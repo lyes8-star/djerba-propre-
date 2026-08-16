@@ -19,10 +19,21 @@ const UI = (() => {
     els.btnAction = document.getElementById("btn-action");
   }
 
-  function showScreen(id) {
-    document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
-    const el = document.getElementById(id);
-    if (el) el.classList.add("active");
+  function showScreen(id, fade = false) {
+    const run = () => {
+      document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add("active");
+        if (fade) {
+          el.classList.remove("fade-in");
+          // reflow
+          void el.offsetWidth;
+          el.classList.add("fade-in");
+        }
+      }
+    };
+    run();
   }
 
   function formatTime(sec) {
@@ -255,10 +266,13 @@ const UI = (() => {
   function showResult({ score, stars, xp, coins, title }) {
     document.getElementById("result-title").textContent = title;
     document.getElementById("result-stars").textContent = starString(stars);
+    document.getElementById("result-stars").classList.remove("pop");
+    void document.getElementById("result-stars").offsetWidth;
+    document.getElementById("result-stars").classList.add("pop");
     document.getElementById("result-score").textContent = score.toLocaleString("fr-FR");
     document.getElementById("result-xp").textContent = `+${xp} XP`;
     document.getElementById("result-coins").textContent = `+${coins} 🪙`;
-    showScreen("screen-result");
+    showScreen("screen-result", true);
   }
 
   return {

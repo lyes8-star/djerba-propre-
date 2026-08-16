@@ -31,6 +31,12 @@ Puis va sur `http://localhost:8080`.
 
 Progression sauvegardée dans `localStorage` (`djerba-propre-save`).
 
+## Polish
+
+- Animations : mer, palmiers, phare, bateau, marche, particules
+- Canvas 192×288 pixel art détaillé
+- Musiques titre / gameplay (Web Audio orientale rétro)
+
 ## Stack
 
 HTML / CSS / JS vanilla · Canvas 2D pixel art · Web Audio (musique orientale rétro)

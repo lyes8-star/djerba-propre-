@@ -2,8 +2,8 @@
 const Player = (() => {
   function create(stats) {
     return {
-      x: 70,
-      y: 140,
+      x: 88,
+      y: 180,
       vx: 0,
       vy: 0,
       facing: 1,
@@ -11,7 +11,7 @@ const Player = (() => {
       attackTimer: 0,
       cooldown: 0,
       inventory: [],
-      baseSpeed: 48,
+      baseSpeed: 56,
       stats,
     };
   }
@@ -38,8 +38,8 @@ const Player = (() => {
     if (ix < -0.1) p.facing = -1;
 
     // bounds (playable sand area)
-    p.x = Math.max(4, Math.min(world.W - 16, p.x));
-    p.y = Math.max(70, Math.min(world.H - 20, p.y));
+    p.x = Math.max(4, Math.min(world.W - 18, p.x));
+    p.y = Math.max(92, Math.min(world.H - 22, p.y));
 
     if (p.attackTimer > 0) {
       p.attackTimer -= dt;
