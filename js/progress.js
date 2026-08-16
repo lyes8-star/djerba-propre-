@@ -10,7 +10,7 @@ const Progress = (() => {
       cost: 500,
       maxLevel: 5,
       desc: (lv) => `+Portée · +Vitesse  Lv.${lv}`,
-      range: (lv) => 12 + lv * 3,
+      range: (lv) => 14 + lv * 3,
       speed: (lv) => 1 + lv * 0.25,
     },
     sac: {

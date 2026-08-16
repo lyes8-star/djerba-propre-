@@ -4,9 +4,9 @@ const World = (() => {
   const POINTS = { can: 40, bottle: 50, bag: 80 };
 
   function create(level) {
-    const W = 160;
-    const H = 220;
-    const count = Math.min(22 + level * 5, 50);
+    const W = 192;
+    const H = 288;
+    const count = Math.min(24 + level * 5, 55);
     const bagTarget = Math.min(20, 5 + Math.floor(level / 2));
     const recycleTarget = Math.min(25, 12 + level);
     const trash = [];
@@ -26,7 +26,7 @@ const World = (() => {
       bagTarget,
       recycleTarget,
       spawnTimer: 0,
-      bin: { x: 90, y: 150 },
+      bin: { x: 110, y: 190 },
     };
   }
 
@@ -37,8 +37,8 @@ const World = (() => {
     return {
       id: `${Date.now()}_${seed}_${Math.random()}`,
       type,
-      x: 10 + Math.random() * (W - 24),
-      y: 75 + Math.random() * (H - 100),
+      x: 12 + Math.random() * (W - 28),
+      y: 95 + Math.random() * (H - 120),
       alive: true,
     };
   }
@@ -110,7 +110,7 @@ const World = (() => {
   function tryRecycle(world, player, stats) {
     const dx = player.x - world.bin.x;
     const dy = player.y - world.bin.y;
-    if (Math.hypot(dx, dy) > 18) return null;
+    if (Math.hypot(dx, dy) > 22) return null;
     if (player.inventory.length === 0) return { empty: true };
     let pts = 0;
     let count = player.inventory.length;
