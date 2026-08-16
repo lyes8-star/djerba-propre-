@@ -2,8 +2,8 @@
 const Player = (() => {
   function create(stats) {
     return {
-      x: 88,
-      y: 180,
+      x: 110,
+      y: 230,
       vx: 0,
       vy: 0,
       facing: 1,
@@ -11,15 +11,14 @@ const Player = (() => {
       attackTimer: 0,
       cooldown: 0,
       inventory: [],
-      baseSpeed: 56,
+      baseSpeed: 62,
       stats,
     };
   }
 
   function update(p, dt, input, world) {
     const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
-    const speed =
-      p.baseSpeed * (1 + p.stats.moveBonus) * (1 - loaded * 0.25);
+    const speed = p.baseSpeed * (1 + p.stats.moveBonus) * (1 - loaded * 0.22);
 
     let ix = input.x;
     let iy = input.y;
@@ -37,9 +36,8 @@ const Player = (() => {
     if (ix > 0.1) p.facing = 1;
     if (ix < -0.1) p.facing = -1;
 
-    // bounds (playable sand area)
-    p.x = Math.max(4, Math.min(world.W - 18, p.x));
-    p.y = Math.max(92, Math.min(world.H - 22, p.y));
+    p.x = Math.max(6, Math.min(world.W - 22, p.x));
+    p.y = Math.max(122, Math.min(world.H - 28, p.y));
 
     if (p.attackTimer > 0) {
       p.attackTimer -= dt;
@@ -52,10 +50,9 @@ const Player = (() => {
 
   function action(p, world, mode) {
     if (p.cooldown > 0) return null;
-    const cd = 0.35 / p.stats.pinceSpeed;
-    p.cooldown = cd;
+    p.cooldown = 0.32 / p.stats.pinceSpeed;
     p.attacking = true;
-    p.attackTimer = 0.18;
+    p.attackTimer = 0.2;
 
     if (mode === "balai") {
       const r = World.trySweep(world, p, p.stats);
@@ -65,11 +62,8 @@ const Player = (() => {
       }
     }
 
-    // prefer recycle if near bin with inventory
     const rec = World.tryRecycle(world, p, p.stats);
-    if (rec && !rec.empty) {
-      return { type: "recycle", ...rec };
-    }
+    if (rec && !rec.empty) return { type: "recycle", ...rec };
 
     const pick = World.tryPickup(world, p, p.stats);
     if (pick && pick.full) return { type: "full" };

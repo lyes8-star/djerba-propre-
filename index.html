@@ -4,110 +4,127 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#1a6bb5" />
+  <meta name="theme-color" content="#0b2a4a" />
   <title>DJERBA PROPRE</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a6bb5'/%3E%3Ctext x='2' y='12' font-size='10'%3E🏝️%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a6bb5'/%3E%3Crect x='4' y='4' width='8' height='8' fill='%232db84a'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div id="app">
-    <!-- TITLE SCREEN -->
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <!-- TITLE -->
     <section id="screen-title" class="screen active">
-      <div class="title-bg" aria-hidden="true"></div>
+      <canvas id="title-bg-canvas" width="256" height="448" aria-hidden="true"></canvas>
       <div class="title-content">
-        <div class="pixel-badge">ÎLE DE DJERBA</div>
-        <h1 class="logo">
-          <span class="logo-main">DJERBA</span>
-          <span class="logo-sub">PROPRE</span>
-        </h1>
-        <p class="tagline">Nettoie la plage · Recycle · Évolue</p>
-        <div class="title-hero" id="title-canvas-wrap">
-          <canvas id="title-canvas" width="192" height="108"></canvas>
+        <div class="pixel-frame title-frame">
+          <div class="pixel-badge blink">* ILE DE DJERBA *</div>
+          <h1 class="logo">
+            <span class="logo-main">DJERBA</span>
+            <span class="logo-sub">PROPRE</span>
+          </h1>
+          <p class="tagline">NETTOIE · RECYCLE · EVOLUE</p>
+          <div class="title-hero pixel-inset">
+            <canvas id="title-canvas" width="224" height="120"></canvas>
+          </div>
+          <button id="btn-play" class="btn btn-primary pulse">
+            <span class="btn-shine"></span>JOUER
+          </button>
+          <p class="hint">Appuie pour la musique orientale</p>
+          <div class="title-stats pixel-inset" id="title-stats"></div>
         </div>
-        <button id="btn-play" class="btn btn-primary pulse">JOUER</button>
-        <p class="hint">Touche pour activer la musique</p>
-        <div class="title-stats" id="title-stats"></div>
       </div>
     </section>
 
-    <!-- GAME SCREEN -->
+    <!-- GAME -->
     <section id="screen-game" class="screen">
-      <header class="hud-top">
+      <header class="hud-top pixel-frame">
         <div class="hud-profile">
-          <div class="avatar" id="hud-avatar"></div>
+          <canvas id="hud-avatar" class="avatar-canvas" width="32" height="32"></canvas>
           <div class="profile-text">
-            <div class="role">Nettoyeur de Djerba</div>
+            <div class="role">NETTOYEUR</div>
             <div class="level-row">
-              <span id="hud-level">NIVEAU 1</span>
+              <span id="hud-level">NV.1</span>
               <div class="xp-bar"><div id="hud-xp-fill"></div></div>
             </div>
-            <div class="xp-label" id="hud-xp-label">0/100 XP</div>
+            <div class="xp-label" id="hud-xp-label">0/100</div>
           </div>
         </div>
         <div class="hud-timer">
-          <div class="label">TEMPS RESTANT</div>
+          <div class="label">TEMPS</div>
           <div class="value" id="hud-timer">03:00</div>
         </div>
         <div class="hud-score">
-          <div class="stars" id="hud-stars">☆☆☆</div>
+          <div class="stars" id="hud-stars">***</div>
           <div class="score" id="hud-score">0</div>
-          <div class="coins" id="hud-coins">🪙 0</div>
+          <div class="coins" id="hud-coins">$*0</div>
         </div>
       </header>
 
-      <aside class="hud-objectives" id="hud-objectives">
+      <aside class="hud-objectives pixel-frame" id="hud-objectives">
         <div class="obj-title">OBJECTIFS</div>
         <ul id="obj-list"></ul>
       </aside>
 
+      <div id="combo" class="combo hidden">COMBO x2</div>
       <div id="toast" class="toast hidden"></div>
 
-      <div class="canvas-wrap">
-        <canvas id="game-canvas" width="192" height="288"></canvas>
+      <div class="canvas-wrap pixel-inset">
+        <canvas id="game-canvas" width="256" height="384"></canvas>
       </div>
 
       <div class="controls">
         <div id="joystick" class="joystick">
           <div class="joy-base"></div>
+          <div class="joy-pad" id="joy-pad"></div>
           <div class="joy-stick" id="joy-stick"></div>
         </div>
-        <button id="btn-action" class="btn-action" aria-label="Action">
-          <span>PINCE</span>
-        </button>
+        <div class="action-cluster">
+          <button id="btn-tool" class="btn-tool" type="button">Q</button>
+          <button id="btn-action" class="btn-action" aria-label="Action">
+            <span id="btn-action-label">PINCE</span>
+          </button>
+        </div>
       </div>
 
       <nav class="bottom-tabs" id="bottom-tabs">
-        <button data-panel="outils" class="tab active">Outils</button>
-        <button data-panel="ameliorations" class="tab">Améliorations</button>
-        <button data-panel="defis" class="tab">Défis</button>
-        <button data-panel="boutique" class="tab">Boutique</button>
-        <button id="btn-pause" class="tab tab-pause">❚❚</button>
+        <button data-panel="outils" class="tab active">OUTILS</button>
+        <button data-panel="ameliorations" class="tab">UPGRADE</button>
+        <button data-panel="defis" class="tab">DEFIS</button>
+        <button data-panel="boutique" class="tab">SHOP</button>
+        <button id="btn-pause" class="tab tab-pause">||</button>
       </nav>
 
       <div id="panel-overlay" class="panel-overlay hidden">
-        <div class="panel" id="panel-content"></div>
-        <button id="btn-close-panel" class="btn btn-secondary">Fermer</button>
+        <div class="panel pixel-frame" id="panel-content"></div>
+        <button id="btn-close-panel" class="btn btn-secondary">FERMER</button>
       </div>
     </section>
 
-    <!-- RESULT SCREEN -->
+    <!-- RESULT -->
     <section id="screen-result" class="screen">
-      <div class="result-card">
-        <h2 id="result-title">Plage terminée !</h2>
-        <div class="result-stars" id="result-stars">★★★</div>
+      <div class="result-card pixel-frame">
+        <div class="result-banner">MISSION</div>
+        <h2 id="result-title">Plage terminee !</h2>
+        <div class="result-stars" id="result-stars">***</div>
         <div class="result-score" id="result-score">0</div>
-        <div class="result-xp" id="result-xp">+0 XP</div>
-        <div class="result-coins" id="result-coins">+0 🪙</div>
+        <div class="result-meta">
+          <div class="result-xp" id="result-xp">+0 XP</div>
+          <div class="result-coins" id="result-coins">+$0</div>
+        </div>
         <div class="result-actions">
           <button id="btn-replay" class="btn btn-primary">REJOUER</button>
-          <button id="btn-menu" class="btn btn-secondary">ÉCRAN TITRE</button>
+          <button id="btn-menu" class="btn btn-secondary">TITRE</button>
         </div>
       </div>
     </section>
 
     <!-- PAUSE -->
     <section id="screen-pause" class="screen overlay-screen">
-      <div class="pause-card">
+      <div class="pause-card pixel-frame">
         <h2>PAUSE</h2>
         <button id="btn-resume" class="btn btn-primary">CONTINUER</button>
         <button id="btn-quit" class="btn btn-secondary">QUITTER</button>

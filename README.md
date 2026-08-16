@@ -33,8 +33,9 @@ Progression sauvegardée dans `localStorage` (`djerba-propre-save`).
 
 ## Polish
 
-- Animations : mer, palmiers, phare, bateau, marche, particules
-- Canvas 192×288 pixel art détaillé
+- UI pixel pro : police Press Start 2P, cadres, scanlines, scale entier
+- Canvas **256×384** + sprites animés détaillés
+- FX : particules, combos, anneaux, shake
 - Musiques titre / gameplay (Web Audio orientale rétro)
 
 ## Stack

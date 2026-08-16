@@ -1,4 +1,4 @@
-/* HUD, panels, joystick, toasts */
+/* HUD, panels, joystick, toasts — pixel UI */
 const UI = (() => {
   const els = {};
 
@@ -7,33 +7,32 @@ const UI = (() => {
     els.xpFill = document.getElementById("hud-xp-fill");
     els.xpLabel = document.getElementById("hud-xp-label");
     els.timer = document.getElementById("hud-timer");
+    els.timerBox = document.querySelector(".hud-timer");
     els.score = document.getElementById("hud-score");
     els.stars = document.getElementById("hud-stars");
     els.coins = document.getElementById("hud-coins");
     els.objList = document.getElementById("obj-list");
     els.toast = document.getElementById("toast");
+    els.combo = document.getElementById("combo");
     els.panelOverlay = document.getElementById("panel-overlay");
     els.panelContent = document.getElementById("panel-content");
     els.titleStats = document.getElementById("title-stats");
     els.joyStick = document.getElementById("joy-stick");
     els.btnAction = document.getElementById("btn-action");
+    els.actionLabel = document.getElementById("btn-action-label");
+    els.avatar = document.getElementById("hud-avatar");
   }
 
   function showScreen(id, fade = false) {
-    const run = () => {
-      document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.add("active");
-        if (fade) {
-          el.classList.remove("fade-in");
-          // reflow
-          void el.offsetWidth;
-          el.classList.add("fade-in");
-        }
-      }
-    };
-    run();
+    document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("active");
+    if (fade) {
+      el.classList.remove("fade-in");
+      void el.offsetWidth;
+      el.classList.add("fade-in");
+    }
   }
 
   function formatTime(sec) {
@@ -44,30 +43,23 @@ const UI = (() => {
   }
 
   function starString(n) {
-    return "★".repeat(n) + "☆".repeat(3 - n);
+    return "*".repeat(n) + ".".repeat(3 - n);
   }
 
   function updateHud(progress, world, timeLeft) {
     const st = progress;
-    els.level.textContent = `NIVEAU ${st.level}`;
-    const pct = Math.min(100, (st.xp / st.xpToNext) * 100);
-    els.xpFill.style.width = `${pct}%`;
-    els.xpLabel.textContent = `${st.xp}/${st.xpToNext} XP`;
+    els.level.textContent = `NV.${st.level}`;
+    els.xpFill.style.width = `${Math.min(100, (st.xp / st.xpToNext) * 100)}%`;
+    els.xpLabel.textContent = `${st.xp}/${st.xpToNext}`;
     els.timer.textContent = formatTime(timeLeft);
-    if (timeLeft <= 10) els.timer.style.color = "#e85a4a";
-    else els.timer.style.color = "";
+    if (els.timerBox) els.timerBox.classList.toggle("urgent", timeLeft <= 10);
     els.score.textContent = world.score.toLocaleString("fr-FR");
     const clean = World.cleanliness(world);
-    const stars = World.stars(world.score, clean);
-    els.stars.textContent = starString(stars);
-    els.coins.textContent = `🪙 ${st.coins}`;
+    els.stars.textContent = starString(World.stars(world.score, clean));
+    els.coins.textContent = `$${st.coins}`;
 
-    const objs = World.objectives(world);
-    els.objList.innerHTML = objs
-      .map(
-        (o) =>
-          `<li class="${o.done ? "done" : ""}">${o.done ? "✓ " : "○ "}${o.label}: ${o.value}</li>`
-      )
+    els.objList.innerHTML = World.objectives(world)
+      .map((o) => `<li class="${o.done ? "done" : ""}">${o.done ? "[OK] " : "[  ] "}${o.label} ${o.value}</li>`)
       .join("");
   }
 
@@ -78,9 +70,24 @@ const UI = (() => {
     toast._t = setTimeout(() => els.toast.classList.add("hidden"), ms);
   }
 
+  function showCombo(n) {
+    if (!els.combo || n < 2) return;
+    els.combo.textContent = `COMBO x${n}`;
+    els.combo.classList.remove("hidden");
+    clearTimeout(showCombo._t);
+    showCombo._t = setTimeout(() => els.combo.classList.add("hidden"), 700);
+  }
+
   function refreshTitleStats() {
     const s = Progress.get();
-    els.titleStats.innerHTML = `Niv.${s.level} · Record ${s.highScore.toLocaleString("fr-FR")} · 🪙 ${s.coins}`;
+    els.titleStats.innerHTML = `NV.${s.level}<br>RECORD ${s.highScore.toLocaleString("fr-FR")}<br>OR $${s.coins}`;
+  }
+
+  function drawAvatar(t) {
+    if (!els.avatar) return;
+    const ctx = els.avatar.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    Sprites.drawAvatar(ctx, Progress.get().cosmetics.hat_gold, t || 0);
   }
 
   function openPanel(name) {
@@ -92,17 +99,16 @@ const UI = (() => {
       html = `<h3>OUTILS</h3>`;
       for (const id of ["pince", "sac", "balai", "brouette"]) {
         const d = tools[id];
-        const lv = s.tools[id];
         html += `<div class="tool-row">
           <div class="tool-icon">${d.icon}</div>
-          <div class="tool-info"><strong>${d.name}</strong><span>${d.desc(lv)}</span></div>
+          <div class="tool-info"><strong>${d.name}</strong><span>${d.desc(s.tools[id])}</span></div>
         </div>`;
       }
-      html += `<p style="font-size:10px;opacity:.8;margin:8px 0 0">Action : Pince pour ramasser · près de la poubelle pour recycler · maintiens pour Balai</p>`;
+      html += `<p style="font-size:6px;opacity:.8;margin:8px 0 0;line-height:1.6">PINCE = ramasser<br>Pres poubelle = recycler<br>Q / bouton = balai</p>`;
     }
 
     if (name === "ameliorations") {
-      html = `<h3>AMÉLIORATIONS</h3>`;
+      html = `<h3>UPGRADES</h3>`;
       for (const id of ["pince", "sac", "balai", "brouette"]) {
         const d = tools[id];
         const lv = s.tools[id];
@@ -110,9 +116,9 @@ const UI = (() => {
         const max = lv >= d.maxLevel;
         html += `<div class="tool-row">
           <div class="tool-icon">${d.icon}</div>
-          <div class="tool-info"><strong>${d.name} Lv.${lv}</strong><span>${d.desc(lv)}</span></div>
+          <div class="tool-info"><strong>${d.name} LV.${lv}</strong><span>${d.desc(lv)}</span></div>
           <button class="btn-buy" data-upgrade="${id}" ${max || s.coins < cost ? "disabled" : ""}>
-            ${max ? "MAX" : cost + " 🪙"}
+            ${max ? "MAX" : "$" + cost}
           </button>
         </div>`;
       }
@@ -120,7 +126,7 @@ const UI = (() => {
 
     if (name === "defis") {
       const d = s.daily;
-      html = `<h3>DÉFIS DU JOUR</h3>
+      html = `<h3>DEFIS DU JOUR</h3>
         <div class="daily-row"><div class="tool-info">
           <strong>Nettoyer ${d.targets.beaches} plages</strong>
           <span>${d.cleanBeaches}/${d.targets.beaches}</span>
@@ -130,12 +136,12 @@ const UI = (() => {
           <span>${d.collectObjects}/${d.targets.objects}</span>
         </div></div>
         <button class="btn-claim" id="btn-claim-daily" ${Progress.canClaimDaily() ? "" : "disabled"}>
-          ${d.claimed ? "RÉCOMPENSE RÉCUPÉRÉE" : "RÉCUPÉRER RÉCOMPENSE"}
+          ${d.claimed ? "DEJA PRIS" : "RECUPERER"}
         </button>`;
     }
 
     if (name === "boutique") {
-      html = `<h3>BOUTIQUE</h3>`;
+      html = `<h3>SHOP</h3>`;
       for (const item of Progress.SHOP_ITEMS) {
         let owned = false;
         if (item.id === "hat_gold") owned = s.cosmetics.hat_gold;
@@ -143,9 +149,9 @@ const UI = (() => {
         if (item.id === "boost_time") owned = s.boosts.time;
         html += `<div class="shop-row">
           <div class="tool-icon">${item.icon}</div>
-          <div class="tool-info"><strong>${item.name}</strong><span>${item.cost} 🪙</span></div>
+          <div class="tool-info"><strong>${item.name}</strong><span>$${item.cost}</span></div>
           <button class="btn-buy" data-shop="${item.id}" ${owned || s.coins < item.cost ? "disabled" : ""}>
-            ${owned ? "OK" : "ACHETER"}
+            ${owned ? "OK" : "BUY"}
           </button>
         </div>`;
       }
@@ -160,17 +166,12 @@ const UI = (() => {
         const res = Progress.upgradeTool(id);
         if (res.ok) {
           AudioSys.sfx("upgrade");
-          toast(`Amélioré ! ${tools[id].name} Lv.${res.level}`);
-          // refresh live player stats if in a run
+          toast(`UPGRADE!<br/>${tools[id].name} LV.${res.level}`);
           if (window.__playerRefresh) window.__playerRefresh();
           openPanel("ameliorations");
-          if (window.__world) {
-            updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
-          }
-          document.getElementById("hud-coins").textContent = `🪙 ${Progress.get().coins}`;
-        } else {
-          toast(res.reason || "Impossible");
-        }
+          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
+          els.coins.textContent = `$${Progress.get().coins}`;
+        } else toast(res.reason || "Impossible");
       });
     });
 
@@ -180,8 +181,9 @@ const UI = (() => {
         const res = Progress.buyShopItem(id);
         if (res.ok) {
           AudioSys.sfx("upgrade");
-          toast("Achat réussi !");
+          toast("ACHAT OK!");
           openPanel("boutique");
+          els.coins.textContent = `$${Progress.get().coins}`;
         } else toast(res.reason || "Impossible");
       });
     });
@@ -192,7 +194,7 @@ const UI = (() => {
         const res = Progress.claimDaily();
         if (res.ok) {
           AudioSys.sfx("levelup");
-          toast(`Récompense ! +${res.coins} 🪙 +${res.xp} XP`);
+          toast(`RECOMPENSE!<br/>+$${res.coins} +${res.xp} XP`);
           openPanel("defis");
         }
       });
@@ -203,7 +205,6 @@ const UI = (() => {
     els.panelOverlay.classList.add("hidden");
   }
 
-  /* Joystick */
   function setupJoystick(input) {
     const root = document.getElementById("joystick");
     const stick = els.joyStick;
@@ -211,7 +212,7 @@ const UI = (() => {
     let pid = null;
 
     function setStick(dx, dy) {
-      const max = 28;
+      const max = 30;
       const m = Math.hypot(dx, dy) || 1;
       const cl = Math.min(1, Math.hypot(dx, dy) / max);
       const nx = (dx / m) * cl * max;
@@ -245,8 +246,7 @@ const UI = (() => {
     }
     function onEnd(e) {
       if (!active) return;
-      const touches = e.changedTouches ? Array.from(e.changedTouches) : [e];
-      if (e.changedTouches && !touches.some((x) => x.identifier === pid)) return;
+      if (e.changedTouches && !Array.from(e.changedTouches).some((x) => x.identifier === pid)) return;
       active = false;
       pid = null;
       input.x = 0;
@@ -265,14 +265,19 @@ const UI = (() => {
 
   function showResult({ score, stars, xp, coins, title }) {
     document.getElementById("result-title").textContent = title;
-    document.getElementById("result-stars").textContent = starString(stars);
-    document.getElementById("result-stars").classList.remove("pop");
-    void document.getElementById("result-stars").offsetWidth;
-    document.getElementById("result-stars").classList.add("pop");
+    const starsEl = document.getElementById("result-stars");
+    starsEl.textContent = starString(stars);
+    starsEl.classList.remove("pop");
+    void starsEl.offsetWidth;
+    starsEl.classList.add("pop");
     document.getElementById("result-score").textContent = score.toLocaleString("fr-FR");
     document.getElementById("result-xp").textContent = `+${xp} XP`;
-    document.getElementById("result-coins").textContent = `+${coins} 🪙`;
+    document.getElementById("result-coins").textContent = `+$${coins}`;
     showScreen("screen-result", true);
+  }
+
+  function setToolLabel(name) {
+    if (els.actionLabel) els.actionLabel.textContent = name;
   }
 
   return {
@@ -280,11 +285,14 @@ const UI = (() => {
     showScreen,
     updateHud,
     toast,
+    showCombo,
     refreshTitleStats,
     openPanel,
     closePanel,
     setupJoystick,
     showResult,
+    drawAvatar,
+    setToolLabel,
     formatTime,
     starString,
   };
