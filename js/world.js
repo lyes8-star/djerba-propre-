@@ -5,8 +5,8 @@ const World = (() => {
 
   function create(mission) {
     const m = mission || {};
-    const W = 256;
-    const H = 384;
+    const W = 384;
+    const H = 480;
     const count = m.trash || 24;
     const bagTarget = m.bagTarget || 5;
     const recycleTarget = m.recycleTarget || 12;
@@ -34,7 +34,7 @@ const World = (() => {
       theme: m.theme || "beach",
       missionId: m.id || 1,
       missionName: m.name || "Plage",
-      bin: { x: 140, y: 250 },
+      bin: { x: 190, y: 300 },
     };
   }
 
@@ -44,7 +44,7 @@ const World = (() => {
       id: `${Date.now()}_${seed}_${Math.random()}`,
       type,
       x: 14 + Math.random() * (W - 36),
-      y: 130 + Math.random() * (H - 160),
+      y: 180 + Math.random() * (H - 220),
       alive: true,
     };
   }
@@ -77,7 +77,7 @@ const World = (() => {
     let best = null;
     let bestD = Infinity;
     for (const t of living(world)) {
-      const d = Math.hypot(t.x + 3 - (player.x + 8), t.y + 3 - (player.y + 10));
+      const d = Math.hypot(t.x + 5 - (player.x + 14), t.y + 5 - (player.y + 16));
       if (d < range && d < bestD) {
         best = t;
         bestD = d;
@@ -99,7 +99,7 @@ const World = (() => {
     let n = 0;
     let pts = 0;
     for (const t of living(world)) {
-      const d = Math.hypot(t.x - player.x - 8, t.y - player.y - 10);
+      const d = Math.hypot(t.x - player.x - 14, t.y - player.y - 16);
       if (d < r) {
         if (player.inventory.length >= stats.capacity) break;
         t.alive = false;
@@ -117,7 +117,7 @@ const World = (() => {
   }
 
   function tryRecycle(world, player, stats) {
-    if (Math.hypot(player.x - world.bin.x, player.y - world.bin.y) > 26) return null;
+    if (Math.hypot(player.x - world.bin.x, player.y - world.bin.y) > 34) return null;
     if (player.inventory.length === 0) return { empty: true };
     let pts = 0;
     const count = player.inventory.length;

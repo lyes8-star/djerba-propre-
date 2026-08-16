@@ -50,7 +50,7 @@ const UI = (() => {
     const st = progress;
     els.level.textContent = `NV.${st.level}`;
     els.xpFill.style.width = `${Math.min(100, (st.xp / st.xpToNext) * 100)}%`;
-    els.xpLabel.textContent = `${st.xp}/${st.xpToNext}`;
+    if (els.xpLabel) els.xpLabel.textContent = `${st.xp}/${st.xpToNext}`;
     els.timer.textContent = formatTime(timeLeft);
     if (els.timerBox) els.timerBox.classList.toggle("urgent", timeLeft <= 10);
     els.score.textContent = world.score.toLocaleString("fr-FR");

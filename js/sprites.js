@@ -1,4 +1,4 @@
-/* High-detail animated pixel sprites (256×384 world) */
+/* Big detailed pixel sprites + themed worlds */
 const Sprites = (() => {
   const C = {
     sky0: "#7ad4ff", sky1: "#4db3e8", sky2: "#2f92d0",
@@ -18,150 +18,143 @@ const Sprites = (() => {
 
   function px(ctx, x, y, w, h, color) {
     ctx.fillStyle = color;
-    ctx.fillRect((x | 0), (y | 0), w, h);
+    ctx.fillRect(x | 0, y | 0, w, h);
   }
 
   function dither(ctx, x, y, w, h, c1, c2) {
     for (let iy = 0; iy < h; iy++) {
       for (let ix = 0; ix < w; ix++) {
-        px(ctx, x + ix, y + iy, 1, 1, ((ix + iy) & 1) ? c1 : c2);
+        if (((ix + iy) & 1) === 0) px(ctx, x + ix, y + iy, 1, 1, c1);
+        else px(ctx, x + ix, y + iy, 1, 1, c2);
       }
     }
   }
 
   function drawCloud(ctx, x, y, t, seed) {
-    const ox = Math.sin(t * 0.12 + seed) * 3;
-    px(ctx, x + ox, y + 3, 18, 5, C.cloud);
-    px(ctx, x + 4 + ox, y, 12, 5, C.cloud);
-    px(ctx, x + 8 + ox, y + 4, 14, 4, C.cloud);
-    px(ctx, x + 6 + ox, y + 2, 4, 2, "#ffffff");
+    const ox = Math.sin(t * 0.12 + seed) * 4;
+    px(ctx, x + ox, y + 4, 28, 8, C.cloud);
+    px(ctx, x + 6 + ox, y, 18, 8, C.cloud);
+    px(ctx, x + 12 + ox, y + 5, 20, 6, C.cloud);
+    px(ctx, x + 10 + ox, y + 2, 6, 3, "#fff");
   }
 
   function drawPalm(ctx, x, y, t, seed) {
-    const sway = Math.sin(t * 2.4 + seed) * 2;
-    // trunk
-    px(ctx, x + 6, y + 14, 4, 22, C.woodD);
-    px(ctx, x + 7, y + 14, 2, 22, C.wood);
-    for (let i = 0; i < 5; i++) px(ctx, x + 6, y + 16 + i * 4, 4, 1, C.woodL);
-    // fronds
-    px(ctx, x + sway, y + 8, 16, 4, C.greenD);
-    px(ctx, x - 4 + sway, y + 11, 10, 3, C.green);
-    px(ctx, x + 10 + sway, y + 11, 10, 3, C.green);
-    px(ctx, x + 2 + sway, y + 4, 8, 5, C.greenL);
-    px(ctx, x + 8 + sway, y + 5, 7, 4, C.greenD);
-    px(ctx, x - 2 + sway, y + 14, 6, 2, C.greenD);
-    px(ctx, x + 12 + sway, y + 14, 6, 2, C.greenD);
-    // coconuts
-    px(ctx, x + 6, y + 12, 3, 3, C.woodD);
-    px(ctx, x + 10, y + 13, 3, 3, C.woodD);
+    const sway = Math.sin(t * 2.2 + seed) * 3;
+    px(ctx, x + 10, y + 22, 6, 34, C.woodD);
+    px(ctx, x + 11, y + 22, 3, 34, C.wood);
+    for (let i = 0; i < 7; i++) px(ctx, x + 10, y + 24 + i * 5, 6, 2, C.woodL);
+    px(ctx, x + sway, y + 12, 26, 6, C.greenD);
+    px(ctx, x - 8 + sway, y + 16, 16, 5, C.green);
+    px(ctx, x + 16 + sway, y + 16, 16, 5, C.green);
+    px(ctx, x + 4 + sway, y + 4, 14, 8, C.greenL);
+    px(ctx, x + 14 + sway, y + 6, 12, 6, C.greenD);
+    px(ctx, x - 4 + sway, y + 20, 10, 3, C.greenD);
+    px(ctx, x + 18 + sway, y + 20, 10, 3, C.greenD);
+    px(ctx, x + 10, y + 18, 4, 4, C.woodD);
+    px(ctx, x + 16, y + 20, 4, 4, C.woodD);
   }
 
   function drawHouse(ctx, x, y) {
-    px(ctx, x, y + 12, 22, 16, C.white);
-    px(ctx, x + 1, y + 13, 20, 2, C.wall);
-    px(ctx, x, y + 26, 22, 2, C.wallD);
-    // dome
-    px(ctx, x + 6, y + 2, 10, 11, C.blueL);
-    px(ctx, x + 7, y + 1, 8, 4, C.blue);
-    px(ctx, x + 8, y + 4, 6, 6, C.blueD);
-    px(ctx, x + 9, y + 5, 4, 2, C.blueL);
-    // door / window
-    px(ctx, x + 8, y + 18, 5, 10, C.woodD);
-    px(ctx, x + 9, y + 20, 3, 2, C.gold);
-    px(ctx, x + 15, y + 16, 5, 5, C.blueL);
-    px(ctx, x + 16, y + 17, 3, 3, C.blueD);
-    px(ctx, x + 2, y + 16, 4, 4, C.blueL);
+    px(ctx, x, y + 18, 34, 24, C.white);
+    px(ctx, x + 2, y + 20, 30, 3, C.wall);
+    px(ctx, x, y + 40, 34, 3, C.wallD);
+    px(ctx, x + 8, y + 2, 18, 18, C.blueL);
+    px(ctx, x + 10, y, 14, 6, C.blue);
+    px(ctx, x + 12, y + 6, 10, 10, C.blueD);
+    px(ctx, x + 14, y + 8, 6, 3, C.blueL);
+    px(ctx, x + 13, y + 28, 8, 14, C.woodD);
+    px(ctx, x + 15, y + 32, 4, 3, C.gold);
+    px(ctx, x + 24, y + 24, 8, 8, C.blueL);
+    px(ctx, x + 26, y + 26, 4, 4, C.blueD);
+    px(ctx, x + 3, y + 24, 7, 7, C.blueL);
   }
 
   function drawLighthouse(ctx, x, y, t) {
-    px(ctx, x + 4, y + 10, 10, 30, C.white);
-    px(ctx, x + 4, y + 14, 10, 5, C.red);
-    px(ctx, x + 4, y + 24, 10, 5, C.red);
-    px(ctx, x + 5, y + 11, 3, 28, C.wall);
-    px(ctx, x + 2, y + 2, 14, 8, C.navy);
-    px(ctx, x + 4, y + 3, 10, 5, C.blueD);
+    px(ctx, x + 6, y + 16, 14, 44, C.white);
+    px(ctx, x + 6, y + 22, 14, 7, C.red);
+    px(ctx, x + 6, y + 36, 14, 7, C.red);
+    px(ctx, x + 8, y + 18, 4, 40, C.wall);
+    px(ctx, x + 2, y + 2, 22, 14, C.navy);
+    px(ctx, x + 5, y + 4, 16, 8, C.blueD);
     const on = Math.sin(t * 5) > 0;
-    px(ctx, x + 6, y + 4, 6, 4, on ? C.goldL : C.gold);
+    px(ctx, x + 8, y + 6, 10, 6, on ? C.goldL : C.gold);
     if (on) {
-      dither(ctx, x + 16, y + 5, 18, 2, "rgba(255,210,74,0.45)", "rgba(255,210,74,0.1)");
-      dither(ctx, x - 16, y + 5, 18, 2, "rgba(255,210,74,0.35)", "rgba(255,210,74,0.08)");
+      dither(ctx, x + 24, y + 8, 28, 3, "rgba(255,210,74,0.5)", "rgba(255,210,74,0.1)");
+      dither(ctx, x - 24, y + 8, 28, 3, "rgba(255,210,74,0.4)", "rgba(255,210,74,0.08)");
     }
   }
 
   function drawBoat(ctx, x, y, t) {
-    const bob = Math.sin(t * 2) * 1.5;
+    const bob = Math.sin(t * 2) * 2;
     const yy = y + bob;
-    px(ctx, x, yy + 7, 20, 5, C.woodD);
-    px(ctx, x + 2, yy + 5, 16, 4, C.wood);
-    px(ctx, x + 3, yy + 6, 14, 1, C.woodL);
-    px(ctx, x + 9, yy - 5, 2, 12, C.white);
-    px(ctx, x + 11, yy - 3, 7, 5, C.red);
-    px(ctx, x + 11, yy - 2, 5, 2, C.redD);
-    px(ctx, x + 5, yy + 11, 4, 1, C.foam);
+    px(ctx, x, yy + 10, 30, 7, C.woodD);
+    px(ctx, x + 3, yy + 7, 24, 6, C.wood);
+    px(ctx, x + 4, yy + 8, 22, 2, C.woodL);
+    px(ctx, x + 14, yy - 8, 3, 18, C.white);
+    px(ctx, x + 17, yy - 5, 10, 7, C.red);
+    px(ctx, x + 17, yy - 3, 8, 3, C.redD);
+    px(ctx, x + 8, yy + 16, 6, 2, C.foam);
   }
 
   function drawSign(ctx, x, y) {
-    px(ctx, x + 10, y + 8, 4, 28, C.woodD);
-    px(ctx, x + 11, y + 10, 2, 24, C.woodL);
-    px(ctx, x, y + 8, 22, 6, C.wood);
-    px(ctx, x + 1, y + 15, 20, 5, C.wood);
-    px(ctx, x + 1, y + 21, 18, 5, C.wood);
+    px(ctx, x + 14, y + 10, 5, 40, C.woodD);
+    px(ctx, x + 15, y + 12, 3, 36, C.woodL);
+    px(ctx, x, y + 10, 32, 8, C.wood);
+    px(ctx, x + 2, y + 20, 28, 7, C.wood);
+    px(ctx, x + 2, y + 29, 26, 7, C.wood);
     ctx.fillStyle = C.white;
-    ctx.font = "5px monospace";
-    ctx.fillText("PLAGE", x + 4, y + 12);
-    ctx.fillText("H.SOUK", x + 3, y + 19);
-    ctx.fillText("MIDOUN", x + 3, y + 25);
+    ctx.font = "8px monospace";
+    ctx.fillText("PLAGE", x + 5, y + 16);
+    ctx.fillText("H.SOUK", x + 4, y + 25);
+    ctx.fillText("MIDOUN", x + 4, y + 34);
   }
 
   function drawSeagull(ctx, x, y, t, seed) {
-    const flap = Math.sin(t * 7 + seed) > 0 ? 1 : -1;
-    const ox = x + Math.sin(t * 0.35 + seed) * 28;
-    const oy = y + Math.cos(t * 0.5 + seed) * 4;
-    px(ctx, ox, oy, 4, 2, C.white);
-    px(ctx, ox - 4, oy - flap, 4, 1, C.white);
-    px(ctx, ox + 4, oy - flap, 4, 1, C.white);
-    px(ctx, ox + 1, oy + 1, 1, 1, C.navy);
+    const flap = Math.sin(t * 7 + seed) > 0 ? 2 : -2;
+    const ox = x + Math.sin(t * 0.35 + seed) * 36;
+    const oy = y + Math.cos(t * 0.5 + seed) * 5;
+    px(ctx, ox, oy, 6, 3, C.white);
+    px(ctx, ox - 6, oy - flap, 6, 2, C.white);
+    px(ctx, ox + 6, oy - flap, 6, 2, C.white);
+    px(ctx, ox + 2, oy + 1, 2, 2, C.navy);
   }
 
   function drawBin(ctx, x, y, t) {
-    const wob = Math.sin(t * 10) * 0.4;
-    px(ctx, x + wob, y + 4, 12, 14, C.green);
-    px(ctx, x + 1 + wob, y + 5, 10, 3, C.greenL);
-    px(ctx, x + 1 + wob, y, 10, 4, C.greenD);
-    px(ctx, x + 3 + wob, y + 8, 6, 6, C.white);
-    px(ctx, x + 4 + wob, y + 9, 4, 4, C.greenD);
-    // recycle arrows hint
-    px(ctx, x + 5 + wob, y + 10, 2, 2, C.green);
-    px(ctx, x - 1 + wob, y + 16, 3, 3, C.navy);
-    px(ctx, x + 10 + wob, y + 16, 3, 3, C.navy);
-    px(ctx, x + wob, y + 18, 12, 2, "rgba(0,0,0,0.18)");
+    const wob = Math.sin(t * 10) * 0.5;
+    px(ctx, x + wob, y + 6, 18, 20, C.green);
+    px(ctx, x + 2 + wob, y + 8, 14, 4, C.greenL);
+    px(ctx, x + 2 + wob, y, 14, 6, C.greenD);
+    px(ctx, x + 5 + wob, y + 12, 8, 8, C.white);
+    px(ctx, x + 7 + wob, y + 14, 4, 4, C.greenD);
+    px(ctx, x - 2 + wob, y + 24, 5, 5, C.navy);
+    px(ctx, x + 15 + wob, y + 24, 5, 5, C.navy);
+    px(ctx, x + wob, y + 28, 18, 3, "rgba(0,0,0,0.2)");
   }
 
   function drawTrash(ctx, item, t) {
     const { x, y, type } = item;
-    const spark = Math.sin(t * 6 + x * 0.2) > 0.65;
-    const bob = Math.sin(t * 3 + y) * 0.6;
+    const spark = Math.sin(t * 6 + x * 0.2) > 0.55;
+    const bob = Math.sin(t * 3 + y) * 0.8;
     const yy = y + bob;
-    px(ctx, x + 1, yy + 8, 6, 2, "rgba(0,0,0,0.16)");
+    px(ctx, x + 2, yy + 12, 10, 3, "rgba(0,0,0,0.18)");
     if (type === "can") {
-      px(ctx, x, yy, 6, 8, C.metal);
-      px(ctx, x + 1, yy + 1, 4, 3, C.red);
-      px(ctx, x + 1, yy + 5, 4, 1, "#9aa");
-      px(ctx, x, yy, 6, 1, C.white);
-      if (spark) px(ctx, x + 5, yy, 1, 1, C.white);
+      px(ctx, x, yy, 10, 12, C.metal);
+      px(ctx, x + 2, yy + 2, 6, 4, C.red);
+      px(ctx, x + 2, yy + 8, 6, 2, "#9aa");
+      px(ctx, x, yy, 10, 2, C.white);
+      if (spark) px(ctx, x + 8, yy + 1, 2, 2, C.white);
     } else if (type === "bottle") {
-      px(ctx, x + 1, yy + 2, 4, 9, C.bottle);
-      px(ctx, x + 2, yy, 2, 3, C.white);
-      px(ctx, x + 1, yy + 4, 4, 2, "rgba(255,255,255,0.25)");
-      if (spark) px(ctx, x + 4, yy + 5, 1, 1, C.white);
+      px(ctx, x + 2, yy + 3, 6, 14, C.bottle);
+      px(ctx, x + 3, yy, 4, 4, C.white);
+      px(ctx, x + 2, yy + 6, 6, 3, "rgba(255,255,255,0.3)");
+      if (spark) px(ctx, x + 6, yy + 8, 2, 2, C.white);
     } else if (type === "bag") {
-      px(ctx, x, yy + 2, 9, 8, C.bag);
-      px(ctx, x + 1, yy, 7, 3, "#5a5a66");
-      px(ctx, x + 2, yy + 4, 5, 3, "#2e2e36");
-      px(ctx, x + 3, yy + 1, 1, 1, C.white);
-      if (spark) px(ctx, x + 7, yy + 2, 1, 1, C.white);
+      px(ctx, x, yy + 3, 14, 12, C.bag);
+      px(ctx, x + 2, yy, 10, 4, "#5a5a66");
+      px(ctx, x + 3, yy + 6, 8, 5, "#2e2e36");
+      if (spark) px(ctx, x + 11, yy + 3, 2, 2, C.white);
     } else {
-      px(ctx, x, yy, 6, 6, C.woodD);
+      px(ctx, x, yy, 10, 10, C.woodD);
     }
   }
 
@@ -169,68 +162,68 @@ const Sprites = (() => {
     const x = p.x | 0;
     const y = p.y | 0;
     const moving = Math.hypot(p.vx || 0, p.vy || 0) > 5;
-    const frame = moving ? (Math.floor(t * 12) % 4) : 0;
-    const bob = moving ? (frame === 1 || frame === 3 ? -1 : 0) : Math.sin(t * 3) * 0.5;
+    const frame = moving ? Math.floor(t * 12) % 4 : 0;
+    const bob = moving ? (frame === 1 || frame === 3 ? -1 : 0) : Math.sin(t * 3) * 0.6;
     const yy = y + bob;
     const facing = p.facing || 1;
 
-    px(ctx, x + 2, yy + 22, 14, 3, "rgba(0,0,0,0.2)");
+    px(ctx, x + 4, yy + 34, 22, 4, "rgba(0,0,0,0.22)");
 
-    // legs 4-frame
+    // legs
     if (frame === 0 || frame === 2) {
-      px(ctx, x + 5, yy + 16, 4, 7, "#3d5f95");
-      px(ctx, x + 11, yy + 16, 4, 7, "#2f4f82");
+      px(ctx, x + 8, yy + 24, 6, 11, "#3d5f95");
+      px(ctx, x + 18, yy + 24, 6, 11, "#2f4f82");
     } else if (frame === 1) {
-      px(ctx, x + 4, yy + 16, 4, 7, "#3d5f95");
-      px(ctx, x + 12, yy + 17, 4, 6, "#2f4f82");
+      px(ctx, x + 6, yy + 24, 6, 11, "#3d5f95");
+      px(ctx, x + 20, yy + 26, 6, 9, "#2f4f82");
     } else {
-      px(ctx, x + 4, yy + 17, 4, 6, "#2f4f82");
-      px(ctx, x + 12, yy + 16, 4, 7, "#3d5f95");
+      px(ctx, x + 6, yy + 26, 6, 9, "#2f4f82");
+      px(ctx, x + 20, yy + 24, 6, 11, "#3d5f95");
     }
-    px(ctx, x + 5, yy + 22, 4, 2, C.navy);
-    px(ctx, x + 11, yy + 22, 4, 2, C.navy);
+    px(ctx, x + 8, yy + 33, 6, 3, C.navy);
+    px(ctx, x + 18, yy + 33, 6, 3, C.navy);
 
     // torso
-    px(ctx, x + 4, yy + 8, 12, 10, C.green);
-    px(ctx, x + 5, yy + 9, 10, 2, C.greenL);
-    px(ctx, x + 7, yy + 11, 6, 5, C.white);
-    px(ctx, x + 8, yy + 12, 4, 3, C.greenD);
-    px(ctx, x + 8, yy + 12, 1, 1, C.greenL);
-    px(ctx, x + 11, yy + 14, 1, 1, C.greenL);
+    px(ctx, x + 6, yy + 12, 20, 14, C.green);
+    px(ctx, x + 8, yy + 13, 16, 3, C.greenL);
+    px(ctx, x + 11, yy + 16, 10, 7, C.white);
+    px(ctx, x + 13, yy + 18, 6, 4, C.greenD);
+    px(ctx, x + 13, yy + 18, 2, 2, C.greenL);
+    px(ctx, x + 17, yy + 20, 2, 2, C.greenL);
 
     // head
-    px(ctx, x + 6, yy + 3, 8, 6, C.skin);
-    px(ctx, x + 7, yy + 4, 2, 1, C.skinD);
-    const eyeX = facing > 0 ? x + 11 : x + 7;
-    px(ctx, eyeX, yy + 5, 2, 2, C.navy);
-    px(ctx, eyeX + (facing > 0 ? 0 : 1), yy + 5, 1, 1, C.white);
+    px(ctx, x + 10, yy + 4, 12, 9, C.skin);
+    px(ctx, x + 11, yy + 5, 3, 2, C.skinD);
+    const eyeX = facing > 0 ? x + 17 : x + 11;
+    px(ctx, eyeX, yy + 7, 3, 3, C.navy);
+    px(ctx, eyeX + (facing > 0 ? 0 : 1), yy + 7, 1, 1, C.white);
 
     // hat
     const hc = goldHat ? C.gold : C.greenD;
     const hc2 = goldHat ? C.goldL : C.green;
-    px(ctx, x + 5, yy + 1, 10, 3, hc);
-    px(ctx, x + 7, yy - 1, 6, 2, hc2);
-    px(ctx, x + 4, yy + 3, 12, 1, hc);
+    px(ctx, x + 8, yy + 1, 16, 4, hc);
+    px(ctx, x + 11, yy - 2, 10, 3, hc2);
+    px(ctx, x + 6, yy + 4, 20, 2, hc);
 
     // gloves
-    px(ctx, x + 2, yy + 12, 3, 3, C.white);
-    px(ctx, x + 15, yy + 12, 3, 3, C.white);
+    px(ctx, x + 2, yy + 18, 5, 5, C.white);
+    px(ctx, x + 25, yy + 18, 5, 5, C.white);
 
-    // scorpion claw
-    const ax = facing > 0 ? x + 16 : x - 10;
-    const ay = yy + 10;
+    // scorpion claw - big and readable
+    const ax = facing > 0 ? x + 28 : x - 18;
+    const ay = yy + 16;
     if (p.attacking) {
-      const ext = facing > 0 ? 12 : -12;
-      px(ctx, facing > 0 ? ax : ax + 2, ay, 12, 3, C.navy);
-      px(ctx, ax + (facing > 0 ? 9 : -3), ay - 4, 6, 3, C.gold);
-      px(ctx, ax + (facing > 0 ? 9 : -3), ay + 4, 6, 3, C.gold);
-      px(ctx, ax + ext, ay, 5, 3, C.red);
-      px(ctx, ax + ext + (facing > 0 ? 3 : -3), ay - 1, 2, 1, C.goldL);
+      const ext = facing > 0 ? 18 : -18;
+      px(ctx, facing > 0 ? ax : ax + 4, ay, 18, 4, C.navy);
+      px(ctx, ax + (facing > 0 ? 12 : -6), ay - 6, 10, 4, C.gold);
+      px(ctx, ax + (facing > 0 ? 12 : -6), ay + 6, 10, 4, C.gold);
+      px(ctx, ax + ext, ay, 8, 4, C.red);
+      px(ctx, ax + ext + (facing > 0 ? 4 : -4), ay - 2, 3, 2, C.goldL);
     } else {
-      px(ctx, facing > 0 ? ax : ax + 4, ay, 7, 3, C.navy);
-      px(ctx, ax + (facing > 0 ? 4 : 0), ay - 3, 5, 2, C.gold);
-      px(ctx, ax + (facing > 0 ? 4 : 0), ay + 4, 5, 2, C.gold);
-      px(ctx, ax + (facing > 0 ? 7 : -1), ay, 3, 3, C.red);
+      px(ctx, facing > 0 ? ax : ax + 6, ay, 12, 4, C.navy);
+      px(ctx, ax + (facing > 0 ? 6 : 0), ay - 5, 8, 3, C.gold);
+      px(ctx, ax + (facing > 0 ? 6 : 0), ay + 6, 8, 3, C.gold);
+      px(ctx, ax + (facing > 0 ? 10 : -2), ay, 5, 4, C.red);
     }
   }
 
@@ -246,174 +239,120 @@ const Sprites = (() => {
     };
     const th = themes[theme] || themes.beach;
 
-    px(ctx, 0, 0, W, 28, th.sky0);
-    px(ctx, 0, 28, W, 28, th.sky1);
-    px(ctx, 0, 56, W, 22, th.sky2);
+    px(ctx, 0, 0, W, 40, th.sky0);
+    px(ctx, 0, 40, W, 40, th.sky1);
+    px(ctx, 0, 80, W, 30, th.sky2);
 
-    drawCloud(ctx, 18, 10, t, 0);
-    drawCloud(ctx, 110, 6, t, 1.7);
-    drawCloud(ctx, 190, 14, t, 3.2);
+    drawCloud(ctx, 20, 12, t, 0);
+    drawCloud(ctx, 140, 8, t, 1.7);
+    drawCloud(ctx, 260, 18, t, 3.2);
 
     if (th.sun) {
-      px(ctx, W - 36, 10, 14, 14, C.goldL);
-      px(ctx, W - 33, 13, 8, 8, C.gold);
+      px(ctx, W - 50, 12, 22, 22, C.goldL);
+      px(ctx, W - 45, 17, 12, 12, C.gold);
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2 + t * 0.2;
-        px(ctx, W - 29 + Math.cos(a) * 12, 17 + Math.sin(a) * 12, 2, 2, C.goldL);
+        px(ctx, W - 39 + Math.cos(a) * 18, 23 + Math.sin(a) * 18, 3, 3, C.goldL);
       }
     }
     if (theme === "sunset") {
-      px(ctx, W - 40, 20, 18, 18, "#ff9040");
-      px(ctx, W - 36, 24, 10, 10, "#ffd24a");
+      px(ctx, W - 55, 28, 26, 26, "#ff9040");
+      px(ctx, W - 49, 34, 14, 14, "#ffd24a");
     }
     if (th.moon) {
-      px(ctx, W - 34, 12, 12, 12, C.goldL);
-      px(ctx, W - 30, 14, 8, 8, th.sky1);
-      // stars
-      for (let i = 0; i < 12; i++) {
-        if (Math.sin(t * 3 + i) > 0) px(ctx, 10 + i * 18, 8 + (i % 5) * 6, 2, 2, C.white);
+      px(ctx, W - 48, 14, 18, 18, C.goldL);
+      px(ctx, W - 42, 16, 12, 12, th.sky1);
+      for (let i = 0; i < 16; i++) {
+        if (Math.sin(t * 3 + i) > 0) px(ctx, 12 + i * 22, 10 + (i % 5) * 8, 2, 2, C.white);
       }
     }
 
-    // sea
-    px(ctx, 0, 74, W, 42, th.sea1);
-    px(ctx, 0, 74, W, 8, th.sea0);
-    px(ctx, 0, 104, W, 8, th.sea2);
-    px(ctx, 0, 110, W, 6, C.sea3);
-    const wave = Math.floor(t * 4) % 10;
-    for (let i = -10; i < W; i += 10) {
-      px(ctx, i + wave, 82, 5, 2, C.foam);
-      px(ctx, i + (wave * 2) % 10, 92, 4, 1, th.sea0);
+    px(ctx, 0, 105, W, 55, th.sea1);
+    px(ctx, 0, 105, W, 12, th.sea0);
+    px(ctx, 0, 145, W, 10, th.sea2);
+    px(ctx, 0, 152, W, 8, C.sea3);
+    const wave = Math.floor(t * 4) % 12;
+    for (let i = -12; i < W; i += 12) {
+      px(ctx, i + wave, 118, 7, 3, C.foam);
+      px(ctx, i + (wave * 2) % 12, 132, 6, 2, th.sea0);
     }
 
-    // sand / ground
-    px(ctx, 0, 116, W, H - 116, th.sand);
-    px(ctx, 0, 116, W, 5, th.sandTop);
-    for (let i = 0; i < 90; i++) {
-      const sx = (i * 47 + 19) % W;
-      const sy = 126 + ((i * 73) % (H - 140));
-      px(ctx, sx, sy, 1, 1, i % 4 === 0 ? C.sand2 : th.sandTop);
+    px(ctx, 0, 160, W, H - 160, th.sand);
+    px(ctx, 0, 160, W, 8, th.sandTop);
+    for (let i = 0; i < 140; i++) {
+      const sx = (i * 53 + 17) % W;
+      const sy = 175 + ((i * 79) % (H - 190));
+      px(ctx, sx, sy, 2, 2, i % 4 === 0 ? C.sand2 : th.sandTop);
     }
 
-    // theme props
     if (theme === "souk") {
-      drawHouse(ctx, 8, 58);
-      drawHouse(ctx, 40, 62);
-      drawHouse(ctx, 200, 60);
-      // market stalls
-      px(ctx, 90, 100, 20, 12, C.red);
-      px(ctx, 92, 102, 16, 4, C.gold);
-      px(ctx, 120, 98, 18, 14, C.greenD);
-      px(ctx, 122, 100, 14, 4, C.white);
+      drawHouse(ctx, 10, 85);
+      drawHouse(ctx, 55, 90);
+      drawHouse(ctx, 280, 88);
+      px(ctx, 130, 145, 30, 16, C.red);
+      px(ctx, 134, 148, 22, 5, C.gold);
+      px(ctx, 175, 142, 28, 18, C.greenD);
     } else if (theme === "port") {
-      drawLighthouse(ctx, 145, 34, t);
-      drawBoat(ctx, 40, 96, t);
-      drawBoat(ctx, 160, 100, t + 1);
-      // dock
-      px(ctx, 20, 112, 80, 6, C.woodD);
-      px(ctx, 20, 112, 80, 2, C.wood);
-      for (let i = 0; i < 6; i++) px(ctx, 28 + i * 12, 118, 3, 8, C.woodD);
+      drawLighthouse(ctx, 210, 50, t);
+      drawBoat(ctx, 50, 138, t);
+      drawBoat(ctx, 220, 142, t + 1);
+      px(ctx, 30, 155, 110, 8, C.woodD);
+      for (let i = 0; i < 8; i++) px(ctx, 40 + i * 14, 163, 4, 12, C.woodD);
     } else if (theme === "lagoon") {
-      drawPalm(ctx, 30, 78, t, 0);
-      drawPalm(ctx, 60, 82, t, 1);
-      drawPalm(ctx, 200, 80, t, 2);
-      // water patches
-      px(ctx, 100, 140, 40, 10, th.sea0);
-      px(ctx, 160, 180, 30, 8, th.sea1);
+      drawPalm(ctx, 40, 115, t, 0);
+      drawPalm(ctx, 90, 120, t, 1);
+      drawPalm(ctx, 290, 118, t, 2);
+      px(ctx, 150, 200, 60, 14, th.sea0);
+      px(ctx, 230, 250, 45, 12, th.sea1);
     } else if (theme === "resort") {
-      drawHouse(ctx, 10, 55);
-      drawHouse(ctx, 50, 58);
-      drawHouse(ctx, 180, 55);
-      // umbrella
-      px(ctx, 100, 130, 20, 3, C.red);
-      px(ctx, 108, 133, 2, 14, C.wood);
-      px(ctx, 140, 150, 18, 3, C.blueL);
-      px(ctx, 147, 153, 2, 12, C.wood);
+      drawHouse(ctx, 12, 82);
+      drawHouse(ctx, 70, 86);
+      drawHouse(ctx, 260, 84);
+      px(ctx, 150, 190, 28, 4, C.red);
+      px(ctx, 162, 194, 3, 20, C.wood);
+      px(ctx, 200, 220, 26, 4, C.blueL);
+      px(ctx, 211, 224, 3, 18, C.wood);
     } else if (theme === "festival") {
-      drawHouse(ctx, 20, 58);
-      drawLighthouse(ctx, 145, 34, t);
-      // banners
-      for (let i = 0; i < 6; i++) {
-        px(ctx, 40 + i * 30, 120, 16, 4, i % 2 ? C.gold : C.red);
-        px(ctx, 46 + i * 30, 124, 2, 10, C.wood);
+      drawHouse(ctx, 30, 88);
+      drawLighthouse(ctx, 210, 50, t);
+      for (let i = 0; i < 7; i++) {
+        px(ctx, 50 + i * 40, 175, 22, 5, i % 2 ? C.gold : C.red);
+        px(ctx, 58 + i * 40, 180, 3, 14, C.wood);
       }
     } else {
-      drawHouse(ctx, 8, 58);
-      drawHouse(ctx, 55, 62);
-      drawHouse(ctx, 200, 60);
-      drawLighthouse(ctx, 145, 34, t);
-      drawBoat(ctx, 105, 96, t);
+      drawHouse(ctx, 12, 88);
+      drawHouse(ctx, 70, 92);
+      drawHouse(ctx, 280, 90);
+      drawLighthouse(ctx, 210, 50, t);
+      drawBoat(ctx, 150, 138, t);
     }
 
-    drawPalm(ctx, 35, 78, t, 0);
-    drawPalm(ctx, 95, 74, t, 1.4);
-    drawPalm(ctx, 220, 80, t, 2.8);
-    drawSign(ctx, 6, 130);
-    drawSeagull(ctx, 50, 40, t, 0);
-    drawSeagull(ctx, 160, 28, t, 2.1);
-  }
-
-  function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId) {
-    // water
-    px(ctx, 0, 0, W, H, "#1a6bb5");
-    for (let i = 0; i < 30; i++) {
-      px(ctx, (i * 37) % W, 10 + (i * 19) % H, 2, 1, "#3aa0d8");
-    }
-    // island blob
-    px(ctx, 30, 30, 180, 160, "#e8d4a8");
-    px(ctx, 50, 20, 140, 30, "#e8d4a8");
-    px(ctx, 40, 170, 150, 30, "#e8d4a8");
-    px(ctx, 20, 60, 30, 80, "#e8d4a8");
-    px(ctx, 190, 50, 40, 100, "#e8d4a8");
-    // green patches
-    px(ctx, 70, 80, 40, 20, "#3ddc5a");
-    px(ctx, 130, 120, 35, 18, "#2db84a");
-
-    Campaign.list().forEach((lv) => {
-      const open = lv.id <= unlocked;
-      const st = (starsMap && starsMap[String(lv.id)]) || 0;
-      const sel = lv.id === selectedId;
-      const pulse = sel && Math.sin(t * 6) > 0 ? 2 : 0;
-      px(ctx, lv.mapX - 4 - pulse, lv.mapY - 4 - pulse, 12 + pulse * 2, 12 + pulse * 2, sel ? C.gold : "#000");
-      px(ctx, lv.mapX - 2, lv.mapY - 2, 8, 8, open ? C.green : "#555");
-      if (open) {
-        ctx.fillStyle = C.white;
-        ctx.font = "6px monospace";
-        ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 4);
-        if (st > 0) {
-          ctx.fillStyle = C.gold;
-          ctx.fillText("*".repeat(st), lv.mapX - 4, lv.mapY + 14);
-        }
-      } else {
-        px(ctx, lv.mapX, lv.mapY, 4, 4, "#222");
-      }
-    });
-
-    ctx.fillStyle = C.white;
-    ctx.font = "7px monospace";
-    ctx.fillText("CARTE DE DJERBA", 60, 16);
+    drawPalm(ctx, 45, 115, t, 0);
+    drawPalm(ctx, 130, 110, t, 1.4);
+    drawPalm(ctx, 310, 118, t, 2.8);
+    drawSign(ctx, 8, 185);
+    drawSeagull(ctx, 60, 55, t, 0);
+    drawSeagull(ctx, 220, 40, t, 2.1);
   }
 
   function drawTitleScene(ctx, t) {
-    const W = 224;
-    const H = 120;
-    // local cropped beach vibe
-    px(ctx, 0, 0, W, 40, C.sky1);
-    px(ctx, 0, 40, W, 28, C.sea1);
+    const W = 280;
+    const H = 150;
+    px(ctx, 0, 0, W, 50, C.sky1);
+    px(ctx, 0, 50, W, 35, C.sea1);
     const wave = Math.floor(t * 4) % 8;
-    for (let i = 0; i < W; i += 8) px(ctx, i + wave, 48, 4, 2, C.foam);
-    px(ctx, 0, 68, W, H, C.sand1);
-    drawHouse(ctx, 10, 28);
-    drawLighthouse(ctx, 150, 8, t);
-    drawPalm(ctx, 70, 40, t, 0);
-    drawPalm(ctx, 190, 44, t, 2);
-    drawBoat(ctx, 100, 52, t);
-    drawPlayer(ctx, { x: 95, y: 78, facing: 1, attacking: Math.sin(t * 2.5) > 0.8, vx: 30, vy: 0 }, false, t);
-    drawBin(ctx, 125, 88, t);
-    drawTrash(ctx, { x: 55, y: 95, type: "can" }, t);
-    drawTrash(ctx, { x: 165, y: 92, type: "bottle" }, t);
-    drawTrash(ctx, { x: 40, y: 100, type: "bag" }, t);
-    drawSeagull(ctx, 30, 18, t, 1);
+    for (let i = 0; i < W; i += 8) px(ctx, i + wave, 58, 5, 2, C.foam);
+    px(ctx, 0, 85, W, H, C.sand1);
+    drawHouse(ctx, 10, 35);
+    drawLighthouse(ctx, 190, 8, t);
+    drawPalm(ctx, 90, 50, t, 0);
+    drawPalm(ctx, 230, 55, t, 2);
+    drawBoat(ctx, 130, 65, t);
+    drawPlayer(ctx, { x: 115, y: 95, facing: 1, attacking: Math.sin(t * 2.5) > 0.8, vx: 30, vy: 0 }, false, t);
+    drawBin(ctx, 155, 108, t);
+    drawTrash(ctx, { x: 70, y: 118, type: "can" }, t);
+    drawTrash(ctx, { x: 210, y: 112, type: "bottle" }, t);
+    drawTrash(ctx, { x: 50, y: 125, type: "bag" }, t);
   }
 
   function drawTitleBackground(ctx, W, H, t) {
@@ -421,46 +360,65 @@ const Sprites = (() => {
   }
 
   function drawAvatar(ctx, goldHat, t) {
-    ctx.clearRect(0, 0, 32, 32);
-    px(ctx, 0, 0, 32, 32, C.sky1);
+    ctx.clearRect(0, 0, 40, 40);
+    px(ctx, 0, 0, 40, 40, C.sky1);
+    ctx.save();
+    ctx.translate(-4, -4);
+    ctx.scale(0.85, 0.85);
     drawPlayer(ctx, { x: 6, y: 4, facing: 1, attacking: false, vx: 0, vy: 0 }, goldHat, t);
+    ctx.restore();
   }
 
-  function drawMinimap(ctx, W, H, trash, player, t) {
-    const mx = W - 40;
-    const my = H - 40;
+  function drawMinimap(ctx, W, H, trash, player, t, cam) {
+    const mw = 52;
+    const mh = 52;
+    const mx = (cam && cam.x != null ? cam.x : 0) + (cam && cam.vw ? cam.vw : W) - mw - 6;
+    const my = (cam && cam.y != null ? cam.y : 0) + 6;
     ctx.fillStyle = "rgba(8,40,72,0.85)";
-    ctx.fillRect(mx, my, 36, 36);
-    ctx.strokeStyle = C.blueL;
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.strokeStyle = Math.sin(t * 4) > 0 ? C.gold : C.blueL;
     ctx.lineWidth = 2;
-    ctx.strokeRect(mx, my, 36, 36);
-    // pulse border
-    if (Math.sin(t * 4) > 0) {
-      ctx.strokeStyle = C.gold;
-      ctx.strokeRect(mx + 1, my + 1, 34, 34);
-    }
+    ctx.strokeRect(mx, my, mw, mh);
     trash.forEach((tr) => {
-      px(ctx, mx + 2 + (tr.x / W) * 32, my + 2 + (tr.y / H) * 32, 2, 2, C.red);
+      px(ctx, mx + 3 + (tr.x / W) * (mw - 6), my + 3 + (tr.y / H) * (mh - 6), 2, 2, C.red);
     });
-    px(ctx, mx + 2 + (player.x / W) * 32, my + 2 + (player.y / H) * 32, 3, 3, C.green);
+    px(ctx, mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 4, 4, C.green);
+  }
+
+  function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId) {
+    px(ctx, 0, 0, W, H, "#1a6bb5");
+    for (let i = 0; i < 40; i++) px(ctx, (i * 37) % W, 10 + (i * 19) % H, 3, 2, "#3aa0d8");
+    px(ctx, 28, 28, 190, 170, "#e8d4a8");
+    px(ctx, 48, 18, 150, 35, "#e8d4a8");
+    px(ctx, 38, 180, 160, 35, "#e8d4a8");
+    px(ctx, 70, 80, 45, 24, "#3ddc5a");
+    px(ctx, 130, 120, 40, 20, "#2db84a");
+
+    Campaign.list().forEach((lv) => {
+      const open = lv.id <= unlocked;
+      const st = (starsMap && starsMap[String(lv.id)]) || 0;
+      const sel = lv.id === selectedId;
+      const pulse = sel && Math.sin(t * 6) > 0 ? 3 : 0;
+      px(ctx, lv.mapX - 5 - pulse, lv.mapY - 5 - pulse, 16 + pulse * 2, 16 + pulse * 2, sel ? C.gold : "#000");
+      px(ctx, lv.mapX - 3, lv.mapY - 3, 12, 12, open ? C.green : "#555");
+      if (open) {
+        ctx.fillStyle = C.white;
+        ctx.font = "8px monospace";
+        ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 5);
+        if (st > 0) {
+          ctx.fillStyle = C.gold;
+          ctx.fillText("*".repeat(st), lv.mapX - 4, lv.mapY + 18);
+        }
+      }
+    });
+    ctx.fillStyle = C.white;
+    ctx.font = "9px monospace";
+    ctx.fillText("CARTE DE DJERBA", 55, 18);
   }
 
   return {
-    C,
-    px,
-    drawPalm,
-    drawHouse,
-    drawLighthouse,
-    drawBoat,
-    drawSign,
-    drawBin,
-    drawTrash,
-    drawPlayer,
-    drawWorldBg,
-    drawTitleScene,
-    drawTitleBackground,
-    drawAvatar,
-    drawMinimap,
-    drawIslandMap,
+    C, px, drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
+    drawBin, drawTrash, drawPlayer, drawWorldBg, drawTitleScene,
+    drawTitleBackground, drawAvatar, drawMinimap, drawIslandMap,
   };
 })();

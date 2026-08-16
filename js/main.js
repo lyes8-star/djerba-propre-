@@ -9,14 +9,17 @@
   const mapCanvas = document.getElementById("map-canvas");
   const mapCtx = mapCanvas.getContext("2d");
 
-  canvas.width = 256;
-  canvas.height = 384;
-  titleCanvas.width = 224;
-  titleCanvas.height = 120;
-  titleBg.width = 256;
-  titleBg.height = 448;
-  mapCanvas.width = 240;
-  mapCanvas.height = 220;
+  canvas.width = 320;
+  canvas.height = 400;
+  titleCanvas.width = 280;
+  titleCanvas.height = 150;
+  titleBg.width = 320;
+  titleBg.height = 520;
+  mapCanvas.width = 280;
+  mapCanvas.height = 250;
+
+  const ZOOM = 2.15;
+  let cam = { x: 0, y: 0, vw: 0, vh: 0 };
 
   [ctx, titleCtx, titleBgCtx, mapCtx].forEach((c) => {
     c.imageSmoothingEnabled = false;
@@ -45,14 +48,8 @@
   let quickPlay = false;
 
   function fitGameCanvas() {
-    const wrap = canvas.parentElement;
-    if (!wrap) return;
-    const scale = Math.max(
-      1,
-      Math.floor(Math.min(wrap.clientWidth / canvas.width, wrap.clientHeight / canvas.height))
-    );
-    canvas.style.width = `${canvas.width * scale}px`;
-    canvas.style.height = `${canvas.height * scale}px`;
+    // Fill stage via CSS object-fit; keep pixels crisp
+    ctx.imageSmoothingEnabled = false;
   }
 
   function drawTitleFrame(ts) {
@@ -359,25 +356,39 @@
   function render(t) {
     const W = world.W;
     const H = world.H;
+    const vw = canvas.width / ZOOM;
+    const vh = canvas.height / ZOOM;
+    let camX = player.x + 14 - vw / 2;
+    let camY = player.y + 16 - vh / 2;
+    camX = Math.max(0, Math.min(W - vw, camX));
+    camY = Math.max(0, Math.min(H - vh, camY));
+    cam = { x: camX, y: camY, vw, vh };
+
     ctx.imageSmoothingEnabled = false;
     ctx.save();
     FX.applyShake(ctx);
+    ctx.scale(ZOOM, ZOOM);
+    ctx.translate(-camX, -camY);
+
     Sprites.drawWorldBg(ctx, W, H, t, world.theme);
     for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t);
     Sprites.drawBin(ctx, world.bin.x, world.bin.y, t);
     Sprites.drawPlayer(ctx, player, Progress.get().cosmetics.hat_gold, t);
     FX.draw(ctx);
 
+    // inventory HUD in world space near bottom of view
+    const ix = camX + 8;
+    const iy = camY + vh - 18;
     ctx.fillStyle = "rgba(8,40,72,0.9)";
-    ctx.fillRect(6, H - 20, 70, 14);
+    ctx.fillRect(ix, iy, 78, 14);
     ctx.strokeStyle = "#6ec8ff";
     ctx.lineWidth = 2;
-    ctx.strokeRect(6, H - 20, 70, 14);
+    ctx.strokeRect(ix, iy, 78, 14);
     ctx.fillStyle = "#ffd24a";
     ctx.font = "8px monospace";
-    ctx.fillText(`BAG ${player.inventory.length}/${player.stats.capacity}`, 10, H - 9);
+    ctx.fillText(`BAG ${player.inventory.length}/${player.stats.capacity}`, ix + 4, iy + 10);
 
-    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t);
+    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam);
     ctx.restore();
   }
 

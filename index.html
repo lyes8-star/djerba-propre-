@@ -28,7 +28,7 @@
           </h1>
           <p class="tagline">NETTOIE · RECYCLE · EVOLUE</p>
           <div class="title-hero pixel-inset">
-            <canvas id="title-canvas" width="224" height="120"></canvas>
+            <canvas id="title-canvas" width="280" height="150"></canvas>
           </div>
           <button id="btn-play" class="btn btn-primary pulse">
             <span class="btn-shine"></span>CAMPAGNE
@@ -63,7 +63,7 @@
           <button id="btn-map-back" class="btn btn-secondary btn-mini">TITRE</button>
         </div>
         <div class="map-canvas-wrap pixel-inset">
-          <canvas id="map-canvas" width="240" height="220"></canvas>
+          <canvas id="map-canvas" width="280" height="250"></canvas>
         </div>
         <div class="map-info pixel-frame" id="map-info">
           <div class="map-level-name" id="map-level-name">Sidi Mahrez</div>
@@ -83,18 +83,16 @@
     <section id="screen-game" class="screen">
       <header class="hud-top pixel-frame">
         <div class="hud-profile">
-          <canvas id="hud-avatar" class="avatar-canvas" width="32" height="32"></canvas>
+          <canvas id="hud-avatar" class="avatar-canvas" width="40" height="40"></canvas>
           <div class="profile-text">
             <div class="role" id="hud-mission">MISSION</div>
             <div class="level-row">
               <span id="hud-level">NV.1</span>
               <div class="xp-bar"><div id="hud-xp-fill"></div></div>
             </div>
-            <div class="xp-label" id="hud-xp-label">0/100</div>
           </div>
         </div>
         <div class="hud-timer">
-          <div class="label">TEMPS</div>
           <div class="value" id="hud-timer">03:00</div>
         </div>
         <div class="hud-score">
@@ -104,35 +102,37 @@
         </div>
       </header>
 
-      <aside class="hud-objectives pixel-frame" id="hud-objectives">
-        <div class="obj-title">OBJECTIFS</div>
-        <ul id="obj-list"></ul>
-      </aside>
-
-      <div id="combo" class="combo hidden">COMBO x2</div>
-      <div id="toast" class="toast hidden"></div>
-
-      <div class="canvas-wrap pixel-inset">
-        <canvas id="game-canvas" width="256" height="384"></canvas>
-      </div>
-
-      <div class="controls">
-        <div id="joystick" class="joystick">
-          <div class="joy-base"></div>
-          <div class="joy-pad" id="joy-pad"></div>
-          <div class="joy-stick" id="joy-stick"></div>
+      <div class="stage">
+        <div class="canvas-wrap">
+          <canvas id="game-canvas" width="320" height="400"></canvas>
         </div>
-        <div class="action-cluster">
-          <button id="btn-tool" class="btn-tool" type="button">Q</button>
-          <button id="btn-action" class="btn-action" aria-label="Action">
-            <span id="btn-action-label">PINCE</span>
-          </button>
+
+        <aside class="hud-objectives pixel-frame" id="hud-objectives">
+          <div class="obj-title">OBJ</div>
+          <ul id="obj-list"></ul>
+        </aside>
+
+        <div id="combo" class="combo hidden">COMBO x2</div>
+        <div id="toast" class="toast hidden"></div>
+
+        <div class="controls overlay-controls">
+          <div id="joystick" class="joystick">
+            <div class="joy-base"></div>
+            <div class="joy-pad" id="joy-pad"></div>
+            <div class="joy-stick" id="joy-stick"></div>
+          </div>
+          <div class="action-cluster">
+            <button id="btn-tool" class="btn-tool" type="button">Q</button>
+            <button id="btn-action" class="btn-action" aria-label="Action">
+              <span id="btn-action-label">PINCE</span>
+            </button>
+          </div>
         </div>
       </div>
 
       <nav class="bottom-tabs" id="bottom-tabs">
         <button data-panel="outils" class="tab active">OUTILS</button>
-        <button data-panel="ameliorations" class="tab">UPGRADE</button>
+        <button data-panel="ameliorations" class="tab">UP</button>
         <button data-panel="defis" class="tab">DEFIS</button>
         <button data-panel="boutique" class="tab">SHOP</button>
         <button id="btn-pause" class="tab tab-pause">||</button>
