@@ -31,12 +31,20 @@ Puis va sur `http://localhost:8080`.
 
 Progression sauvegardée dans `localStorage` (`djerba-propre-save`).
 
+## Campagne
+
+8 niveaux sur l'ile de Djerba avec **histoire** (prologue, dialogues, epilogue) :
+
+1. Sidi Mahrez · 2. Houmt Souk · 3. Midoun · 4. Lagune · 5. Port d'Ajim · 6. Aghir · 7. Zone Hoteliere · 8. Festival
+
+Debloque les niveaux en gagnant des etoiles. Carte interactive + partie rapide dispo.
+
 ## Polish
 
 - UI pixel pro : police Press Start 2P, cadres, scanlines, scale entier
-- Canvas **256×384** + sprites animés détaillés
+- Canvas **256×384** + themes par niveau
 - FX : particules, combos, anneaux, shake
-- Musiques titre / gameplay (Web Audio orientale rétro)
+- Musiques titre / gameplay (Web Audio orientale retro)
 
 ## Stack
 

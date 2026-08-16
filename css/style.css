@@ -763,3 +763,114 @@ html, body {
   letter-spacing: 3px;
   font-size: 16px;
 }
+
+/* —— STORY —— */
+#screen-story {
+  align-items: flex-end;
+  justify-content: center;
+  padding: calc(12px + var(--safe-top)) 12px calc(20px + var(--safe-bottom));
+  background: radial-gradient(circle at 50% 20%, #1a6bb5, #031526 65%);
+}
+
+.story-wrap {
+  width: 100%;
+  max-width: 380px;
+  padding: 14px;
+  text-align: left;
+}
+
+.story-chapter {
+  font-size: 7px;
+  color: var(--gold);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.story-who {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 8px;
+  padding: 4px 8px;
+  margin-bottom: 10px;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.story-text {
+  min-height: 72px;
+  margin: 0 0 14px;
+  font-size: 9px;
+  line-height: 1.7;
+  color: var(--white);
+}
+
+.story-actions { display: flex; justify-content: flex-end; }
+
+/* —— MAP —— */
+#screen-map {
+  padding: calc(8px + var(--safe-top)) 8px calc(10px + var(--safe-bottom));
+  background: #041828;
+}
+
+.map-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+}
+
+.map-title { font-size: 10px; color: var(--gold); }
+.map-sub { font-size: 7px; color: var(--blue-light); margin-top: 4px; }
+
+.btn-mini {
+  padding: 8px 10px;
+  font-size: 8px;
+}
+
+.map-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+#map-canvas {
+  width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #1a6bb5;
+}
+
+.map-info {
+  padding: 10px;
+  text-align: left;
+}
+
+.map-level-name { font-size: 10px; color: var(--white); margin-bottom: 4px; }
+.map-level-sub { font-size: 7px; color: var(--gold); margin-bottom: 4px; }
+.map-level-desc { font-size: 7px; color: var(--blue-light); line-height: 1.5; margin-bottom: 6px; }
+.map-level-stars { font-size: 9px; color: var(--gold); }
+
+.map-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.map-actions .btn-primary { flex: 1; }
+
+#btn-quick {
+  margin-top: 2px;
+  font-size: 9px;
+  padding: 10px 16px;
+}

@@ -80,7 +80,7 @@ const UI = (() => {
 
   function refreshTitleStats() {
     const s = Progress.get();
-    els.titleStats.innerHTML = `NV.${s.level}<br>RECORD ${s.highScore.toLocaleString("fr-FR")}<br>OR $${s.coins}`;
+    els.titleStats.innerHTML = `NV.${s.level} · $*${s.coins}<br>CAMPAGNE ${s.campaign.unlocked}/8<br>ETOILES ${Progress.totalStars()}/24`;
   }
 
   function drawAvatar(t) {

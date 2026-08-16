@@ -68,6 +68,13 @@ const Progress = (() => {
       targets: { beaches: 3, objects: 50 },
     },
     totalRecycled: 0,
+    campaign: {
+      unlocked: 1,
+      introSeen: false,
+      endingSeen: false,
+      stars: {},
+      bestScore: {},
+    },
   });
 
   function todayKey() {
@@ -89,6 +96,12 @@ const Progress = (() => {
       state.tools = { ...defaultState().tools, ...(parsed.tools || {}) };
       state.cosmetics = { ...defaultState().cosmetics, ...(parsed.cosmetics || {}) };
       state.boosts = { ...defaultState().boosts, ...(parsed.boosts || {}) };
+      state.campaign = {
+        ...defaultState().campaign,
+        ...(parsed.campaign || {}),
+        stars: { ...(parsed.campaign && parsed.campaign.stars) },
+        bestScore: { ...(parsed.campaign && parsed.campaign.bestScore) },
+      };
       if (!parsed.daily || parsed.daily.day !== todayKey()) {
         state.daily = defaultState().daily;
       } else {
@@ -178,12 +191,42 @@ const Progress = (() => {
     save();
   }
 
-  function recordRun({ score, recycled, beachClean }) {
+  function recordRun({ score, recycled, beachClean, missionId, starsEarned }) {
     if (score > state.highScore) state.highScore = score;
     state.totalRecycled += recycled;
     state.daily.collectObjects += recycled;
     if (beachClean) state.daily.cleanBeaches += 1;
+    if (missionId) {
+      const key = String(missionId);
+      const prev = state.campaign.stars[key] || 0;
+      if (starsEarned > prev) state.campaign.stars[key] = starsEarned;
+      const best = state.campaign.bestScore[key] || 0;
+      if (score > best) state.campaign.bestScore[key] = score;
+      // unlock next if at least 1 star OR beach clean enough
+      if (starsEarned >= 1 || beachClean) {
+        const next = missionId + 1;
+        if (next > state.campaign.unlocked) state.campaign.unlocked = Math.min(8, next);
+      }
+    }
     save();
+  }
+
+  function isUnlocked(missionId) {
+    return missionId <= (state.campaign.unlocked || 1);
+  }
+
+  function markIntroSeen() {
+    state.campaign.introSeen = true;
+    save();
+  }
+
+  function markEndingSeen() {
+    state.campaign.endingSeen = true;
+    save();
+  }
+
+  function totalStars() {
+    return Object.values(state.campaign.stars || {}).reduce((a, b) => a + (b || 0), 0);
   }
 
   function canClaimDaily() {
@@ -238,5 +281,9 @@ const Progress = (() => {
     claimDaily,
     toolStats,
     xpNeeded,
+    isUnlocked,
+    markIntroSeen,
+    markEndingSeen,
+    totalStars,
   };
 })();

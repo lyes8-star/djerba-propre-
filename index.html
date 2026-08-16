@@ -31,10 +31,50 @@
             <canvas id="title-canvas" width="224" height="120"></canvas>
           </div>
           <button id="btn-play" class="btn btn-primary pulse">
-            <span class="btn-shine"></span>JOUER
+            <span class="btn-shine"></span>CAMPAGNE
           </button>
+          <button id="btn-quick" class="btn btn-secondary">PARTIE RAPIDE</button>
           <p class="hint">Appuie pour la musique orientale</p>
           <div class="title-stats pixel-inset" id="title-stats"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STORY / DIALOGUE -->
+    <section id="screen-story" class="screen">
+      <div class="story-wrap pixel-frame">
+        <div class="story-chapter" id="story-chapter">CHAPITRE</div>
+        <div class="story-who" id="story-who">MAIRIE</div>
+        <p class="story-text" id="story-text">...</p>
+        <div class="story-actions">
+          <button id="btn-story-next" class="btn btn-primary">SUITE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP SELECT -->
+    <section id="screen-map" class="screen">
+      <div class="map-wrap">
+        <div class="map-header pixel-frame">
+          <div>
+            <div class="map-title">CAMPAGNE</div>
+            <div class="map-sub" id="map-stars-total">ETOILES 0/24</div>
+          </div>
+          <button id="btn-map-back" class="btn btn-secondary btn-mini">TITRE</button>
+        </div>
+        <div class="map-canvas-wrap pixel-inset">
+          <canvas id="map-canvas" width="240" height="220"></canvas>
+        </div>
+        <div class="map-info pixel-frame" id="map-info">
+          <div class="map-level-name" id="map-level-name">Sidi Mahrez</div>
+          <div class="map-level-sub" id="map-level-sub">Chapitre 1</div>
+          <div class="map-level-desc" id="map-level-desc">Le premier matin</div>
+          <div class="map-level-stars" id="map-level-stars">...</div>
+        </div>
+        <div class="map-actions">
+          <button id="btn-map-prev" class="btn btn-secondary btn-mini">PREV</button>
+          <button id="btn-map-play" class="btn btn-primary">JOUER</button>
+          <button id="btn-map-next" class="btn btn-secondary btn-mini">NEXT</button>
         </div>
       </div>
     </section>
@@ -45,7 +85,7 @@
         <div class="hud-profile">
           <canvas id="hud-avatar" class="avatar-canvas" width="32" height="32"></canvas>
           <div class="profile-text">
-            <div class="role">NETTOYEUR</div>
+            <div class="role" id="hud-mission">MISSION</div>
             <div class="level-row">
               <span id="hud-level">NV.1</span>
               <div class="xp-bar"><div id="hud-xp-fill"></div></div>
@@ -107,7 +147,7 @@
     <!-- RESULT -->
     <section id="screen-result" class="screen">
       <div class="result-card pixel-frame">
-        <div class="result-banner">MISSION</div>
+        <div class="result-banner" id="result-banner">MISSION</div>
         <h2 id="result-title">Plage terminee !</h2>
         <div class="result-stars" id="result-stars">***</div>
         <div class="result-score" id="result-score">0</div>
@@ -116,8 +156,9 @@
           <div class="result-coins" id="result-coins">+$0</div>
         </div>
         <div class="result-actions">
-          <button id="btn-replay" class="btn btn-primary">REJOUER</button>
-          <button id="btn-menu" class="btn btn-secondary">TITRE</button>
+          <button id="btn-next-level" class="btn btn-primary">NIVEAU SUIVANT</button>
+          <button id="btn-replay" class="btn btn-secondary">REJOUER</button>
+          <button id="btn-menu" class="btn btn-secondary">CARTE</button>
         </div>
       </div>
     </section>
@@ -133,6 +174,7 @@
   </div>
 
   <script src="js/progress.js"></script>
+  <script src="js/campaign.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/fx.js"></script>
   <script src="js/sprites.js"></script>

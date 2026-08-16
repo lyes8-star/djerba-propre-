@@ -234,62 +234,164 @@ const Sprites = (() => {
     }
   }
 
-  function drawWorldBg(ctx, W, H, t) {
-    // sky bands
-    px(ctx, 0, 0, W, 28, C.sky0);
-    px(ctx, 0, 28, W, 28, C.sky1);
-    px(ctx, 0, 56, W, 22, C.sky2);
+  function drawWorldBg(ctx, W, H, t, theme = "beach") {
+    const themes = {
+      beach: { sky0: C.sky0, sky1: C.sky1, sky2: C.sky2, sea0: C.sea0, sea1: C.sea1, sea2: C.sea2, sand: C.sand1, sandTop: C.sand0, sun: true, moon: false },
+      souk: { sky0: "#8fd0ff", sky1: "#5eb3e8", sky2: "#3a90c8", sea0: "#4eb8e0", sea1: "#1a7ab0", sea2: "#0f5a88", sand: "#e8d09a", sandTop: "#f2e2b0", sun: true, moon: false },
+      lagoon: { sky0: "#9ae0ff", sky1: "#62c4e8", sky2: "#3aa8c8", sea0: "#5ee0d0", sea1: "#2ab8a8", sea2: "#1a8880", sand: "#d8e8c8", sandTop: "#e8f0d8", sun: true, moon: false },
+      port: { sky0: "#7ec0e8", sky1: "#4a98c8", sky2: "#2a7098", sea0: "#3a90b8", sea1: "#1a6088", sea2: "#0a4060", sand: "#c8b898", sandTop: "#d8c8a8", sun: true, moon: false },
+      sunset: { sky0: "#ffb068", sky1: "#f08050", sky2: "#c05070", sea0: "#e07060", sea1: "#884878", sea2: "#503868", sand: "#d8a878", sandTop: "#e8c098", sun: false, moon: false },
+      resort: { sky0: "#90d8ff", sky1: "#58b8f0", sky2: "#3890d0", sea0: "#48c0f0", sea1: "#2090c8", sea2: "#106898", sand: "#f0e0b8", sandTop: "#fff0d0", sun: true, moon: false },
+      festival: { sky0: "#b090ff", sky1: "#7860d8", sky2: "#4840a8", sea0: "#60a0e8", sea1: "#3070b8", sea2: "#184888", sand: "#e8d8a0", sandTop: "#f8e8b8", sun: false, moon: true },
+    };
+    const th = themes[theme] || themes.beach;
+
+    px(ctx, 0, 0, W, 28, th.sky0);
+    px(ctx, 0, 28, W, 28, th.sky1);
+    px(ctx, 0, 56, W, 22, th.sky2);
 
     drawCloud(ctx, 18, 10, t, 0);
     drawCloud(ctx, 110, 6, t, 1.7);
     drawCloud(ctx, 190, 14, t, 3.2);
 
-    // sun
-    px(ctx, W - 36, 10, 14, 14, C.goldL);
-    px(ctx, W - 33, 13, 8, 8, C.gold);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2 + t * 0.2;
-      px(ctx, W - 29 + Math.cos(a) * 12, 17 + Math.sin(a) * 12, 2, 2, C.goldL);
+    if (th.sun) {
+      px(ctx, W - 36, 10, 14, 14, C.goldL);
+      px(ctx, W - 33, 13, 8, 8, C.gold);
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + t * 0.2;
+        px(ctx, W - 29 + Math.cos(a) * 12, 17 + Math.sin(a) * 12, 2, 2, C.goldL);
+      }
+    }
+    if (theme === "sunset") {
+      px(ctx, W - 40, 20, 18, 18, "#ff9040");
+      px(ctx, W - 36, 24, 10, 10, "#ffd24a");
+    }
+    if (th.moon) {
+      px(ctx, W - 34, 12, 12, 12, C.goldL);
+      px(ctx, W - 30, 14, 8, 8, th.sky1);
+      // stars
+      for (let i = 0; i < 12; i++) {
+        if (Math.sin(t * 3 + i) > 0) px(ctx, 10 + i * 18, 8 + (i % 5) * 6, 2, 2, C.white);
+      }
     }
 
     // sea
-    px(ctx, 0, 74, W, 42, C.sea1);
-    px(ctx, 0, 74, W, 8, C.sea0);
-    px(ctx, 0, 104, W, 8, C.sea2);
+    px(ctx, 0, 74, W, 42, th.sea1);
+    px(ctx, 0, 74, W, 8, th.sea0);
+    px(ctx, 0, 104, W, 8, th.sea2);
     px(ctx, 0, 110, W, 6, C.sea3);
     const wave = Math.floor(t * 4) % 10;
     for (let i = -10; i < W; i += 10) {
       px(ctx, i + wave, 82, 5, 2, C.foam);
-      px(ctx, i + (wave * 2) % 10, 92, 4, 1, C.sea0);
-      px(ctx, i + wave, 100, 6, 1, "rgba(232,247,255,0.35)");
+      px(ctx, i + (wave * 2) % 10, 92, 4, 1, th.sea0);
     }
 
-    // sand
-    px(ctx, 0, 116, W, H - 116, C.sand1);
-    px(ctx, 0, 116, W, 5, C.sand0);
+    // sand / ground
+    px(ctx, 0, 116, W, H - 116, th.sand);
+    px(ctx, 0, 116, W, 5, th.sandTop);
     for (let i = 0; i < 90; i++) {
       const sx = (i * 47 + 19) % W;
       const sy = 126 + ((i * 73) % (H - 140));
-      px(ctx, sx, sy, 1, 1, i % 4 === 0 ? C.sand2 : C.sand0);
-    }
-    // footprints-ish darker patches
-    for (let i = 0; i < 8; i++) {
-      px(ctx, 30 + i * 28, 200 + (i % 3) * 20, 8, 2, "rgba(168,136,80,0.25)");
+      px(ctx, sx, sy, 1, 1, i % 4 === 0 ? C.sand2 : th.sandTop);
     }
 
-    // village
-    drawHouse(ctx, 8, 58);
-    drawHouse(ctx, 55, 62);
-    drawHouse(ctx, 200, 60);
-    drawLighthouse(ctx, 145, 34, t);
+    // theme props
+    if (theme === "souk") {
+      drawHouse(ctx, 8, 58);
+      drawHouse(ctx, 40, 62);
+      drawHouse(ctx, 200, 60);
+      // market stalls
+      px(ctx, 90, 100, 20, 12, C.red);
+      px(ctx, 92, 102, 16, 4, C.gold);
+      px(ctx, 120, 98, 18, 14, C.greenD);
+      px(ctx, 122, 100, 14, 4, C.white);
+    } else if (theme === "port") {
+      drawLighthouse(ctx, 145, 34, t);
+      drawBoat(ctx, 40, 96, t);
+      drawBoat(ctx, 160, 100, t + 1);
+      // dock
+      px(ctx, 20, 112, 80, 6, C.woodD);
+      px(ctx, 20, 112, 80, 2, C.wood);
+      for (let i = 0; i < 6; i++) px(ctx, 28 + i * 12, 118, 3, 8, C.woodD);
+    } else if (theme === "lagoon") {
+      drawPalm(ctx, 30, 78, t, 0);
+      drawPalm(ctx, 60, 82, t, 1);
+      drawPalm(ctx, 200, 80, t, 2);
+      // water patches
+      px(ctx, 100, 140, 40, 10, th.sea0);
+      px(ctx, 160, 180, 30, 8, th.sea1);
+    } else if (theme === "resort") {
+      drawHouse(ctx, 10, 55);
+      drawHouse(ctx, 50, 58);
+      drawHouse(ctx, 180, 55);
+      // umbrella
+      px(ctx, 100, 130, 20, 3, C.red);
+      px(ctx, 108, 133, 2, 14, C.wood);
+      px(ctx, 140, 150, 18, 3, C.blueL);
+      px(ctx, 147, 153, 2, 12, C.wood);
+    } else if (theme === "festival") {
+      drawHouse(ctx, 20, 58);
+      drawLighthouse(ctx, 145, 34, t);
+      // banners
+      for (let i = 0; i < 6; i++) {
+        px(ctx, 40 + i * 30, 120, 16, 4, i % 2 ? C.gold : C.red);
+        px(ctx, 46 + i * 30, 124, 2, 10, C.wood);
+      }
+    } else {
+      drawHouse(ctx, 8, 58);
+      drawHouse(ctx, 55, 62);
+      drawHouse(ctx, 200, 60);
+      drawLighthouse(ctx, 145, 34, t);
+      drawBoat(ctx, 105, 96, t);
+    }
+
     drawPalm(ctx, 35, 78, t, 0);
     drawPalm(ctx, 95, 74, t, 1.4);
     drawPalm(ctx, 220, 80, t, 2.8);
-    drawBoat(ctx, 105, 96, t);
     drawSign(ctx, 6, 130);
     drawSeagull(ctx, 50, 40, t, 0);
     drawSeagull(ctx, 160, 28, t, 2.1);
-    drawSeagull(ctx, 210, 48, t, 4);
+  }
+
+  function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId) {
+    // water
+    px(ctx, 0, 0, W, H, "#1a6bb5");
+    for (let i = 0; i < 30; i++) {
+      px(ctx, (i * 37) % W, 10 + (i * 19) % H, 2, 1, "#3aa0d8");
+    }
+    // island blob
+    px(ctx, 30, 30, 180, 160, "#e8d4a8");
+    px(ctx, 50, 20, 140, 30, "#e8d4a8");
+    px(ctx, 40, 170, 150, 30, "#e8d4a8");
+    px(ctx, 20, 60, 30, 80, "#e8d4a8");
+    px(ctx, 190, 50, 40, 100, "#e8d4a8");
+    // green patches
+    px(ctx, 70, 80, 40, 20, "#3ddc5a");
+    px(ctx, 130, 120, 35, 18, "#2db84a");
+
+    Campaign.list().forEach((lv) => {
+      const open = lv.id <= unlocked;
+      const st = (starsMap && starsMap[String(lv.id)]) || 0;
+      const sel = lv.id === selectedId;
+      const pulse = sel && Math.sin(t * 6) > 0 ? 2 : 0;
+      px(ctx, lv.mapX - 4 - pulse, lv.mapY - 4 - pulse, 12 + pulse * 2, 12 + pulse * 2, sel ? C.gold : "#000");
+      px(ctx, lv.mapX - 2, lv.mapY - 2, 8, 8, open ? C.green : "#555");
+      if (open) {
+        ctx.fillStyle = C.white;
+        ctx.font = "6px monospace";
+        ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 4);
+        if (st > 0) {
+          ctx.fillStyle = C.gold;
+          ctx.fillText("*".repeat(st), lv.mapX - 4, lv.mapY + 14);
+        }
+      } else {
+        px(ctx, lv.mapX, lv.mapY, 4, 4, "#222");
+      }
+    });
+
+    ctx.fillStyle = C.white;
+    ctx.font = "7px monospace";
+    ctx.fillText("CARTE DE DJERBA", 60, 16);
   }
 
   function drawTitleScene(ctx, t) {
@@ -315,7 +417,7 @@ const Sprites = (() => {
   }
 
   function drawTitleBackground(ctx, W, H, t) {
-    drawWorldBg(ctx, W, H, t);
+    drawWorldBg(ctx, W, H, t, "beach");
   }
 
   function drawAvatar(ctx, goldHat, t) {
@@ -359,5 +461,6 @@ const Sprites = (() => {
     drawTitleBackground,
     drawAvatar,
     drawMinimap,
+    drawIslandMap,
   };
 })();

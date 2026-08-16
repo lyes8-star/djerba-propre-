@@ -1,16 +1,21 @@
-/* Beach world 256×384 */
+/* Beach world — mission-driven */
 const World = (() => {
   const TYPES = ["can", "bottle", "bag", "can", "bottle", "bag"];
   const POINTS = { can: 40, bottle: 55, bag: 90 };
 
-  function create(level) {
+  function create(mission) {
+    const m = mission || {};
     const W = 256;
     const H = 384;
-    const count = Math.min(28 + level * 5, 60);
-    const bagTarget = Math.min(20, 5 + Math.floor(level / 2));
-    const recycleTarget = Math.min(28, 12 + level);
+    const count = m.trash || 24;
+    const bagTarget = m.bagTarget || 5;
+    const recycleTarget = m.recycleTarget || 12;
+    const cleanTarget = m.cleanTarget || 80;
+    const bagRatio = m.bagRatio != null ? m.bagRatio : 0.3;
     const trash = [];
-    for (let i = 0; i < count; i++) trash.push(spawnOne(W, H, i, true));
+    for (let i = 0; i < count; i++) {
+      trash.push(spawnOne(W, H, i, bagRatio));
+    }
     return {
       W,
       H,
@@ -21,17 +26,20 @@ const World = (() => {
       score: 0,
       bagTarget,
       recycleTarget,
+      cleanTarget,
+      spawnEnabled: !!m.spawn,
       spawnTimer: 0,
       combo: 0,
       comboTimer: 0,
+      theme: m.theme || "beach",
+      missionId: m.id || 1,
+      missionName: m.name || "Plage",
       bin: { x: 140, y: 250 },
     };
   }
 
-  function spawnOne(W, H, seed, favorBags) {
-    let type;
-    if (favorBags && seed % 3 === 0) type = "bag";
-    else type = TYPES[(seed + (Math.random() * TYPES.length) | 0) % TYPES.length];
+  function spawnOne(W, H, seed, bagRatio) {
+    const type = Math.random() < bagRatio ? "bag" : TYPES[(seed + (Math.random() * 4) | 0) % TYPES.length];
     return {
       id: `${Date.now()}_${seed}_${Math.random()}`,
       type,
@@ -44,12 +52,13 @@ const World = (() => {
   function tickSpawn(world, dt) {
     world.comboTimer = Math.max(0, world.comboTimer - dt);
     if (world.comboTimer <= 0) world.combo = 0;
-    if (cleanliness(world) >= 85) return;
+    if (!world.spawnEnabled) return;
+    if (cleanliness(world) >= 88) return;
     world.spawnTimer += dt;
-    if (world.spawnTimer < 4) return;
+    if (world.spawnTimer < 3.8) return;
     world.spawnTimer = 0;
-    if (living(world).length >= world.initial) return;
-    world.trash.push(spawnOne(world.W, world.H, world.trash.length, false));
+    if (living(world).length >= world.initial + 6) return;
+    world.trash.push(spawnOne(world.W, world.H, world.trash.length, 0.3));
   }
 
   function living(world) {
@@ -58,7 +67,9 @@ const World = (() => {
 
   function cleanliness(world) {
     if (world.initial === 0) return 100;
-    return Math.round(((world.initial - living(world).length) / world.initial) * 100);
+    const left = living(world).length;
+    const cleaned = Math.max(0, world.initial - left);
+    return Math.min(100, Math.round((cleaned / world.initial) * 100));
   }
 
   function tryPickup(world, player, stats) {
@@ -125,20 +136,23 @@ const World = (() => {
 
   function objectives(world) {
     const clean = cleanliness(world);
-    const bt = world.bagTarget || 20;
-    const rt = world.recycleTarget || 15;
+    const ct = world.cleanTarget || 80;
+    const bt = world.bagTarget || 5;
+    const rt = world.recycleTarget || 12;
     return [
-      { id: "clean", label: "Plage propre", value: `${clean}%`, done: clean >= 80, raw: clean },
-      { id: "bags", label: `Sacs ${bt}`, value: `${world.bagsCollected}/${bt}`, done: world.bagsCollected >= bt, raw: world.bagsCollected },
-      { id: "recycle", label: `Recycle ${rt}`, value: `${world.recycled}/${rt}`, done: world.recycled >= rt, raw: world.recycled },
+      { id: "clean", label: "Proprete", value: `${clean}%/${ct}%`, done: clean >= ct, raw: clean },
+      { id: "bags", label: "Sacs", value: `${world.bagsCollected}/${bt}`, done: world.bagsCollected >= bt, raw: world.bagsCollected },
+      { id: "recycle", label: "Recycle", value: `${world.recycled}/${rt}`, done: world.recycled >= rt, raw: world.recycled },
     ];
   }
 
-  function stars(score, clean) {
-    if (score >= 9000 && clean >= 90) return 3;
-    if (score >= 4500 && clean >= 60) return 2;
-    if (score >= 1800) return 1;
-    return 0;
+  function stars(score, clean, world) {
+    const ct = (world && world.cleanTarget) || 80;
+    let s = 0;
+    if (score >= 1200) s = 1;
+    if (score >= 3500 && clean >= Math.min(ct, 70)) s = 2;
+    if (score >= 7000 && clean >= ct) s = 3;
+    return s;
   }
 
   return {

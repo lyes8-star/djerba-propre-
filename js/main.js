@@ -1,4 +1,4 @@
-/* DJERBA PROPRE — main loop, integer pixel scale, animated title */
+/* DJERBA PROPRE — campagne, histoire, niveaux */
 (() => {
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d");
@@ -6,6 +6,8 @@
   const titleCtx = titleCanvas.getContext("2d");
   const titleBg = document.getElementById("title-bg-canvas");
   const titleBgCtx = titleBg.getContext("2d");
+  const mapCanvas = document.getElementById("map-canvas");
+  const mapCtx = mapCanvas.getContext("2d");
 
   canvas.width = 256;
   canvas.height = 384;
@@ -13,8 +15,10 @@
   titleCanvas.height = 120;
   titleBg.width = 256;
   titleBg.height = 448;
+  mapCanvas.width = 240;
+  mapCanvas.height = 220;
 
-  [ctx, titleCtx, titleBgCtx].forEach((c) => {
+  [ctx, titleCtx, titleBgCtx, mapCtx].forEach((c) => {
     c.imageSmoothingEnabled = false;
   });
 
@@ -29,8 +33,16 @@
   let cleanToastShown = false;
   let raf = 0;
   let titleRaf = 0;
+  let mapRaf = 0;
   let animTime = 0;
   let lastTickSecond = 999;
+
+  let currentMissionId = 1;
+  let selectedMapId = 1;
+  let storyQueue = [];
+  let storyIndex = 0;
+  let storyMode = "intro"; // intro | before | after | ending
+  let quickPlay = false;
 
   function fitGameCanvas() {
     const wrap = canvas.parentElement;
@@ -41,14 +53,11 @@
     );
     canvas.style.width = `${canvas.width * scale}px`;
     canvas.style.height = `${canvas.height * scale}px`;
-    ctx.imageSmoothingEnabled = false;
   }
 
   function drawTitleFrame(ts) {
     if (state !== "title") return;
     animTime = ts / 1000;
-    titleBgCtx.imageSmoothingEnabled = false;
-    titleCtx.imageSmoothingEnabled = false;
     Sprites.drawTitleBackground(titleBgCtx, titleBg.width, titleBg.height, animTime);
     titleCtx.clearRect(0, 0, titleCanvas.width, titleCanvas.height);
     Sprites.drawTitleScene(titleCtx, animTime);
@@ -57,24 +66,154 @@
 
   function startTitleLoop() {
     cancelAnimationFrame(titleRaf);
+    cancelAnimationFrame(mapRaf);
     titleRaf = requestAnimationFrame(drawTitleFrame);
   }
 
-  function startGame() {
+  function drawMapFrame(ts) {
+    if (state !== "map") return;
+    animTime = ts / 1000;
+    const camp = Progress.get().campaign;
+    Sprites.drawIslandMap(
+      mapCtx,
+      mapCanvas.width,
+      mapCanvas.height,
+      animTime,
+      camp.unlocked || 1,
+      camp.stars || {},
+      selectedMapId
+    );
+    mapRaf = requestAnimationFrame(drawMapFrame);
+  }
+
+  function startMapLoop() {
+    cancelAnimationFrame(titleRaf);
+    cancelAnimationFrame(mapRaf);
+    mapRaf = requestAnimationFrame(drawMapFrame);
+  }
+
+  function refreshMapInfo() {
+    const m = Campaign.get(selectedMapId);
+    const camp = Progress.get().campaign;
+    const st = (camp.stars && camp.stars[String(m.id)]) || 0;
+    const unlocked = Progress.isUnlocked(m.id);
+    document.getElementById("map-level-name").textContent = unlocked ? m.name : "???";
+    document.getElementById("map-level-sub").textContent = unlocked ? m.chapter : "VERROUILLE";
+    document.getElementById("map-level-desc").textContent = unlocked
+      ? `${m.subtitle} · ${m.time}s · ${m.trash} dechets`
+      : "Gagne 1 etoile au niveau precedent";
+    document.getElementById("map-level-stars").textContent = unlocked
+      ? `ETOILES ${"*".repeat(st)}${".".repeat(3 - st)}`
+      : "---";
+    document.getElementById("map-stars-total").textContent = `ETOILES ${Progress.totalStars()}/24`;
+    document.getElementById("btn-map-play").disabled = !unlocked;
+  }
+
+  function openMap(selectId) {
+    quickPlay = false;
+    selectedMapId = selectId || Progress.get().campaign.unlocked || 1;
+    selectedMapId = Math.min(8, Math.max(1, selectedMapId));
+    state = "map";
+    AudioSys.setTheme("title");
+    UI.showScreen("screen-map", true);
+    refreshMapInfo();
+    startMapLoop();
+  }
+
+  function startStory(lines, mode, chapterLabel) {
+    storyQueue = lines || [];
+    storyIndex = 0;
+    storyMode = mode;
+    state = "story";
+    cancelAnimationFrame(mapRaf);
+    cancelAnimationFrame(titleRaf);
+    document.getElementById("story-chapter").textContent = chapterLabel || "HISTOIRE";
+    UI.showScreen("screen-story", true);
+    showStoryLine();
+  }
+
+  function showStoryLine() {
+    const line = storyQueue[storyIndex];
+    if (!line) {
+      onStoryDone();
+      return;
+    }
+    document.getElementById("story-who").textContent = line.who;
+    document.getElementById("story-text").textContent = line.text;
+  }
+
+  function onStoryDone() {
+    if (storyMode === "intro") {
+      Progress.markIntroSeen();
+      openMap(1);
+    } else if (storyMode === "before") {
+      beginMission(currentMissionId);
+    } else if (storyMode === "after") {
+      const next = Campaign.nextId(currentMissionId);
+      if (next) openMap(next);
+      else openMap(currentMissionId);
+    } else if (storyMode === "ending") {
+      Progress.markEndingSeen();
+      openMap(8);
+    } else {
+      openMap(currentMissionId);
+    }
+  }
+
+  function launchCampaignFromTitle() {
+    quickPlay = false;
+    AudioSys.unlock();
+    AudioSys.setTheme("title");
+    AudioSys.startMusic("title");
+    if (!Progress.get().campaign.introSeen) {
+      startStory(Campaign.INTRO, "intro", "PROLOGUE");
+    } else {
+      openMap(Progress.get().campaign.unlocked || 1);
+    }
+  }
+
+  function startMissionFlow(id) {
+    currentMissionId = id;
+    const m = Campaign.get(id);
+    if (quickPlay) {
+      beginMission(id);
+      return;
+    }
+    startStory(m.storyBefore, "before", `${m.chapter} · ${m.name}`);
+  }
+
+  function beginMission(id) {
+    const mission = quickPlay
+      ? {
+          id: 0,
+          name: "Partie Rapide",
+          theme: "beach",
+          time: 150,
+          trash: 28,
+          bagRatio: 0.3,
+          bagTarget: 6,
+          recycleTarget: 14,
+          cleanTarget: 80,
+          spawn: true,
+        }
+      : Campaign.get(id);
+
+    currentMissionId = mission.id || id;
     AudioSys.unlock();
     AudioSys.setTheme("play");
     AudioSys.startMusic("play");
     FX.reset();
     cancelAnimationFrame(titleRaf);
+    cancelAnimationFrame(mapRaf);
 
     const boosts = Progress.consumeBoostsOnStart();
-    world = World.create(Progress.get().level);
+    world = World.create(mission);
     player = Player.create(Progress.toolStats());
     window.__world = world;
     window.__playerRefresh = () => {
       if (player) player.stats = Progress.toolStats();
     };
-    timeLeft = 180 + (boosts.time ? 30 : 0);
+    timeLeft = (mission.time || 150) + (boosts.time ? 30 : 0);
     window.__timeLeft = timeLeft;
     cleanToastShown = false;
     lastTickSecond = 999;
@@ -84,6 +223,8 @@
     UI.showScreen("screen-game", true);
     state = "play";
     fitGameCanvas();
+    const missionLabel = document.getElementById("hud-mission");
+    if (missionLabel) missionLabel.textContent = (mission.code || mission.name || "RUN").slice(0, 10);
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
     lastTs = performance.now();
@@ -93,6 +234,7 @@
 
   function goTitle() {
     state = "title";
+    quickPlay = false;
     AudioSys.setTheme("title");
     AudioSys.startMusic("title");
     UI.refreshTitleStats();
@@ -103,14 +245,17 @@
   function endGame(reason) {
     state = "result";
     const clean = World.cleanliness(world);
-    const stars = World.stars(world.score, clean);
-    const baseXp = Math.floor(world.score / 20) + world.recycled * 5 + stars * 40;
-    const baseCoins = Math.floor(world.score / 50) + stars * 30;
+    const beachClean = clean >= (world.cleanTarget || 80);
+    const stars = World.stars(world.score, clean, world);
+    const baseXp = Math.floor(world.score / 18) + world.recycled * 5 + stars * 50;
+    const baseCoins = Math.floor(world.score / 45) + stars * 40;
 
     Progress.recordRun({
       score: world.score,
       recycled: world.recycled,
-      beachClean: clean >= 80,
+      beachClean,
+      missionId: quickPlay ? null : currentMissionId,
+      starsEarned: stars,
     });
     const xpRes = Progress.addXp(baseXp);
     Progress.addCoins(baseCoins);
@@ -122,19 +267,45 @@
     } else if (stars >= 2) AudioSys.sfx("super");
     else if (reason === "time") AudioSys.sfx("fail");
 
+    const mission = Campaign.get(currentMissionId);
+    const next = Campaign.nextId(currentMissionId);
+    const nextBtn = document.getElementById("btn-next-level");
+    if (nextBtn) {
+      nextBtn.style.display = !quickPlay && next && Progress.isUnlocked(next) ? "" : "none";
+    }
+    document.getElementById("result-banner").textContent = quickPlay
+      ? "RAPIDE"
+      : mission.chapter || "MISSION";
+
     UI.showResult({
       score: world.score,
       stars,
       xp: xpRes.amount,
       coins: baseCoins,
-      title:
-        reason === "time"
-          ? clean >= 80
-            ? "Plage propre !"
-            : "Temps ecoule"
-          : "Plage terminee !",
+      title: beachClean
+        ? `${mission.name || "Plage"} OK!`
+        : reason === "time"
+          ? "Temps ecoule"
+          : "Mission finie",
     });
     UI.refreshTitleStats();
+  }
+
+  function afterResultContinue() {
+    if (quickPlay) {
+      openMap(1);
+      return;
+    }
+    const mission = Campaign.get(currentMissionId);
+    if (Campaign.isFinale(currentMissionId) && !Progress.get().campaign.endingSeen) {
+      startStory(Campaign.ENDING, "ending", "EPILOGUE");
+      return;
+    }
+    if (mission.storyAfter && mission.storyAfter.length) {
+      startStory(mission.storyAfter, "after", `${mission.chapter} · FIN`);
+    } else {
+      openMap(Campaign.nextId(currentMissionId) || currentMissionId);
+    }
   }
 
   function toggleTool() {
@@ -170,14 +341,15 @@
 
   function checkObjectives() {
     const clean = World.cleanliness(world);
-    if (!cleanToastShown && clean >= 80) {
+    const ct = world.cleanTarget || 80;
+    if (!cleanToastShown && clean >= ct) {
       cleanToastShown = true;
       world.score += 500;
-      timeLeft += 30;
+      timeLeft += 25;
       AudioSys.sfx("super");
       FX.stars(player.x + 8, player.y);
       FX.hitShake(0.35);
-      UI.toast(`SUPER!<br/>Plage propre! +500<span class="bonus">+30s</span>`, 2200);
+      UI.toast(`SUPER!<br/>Objectif propre! +500<span class="bonus">+25s</span>`, 2200);
     }
     if (World.objectives(world).every((o) => o.done) && player.inventory.length === 0) {
       endGame("clear");
@@ -190,13 +362,12 @@
     ctx.imageSmoothingEnabled = false;
     ctx.save();
     FX.applyShake(ctx);
-    Sprites.drawWorldBg(ctx, W, H, t);
+    Sprites.drawWorldBg(ctx, W, H, t, world.theme);
     for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t);
     Sprites.drawBin(ctx, world.bin.x, world.bin.y, t);
     Sprites.drawPlayer(ctx, player, Progress.get().cosmetics.hat_gold, t);
     FX.draw(ctx);
 
-    // inventory bar
     ctx.fillStyle = "rgba(8,40,72,0.9)";
     ctx.fillRect(6, H - 20, 70, 14);
     ctx.strokeStyle = "#6ec8ff";
@@ -248,6 +419,12 @@
       input.keys[e.key.toLowerCase()] = true;
       const k = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
+      if (state === "story" && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault();
+        storyIndex += 1;
+        showStoryLine();
+        return;
+      }
       if (e.key === " " || k === "e") doAction();
       if (k === "q") toggleTool();
       if (e.key === "Escape" && state === "play") pauseGame();
@@ -295,15 +472,71 @@
   function bindUI() {
     document.getElementById("btn-play").addEventListener("click", () => {
       AudioSys.sfx("click");
-      startGame();
+      launchCampaignFromTitle();
     });
+    document.getElementById("btn-quick").addEventListener("click", () => {
+      AudioSys.sfx("click");
+      quickPlay = true;
+      beginMission(1);
+    });
+    document.getElementById("btn-story-next").addEventListener("click", () => {
+      AudioSys.sfx("click");
+      storyIndex += 1;
+      showStoryLine();
+    });
+    document.getElementById("btn-map-back").addEventListener("click", () => {
+      AudioSys.sfx("click");
+      goTitle();
+    });
+    document.getElementById("btn-map-prev").addEventListener("click", () => {
+      AudioSys.sfx("click");
+      selectedMapId = Math.max(1, selectedMapId - 1);
+      refreshMapInfo();
+    });
+    document.getElementById("btn-map-next").addEventListener("click", () => {
+      AudioSys.sfx("click");
+      selectedMapId = Math.min(8, selectedMapId + 1);
+      refreshMapInfo();
+    });
+    document.getElementById("btn-map-play").addEventListener("click", () => {
+      if (!Progress.isUnlocked(selectedMapId)) return;
+      AudioSys.sfx("click");
+      startMissionFlow(selectedMapId);
+    });
+    mapCanvas.addEventListener("click", (e) => {
+      const rect = mapCanvas.getBoundingClientRect();
+      const sx = (e.clientX - rect.left) * (mapCanvas.width / rect.width);
+      const sy = (e.clientY - rect.top) * (mapCanvas.height / rect.height);
+      let best = null;
+      let bestD = 20;
+      Campaign.list().forEach((lv) => {
+        const d = Math.hypot(lv.mapX - sx, lv.mapY - sy);
+        if (d < bestD) {
+          bestD = d;
+          best = lv.id;
+        }
+      });
+      if (best) {
+        selectedMapId = best;
+        refreshMapInfo();
+        AudioSys.sfx("click");
+      }
+    });
+
     document.getElementById("btn-replay").addEventListener("click", () => {
       AudioSys.sfx("click");
-      startGame();
+      if (quickPlay) beginMission(1);
+      else startMissionFlow(currentMissionId);
+    });
+    document.getElementById("btn-next-level").addEventListener("click", () => {
+      AudioSys.sfx("click");
+      const next = Campaign.nextId(currentMissionId);
+      if (next) startMissionFlow(next);
+      else afterResultContinue();
     });
     document.getElementById("btn-menu").addEventListener("click", () => {
       AudioSys.sfx("click");
-      goTitle();
+      afterResultContinue();
     });
     document.getElementById("btn-pause").addEventListener("click", pauseGame);
     document.getElementById("btn-resume").addEventListener("click", () => {
@@ -313,7 +546,7 @@
     document.getElementById("btn-quit").addEventListener("click", () => {
       AudioSys.sfx("click");
       document.getElementById("screen-pause").classList.remove("active");
-      goTitle();
+      openMap(currentMissionId || 1);
     });
     document.getElementById("btn-close-panel").addEventListener("click", () => {
       AudioSys.sfx("click");
