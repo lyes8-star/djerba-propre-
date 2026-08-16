@@ -1,0 +1,277 @@
+/* HUD, panels, joystick, toasts */
+const UI = (() => {
+  const els = {};
+
+  function cache() {
+    els.level = document.getElementById("hud-level");
+    els.xpFill = document.getElementById("hud-xp-fill");
+    els.xpLabel = document.getElementById("hud-xp-label");
+    els.timer = document.getElementById("hud-timer");
+    els.score = document.getElementById("hud-score");
+    els.stars = document.getElementById("hud-stars");
+    els.coins = document.getElementById("hud-coins");
+    els.objList = document.getElementById("obj-list");
+    els.toast = document.getElementById("toast");
+    els.panelOverlay = document.getElementById("panel-overlay");
+    els.panelContent = document.getElementById("panel-content");
+    els.titleStats = document.getElementById("title-stats");
+    els.joyStick = document.getElementById("joy-stick");
+    els.btnAction = document.getElementById("btn-action");
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+    const el = document.getElementById(id);
+    if (el) el.classList.add("active");
+  }
+
+  function formatTime(sec) {
+    const s = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  }
+
+  function starString(n) {
+    return "★".repeat(n) + "☆".repeat(3 - n);
+  }
+
+  function updateHud(progress, world, timeLeft) {
+    const st = progress;
+    els.level.textContent = `NIVEAU ${st.level}`;
+    const pct = Math.min(100, (st.xp / st.xpToNext) * 100);
+    els.xpFill.style.width = `${pct}%`;
+    els.xpLabel.textContent = `${st.xp}/${st.xpToNext} XP`;
+    els.timer.textContent = formatTime(timeLeft);
+    if (timeLeft <= 10) els.timer.style.color = "#e85a4a";
+    else els.timer.style.color = "";
+    els.score.textContent = world.score.toLocaleString("fr-FR");
+    const clean = World.cleanliness(world);
+    const stars = World.stars(world.score, clean);
+    els.stars.textContent = starString(stars);
+    els.coins.textContent = `🪙 ${st.coins}`;
+
+    const objs = World.objectives(world);
+    els.objList.innerHTML = objs
+      .map(
+        (o) =>
+          `<li class="${o.done ? "done" : ""}">${o.done ? "✓ " : "○ "}${o.label}: ${o.value}</li>`
+      )
+      .join("");
+  }
+
+  function toast(html, ms = 1800) {
+    els.toast.innerHTML = html;
+    els.toast.classList.remove("hidden");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => els.toast.classList.add("hidden"), ms);
+  }
+
+  function refreshTitleStats() {
+    const s = Progress.get();
+    els.titleStats.innerHTML = `Niv.${s.level} · Record ${s.highScore.toLocaleString("fr-FR")} · 🪙 ${s.coins}`;
+  }
+
+  function openPanel(name) {
+    const s = Progress.get();
+    const tools = Progress.TOOL_DEFS;
+    let html = "";
+
+    if (name === "outils") {
+      html = `<h3>OUTILS</h3>`;
+      for (const id of ["pince", "sac", "balai", "brouette"]) {
+        const d = tools[id];
+        const lv = s.tools[id];
+        html += `<div class="tool-row">
+          <div class="tool-icon">${d.icon}</div>
+          <div class="tool-info"><strong>${d.name}</strong><span>${d.desc(lv)}</span></div>
+        </div>`;
+      }
+      html += `<p style="font-size:10px;opacity:.8;margin:8px 0 0">Action : Pince pour ramasser · près de la poubelle pour recycler · maintiens pour Balai</p>`;
+    }
+
+    if (name === "ameliorations") {
+      html = `<h3>AMÉLIORATIONS</h3>`;
+      for (const id of ["pince", "sac", "balai", "brouette"]) {
+        const d = tools[id];
+        const lv = s.tools[id];
+        const cost = d.cost * lv;
+        const max = lv >= d.maxLevel;
+        html += `<div class="tool-row">
+          <div class="tool-icon">${d.icon}</div>
+          <div class="tool-info"><strong>${d.name} Lv.${lv}</strong><span>${d.desc(lv)}</span></div>
+          <button class="btn-buy" data-upgrade="${id}" ${max || s.coins < cost ? "disabled" : ""}>
+            ${max ? "MAX" : cost + " 🪙"}
+          </button>
+        </div>`;
+      }
+    }
+
+    if (name === "defis") {
+      const d = s.daily;
+      html = `<h3>DÉFIS DU JOUR</h3>
+        <div class="daily-row"><div class="tool-info">
+          <strong>Nettoyer ${d.targets.beaches} plages</strong>
+          <span>${d.cleanBeaches}/${d.targets.beaches}</span>
+        </div></div>
+        <div class="daily-row"><div class="tool-info">
+          <strong>Collecter ${d.targets.objects} objets</strong>
+          <span>${d.collectObjects}/${d.targets.objects}</span>
+        </div></div>
+        <button class="btn-claim" id="btn-claim-daily" ${Progress.canClaimDaily() ? "" : "disabled"}>
+          ${d.claimed ? "RÉCOMPENSE RÉCUPÉRÉE" : "RÉCUPÉRER RÉCOMPENSE"}
+        </button>`;
+    }
+
+    if (name === "boutique") {
+      html = `<h3>BOUTIQUE</h3>`;
+      for (const item of Progress.SHOP_ITEMS) {
+        let owned = false;
+        if (item.id === "hat_gold") owned = s.cosmetics.hat_gold;
+        if (item.id === "boost_xp") owned = s.boosts.xp;
+        if (item.id === "boost_time") owned = s.boosts.time;
+        html += `<div class="shop-row">
+          <div class="tool-icon">${item.icon}</div>
+          <div class="tool-info"><strong>${item.name}</strong><span>${item.cost} 🪙</span></div>
+          <button class="btn-buy" data-shop="${item.id}" ${owned || s.coins < item.cost ? "disabled" : ""}>
+            ${owned ? "OK" : "ACHETER"}
+          </button>
+        </div>`;
+      }
+    }
+
+    els.panelContent.innerHTML = html;
+    els.panelOverlay.classList.remove("hidden");
+
+    els.panelContent.querySelectorAll("[data-upgrade]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-upgrade");
+        const res = Progress.upgradeTool(id);
+        if (res.ok) {
+          AudioSys.sfx("upgrade");
+          toast(`Amélioré ! ${tools[id].name} Lv.${res.level}`);
+          // refresh live player stats if in a run
+          if (window.__playerRefresh) window.__playerRefresh();
+          openPanel("ameliorations");
+          if (window.__world) {
+            updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
+          }
+          document.getElementById("hud-coins").textContent = `🪙 ${Progress.get().coins}`;
+        } else {
+          toast(res.reason || "Impossible");
+        }
+      });
+    });
+
+    els.panelContent.querySelectorAll("[data-shop]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-shop");
+        const res = Progress.buyShopItem(id);
+        if (res.ok) {
+          AudioSys.sfx("upgrade");
+          toast("Achat réussi !");
+          openPanel("boutique");
+        } else toast(res.reason || "Impossible");
+      });
+    });
+
+    const claim = document.getElementById("btn-claim-daily");
+    if (claim) {
+      claim.addEventListener("click", () => {
+        const res = Progress.claimDaily();
+        if (res.ok) {
+          AudioSys.sfx("levelup");
+          toast(`Récompense ! +${res.coins} 🪙 +${res.xp} XP`);
+          openPanel("defis");
+        }
+      });
+    }
+  }
+
+  function closePanel() {
+    els.panelOverlay.classList.add("hidden");
+  }
+
+  /* Joystick */
+  function setupJoystick(input) {
+    const root = document.getElementById("joystick");
+    const stick = els.joyStick;
+    let active = false;
+    let pid = null;
+
+    function setStick(dx, dy) {
+      const max = 28;
+      const m = Math.hypot(dx, dy) || 1;
+      const cl = Math.min(1, Math.hypot(dx, dy) / max);
+      const nx = (dx / m) * cl * max;
+      const ny = (dy / m) * cl * max;
+      stick.style.transform = `translate(${nx}px, ${ny}px)`;
+      input.x = (dx / m) * cl;
+      input.y = (dy / m) * cl;
+      if (Math.hypot(dx, dy) < 6) {
+        input.x = 0;
+        input.y = 0;
+        stick.style.transform = "translate(0,0)";
+      }
+    }
+
+    function onStart(e) {
+      e.preventDefault();
+      active = true;
+      const t = e.changedTouches ? e.changedTouches[0] : e;
+      pid = t.identifier ?? "mouse";
+      const rect = root.getBoundingClientRect();
+      setStick(t.clientX - (rect.left + rect.width / 2), t.clientY - (rect.top + rect.height / 2));
+    }
+    function onMove(e) {
+      if (!active) return;
+      const touches = e.changedTouches ? Array.from(e.changedTouches) : [e];
+      const t = touches.find((x) => (x.identifier ?? "mouse") === pid) || touches[0];
+      if (!t) return;
+      e.preventDefault();
+      const rect = root.getBoundingClientRect();
+      setStick(t.clientX - (rect.left + rect.width / 2), t.clientY - (rect.top + rect.height / 2));
+    }
+    function onEnd(e) {
+      if (!active) return;
+      const touches = e.changedTouches ? Array.from(e.changedTouches) : [e];
+      if (e.changedTouches && !touches.some((x) => x.identifier === pid)) return;
+      active = false;
+      pid = null;
+      input.x = 0;
+      input.y = 0;
+      stick.style.transform = "translate(0,0)";
+    }
+
+    root.addEventListener("touchstart", onStart, { passive: false });
+    root.addEventListener("touchmove", onMove, { passive: false });
+    root.addEventListener("touchend", onEnd);
+    root.addEventListener("touchcancel", onEnd);
+    root.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+  }
+
+  function showResult({ score, stars, xp, coins, title }) {
+    document.getElementById("result-title").textContent = title;
+    document.getElementById("result-stars").textContent = starString(stars);
+    document.getElementById("result-score").textContent = score.toLocaleString("fr-FR");
+    document.getElementById("result-xp").textContent = `+${xp} XP`;
+    document.getElementById("result-coins").textContent = `+${coins} 🪙`;
+    showScreen("screen-result");
+  }
+
+  return {
+    cache,
+    showScreen,
+    updateHud,
+    toast,
+    refreshTitleStats,
+    openPanel,
+    closePanel,
+    setupJoystick,
+    showResult,
+    formatTime,
+    starString,
+  };
+})();

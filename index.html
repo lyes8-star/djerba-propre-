@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1a6bb5" />
+  <title>DJERBA PROPRE</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a6bb5'/%3E%3Ctext x='2' y='12' font-size='10'%3E🏝️%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- TITLE SCREEN -->
+    <section id="screen-title" class="screen active">
+      <div class="title-bg" aria-hidden="true"></div>
+      <div class="title-content">
+        <div class="pixel-badge">ÎLE DE DJERBA</div>
+        <h1 class="logo">
+          <span class="logo-main">DJERBA</span>
+          <span class="logo-sub">PROPRE</span>
+        </h1>
+        <p class="tagline">Nettoie la plage · Recycle · Évolue</p>
+        <div class="title-hero" id="title-canvas-wrap">
+          <canvas id="title-canvas" width="160" height="90"></canvas>
+        </div>
+        <button id="btn-play" class="btn btn-primary pulse">JOUER</button>
+        <p class="hint">Touche pour activer la musique</p>
+        <div class="title-stats" id="title-stats"></div>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="screen-game" class="screen">
+      <header class="hud-top">
+        <div class="hud-profile">
+          <div class="avatar" id="hud-avatar"></div>
+          <div class="profile-text">
+            <div class="role">Nettoyeur de Djerba</div>
+            <div class="level-row">
+              <span id="hud-level">NIVEAU 1</span>
+              <div class="xp-bar"><div id="hud-xp-fill"></div></div>
+            </div>
+            <div class="xp-label" id="hud-xp-label">0/100 XP</div>
+          </div>
+        </div>
+        <div class="hud-timer">
+          <div class="label">TEMPS RESTANT</div>
+          <div class="value" id="hud-timer">03:00</div>
+        </div>
+        <div class="hud-score">
+          <div class="stars" id="hud-stars">☆☆☆</div>
+          <div class="score" id="hud-score">0</div>
+          <div class="coins" id="hud-coins">🪙 0</div>
+        </div>
+      </header>
+
+      <aside class="hud-objectives" id="hud-objectives">
+        <div class="obj-title">OBJECTIFS</div>
+        <ul id="obj-list"></ul>
+      </aside>
+
+      <div id="toast" class="toast hidden"></div>
+
+      <div class="canvas-wrap">
+        <canvas id="game-canvas" width="160" height="220"></canvas>
+      </div>
+
+      <div class="controls">
+        <div id="joystick" class="joystick">
+          <div class="joy-base"></div>
+          <div class="joy-stick" id="joy-stick"></div>
+        </div>
+        <button id="btn-action" class="btn-action" aria-label="Action">
+          <span>PINCE</span>
+        </button>
+      </div>
+
+      <nav class="bottom-tabs" id="bottom-tabs">
+        <button data-panel="outils" class="tab active">Outils</button>
+        <button data-panel="ameliorations" class="tab">Améliorations</button>
+        <button data-panel="defis" class="tab">Défis</button>
+        <button data-panel="boutique" class="tab">Boutique</button>
+        <button id="btn-pause" class="tab tab-pause">❚❚</button>
+      </nav>
+
+      <div id="panel-overlay" class="panel-overlay hidden">
+        <div class="panel" id="panel-content"></div>
+        <button id="btn-close-panel" class="btn btn-secondary">Fermer</button>
+      </div>
+    </section>
+
+    <!-- RESULT SCREEN -->
+    <section id="screen-result" class="screen">
+      <div class="result-card">
+        <h2 id="result-title">Plage terminée !</h2>
+        <div class="result-stars" id="result-stars">★★★</div>
+        <div class="result-score" id="result-score">0</div>
+        <div class="result-xp" id="result-xp">+0 XP</div>
+        <div class="result-coins" id="result-coins">+0 🪙</div>
+        <div class="result-actions">
+          <button id="btn-replay" class="btn btn-primary">REJOUER</button>
+          <button id="btn-menu" class="btn btn-secondary">ÉCRAN TITRE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAUSE -->
+    <section id="screen-pause" class="screen overlay-screen">
+      <div class="pause-card">
+        <h2>PAUSE</h2>
+        <button id="btn-resume" class="btn btn-primary">CONTINUER</button>
+        <button id="btn-quit" class="btn btn-secondary">QUITTER</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/progress.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
