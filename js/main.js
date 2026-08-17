@@ -359,6 +359,7 @@
 
   function endGame(reason) {
     state = "result";
+    if (UI.hideTalk) UI.hideTalk();
     AudioSys.setTheme("map");
     const clean = World.cleanliness(world);
     const beachClean = clean >= (world.cleanTarget || 80);
@@ -463,6 +464,7 @@
       FX.hitShake(0.15);
     } else if (res.type === "talk") {
       AudioSys.sfx("click");
+      UI.talkBox(res.who, res.text, res.more);
       if (res.coins) {
         Progress.addCoins(res.coins);
         FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
@@ -562,8 +564,10 @@
     render(animTime);
     UI.updateHud(Progress.get(), world, timeLeft);
     const nearNpc = Npc.nearest(world, player, 34);
-    if (nearNpc && selectedTool !== "balai") UI.setToolLabel("PARLER");
-    else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
+    if (nearNpc && selectedTool !== "balai") {
+      const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1 && nearNpc.bubble > 0;
+      UI.setToolLabel(more ? "SUITE" : "PARLER");
+    } else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
     if ((ts / 200 | 0) % 2 === 0) UI.drawAvatar(animTime);
     raf = requestAnimationFrame(loop);
   }
