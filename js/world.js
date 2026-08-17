@@ -1,7 +1,26 @@
 /* Beach world — mission-driven */
 const World = (() => {
   const TYPES = ["can", "bottle", "bag", "can", "bottle", "bag"];
-  const POINTS = { can: 40, bottle: 55, bag: 90 };
+  const POINTS = {
+    can: 40, bottle: 55, bag: 90,
+    brik: 420, lablabi: 400, couscous: 520, ojja: 380, makroud: 340,
+    mlawi: 320, the: 300, fricasse: 360, bambalouni: 330, harissa: 280,
+    kaftaji: 370, mechouia: 350,
+  };
+  const RARES = [
+    { type: "brik", name: "BRIK A L'OEUF" },
+    { type: "lablabi", name: "LABLABI" },
+    { type: "couscous", name: "COUSCOUS TUNISIEN" },
+    { type: "ojja", name: "OJJA MERGUEZ" },
+    { type: "makroud", name: "MAKROUD" },
+    { type: "mlawi", name: "MLAWI" },
+    { type: "the", name: "THE A LA MENTHE" },
+    { type: "fricasse", name: "FRICASSE" },
+    { type: "bambalouni", name: "BAMBALOUNI" },
+    { type: "harissa", name: "POT DE HARISSA" },
+    { type: "kaftaji", name: "KAFTAJI" },
+    { type: "mechouia", name: "SALADE MECHOUIA" },
+  ];
 
   function create(mission) {
     const m = mission || {};
@@ -16,13 +35,17 @@ const World = (() => {
     for (let i = 0; i < count; i++) {
       trash.push(spawnOne(W, H, i, bagRatio));
     }
+    const rares = spawnRares(W, H);
     return {
       W,
       H,
       trash,
+      rares,
       initial: trash.length,
       recycled: 0,
       bagsCollected: 0,
+      foundRares: 0,
+      rareTarget: rares.length,
       score: 0,
       bagTarget,
       recycleTarget,
@@ -50,6 +73,31 @@ const World = (() => {
     };
   }
 
+  function spawnRares(W, H) {
+    const pool = RARES.slice();
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      const tmp = pool[i];
+      pool[i] = pool[j];
+      pool[j] = tmp;
+    }
+    const n = 6 + ((Math.random() * 3) | 0);
+    const out = [];
+    for (let i = 0; i < n && i < pool.length; i++) {
+      const d = pool[i];
+      out.push({
+        id: `rare_${d.type}_${i}`,
+        type: d.type,
+        name: d.name,
+        rare: true,
+        x: 40 + Math.random() * (W - 100),
+        y: 350 + Math.random() * (H - 440),
+        alive: true,
+      });
+    }
+    return out;
+  }
+
   function tickSpawn(world, dt) {
     world.comboTimer = Math.max(0, world.comboTimer - dt);
     if (world.comboTimer <= 0) world.combo = 0;
@@ -66,6 +114,10 @@ const World = (() => {
     return world.trash.filter((t) => t.alive);
   }
 
+  function livingRares(world) {
+    return (world.rares || []).filter((t) => t.alive);
+  }
+
   function cleanliness(world) {
     if (world.initial === 0) return 100;
     const left = living(world).length;
@@ -77,14 +129,32 @@ const World = (() => {
     const range = stats.pinceRange;
     let best = null;
     let bestD = Infinity;
-    for (const t of living(world)) {
+    for (const t of livingRares(world)) {
       const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 20));
       if (d < range && d < bestD) {
         best = t;
         bestD = d;
       }
     }
+    if (!best) {
+      for (const t of living(world)) {
+        const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 20));
+        if (d < range && d < bestD) {
+          best = t;
+          bestD = d;
+        }
+      }
+    }
     if (!best) return null;
+    if (best.rare) {
+      best.alive = false;
+      world.foundRares = (world.foundRares || 0) + 1;
+      const pts = POINTS[best.type] || 300;
+      world.score += pts;
+      world.combo += 1;
+      world.comboTimer = 2.2;
+      return { item: best, points: pts, combo: world.combo, rare: true, name: best.name, coins: 35 };
+    }
     if (player.inventory.length >= stats.capacity) return { full: true };
     best.alive = false;
     player.inventory.push(best.type);
@@ -92,7 +162,7 @@ const World = (() => {
     world.combo += 1;
     world.comboTimer = 2.2;
     const mult = 1 + Math.min(4, world.combo - 1) * 0.15;
-    return { item: best, points: Math.floor(POINTS[best.type] * 0.4 * mult), combo: world.combo };
+    return { item: best, points: Math.floor((POINTS[best.type] || 40) * 0.4 * mult), combo: world.combo };
   }
 
   function trySweep(world, player, stats) {
@@ -107,7 +177,7 @@ const World = (() => {
         player.inventory.push(t.type);
         if (t.type === "bag") world.bagsCollected += 1;
         n += 1;
-        pts += Math.floor(POINTS[t.type] * 0.22 * stats.balaiEff);
+        pts += Math.floor((POINTS[t.type] || 40) * 0.22 * stats.balaiEff);
       }
     }
     if (n > 0) {
@@ -123,7 +193,7 @@ const World = (() => {
     let pts = 0;
     const count = player.inventory.length;
     const mult = 1 + stats.resistance;
-    for (const type of player.inventory) pts += Math.floor(POINTS[type] * mult);
+    for (const type of player.inventory) pts += Math.floor((POINTS[type] || 40) * mult);
     player.inventory = [];
     world.recycled += count;
     world.score += pts;
@@ -140,10 +210,13 @@ const World = (() => {
     const ct = world.cleanTarget || 80;
     const bt = world.bagTarget || 5;
     const rt = world.recycleTarget || 12;
+    const found = world.foundRares || 0;
+    const need = world.rareTarget || 0;
     return [
       { id: "clean", label: "Proprete", value: `${clean}%/${ct}%`, done: clean >= ct, raw: clean },
       { id: "bags", label: "Sacs", value: `${world.bagsCollected}/${bt}`, done: world.bagsCollected >= bt, raw: world.bagsCollected },
       { id: "recycle", label: "Recycle", value: `${world.recycled}/${rt}`, done: world.recycled >= rt, raw: world.recycled },
+      { id: "plats", label: "Plats TN", value: `${found}/${need}`, done: need > 0 && found >= need, raw: found },
     ];
   }
 
@@ -157,7 +230,7 @@ const World = (() => {
   }
 
   return {
-    create, living, cleanliness, tryPickup, trySweep, tryRecycle,
-    followBin, tickSpawn, objectives, stars, POINTS,
+    create, living, livingRares, cleanliness, tryPickup, trySweep, tryRecycle,
+    followBin, tickSpawn, objectives, stars, POINTS, RARES,
   };
 })();

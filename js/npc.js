@@ -370,12 +370,39 @@ const Npc = (() => {
     return best;
   }
 
+  const WINKS = [
+    "Inchallah ghodwa, la plage est nickel.",
+    "Un p'tit the a la menthe d'abord, yallah.",
+    "Harissa sur le brik, sinon c'est pas la Tunisie.",
+    "Le louage part dans 90 min. Inchallah.",
+    "Sahit ! On est les rois du Maghreb.",
+    "Yallah yallah, mais doucement khouya.",
+    "Brik a l'oeuf qui coule, sinon fake.",
+    "Couscous du vendredi, sacrosaint.",
+    "Wifi : 12345678. Classique tounsi.",
+    "Mela, c'est kif kif.",
+    "Taxi sans compteur, bienvenue a Djerba.",
+    "Clim en panne, the a la menthe.",
+    "Djerba, l'ile des reves. Et du sable partout.",
+    "Makroud de Kairouan > tout.",
+    "Lablabi a 6h, tu comprends le pays.",
+    "Fricasse qui degouline, barsha bon.",
+    "Bambalouni encore chaud, sucré a mort.",
+    "On dit tounsi, pas tunisien.",
+    "Cafe direct. Allonge c'est pour les touristes.",
+    "90 a l'heure au compteur, 140 dans la tete.",
+    "Ojja merguez et on discute politique.",
+    "Kaftaji, mechouia, harissa. Le triple.",
+    "Mlawi du coin, pas la baguette.",
+  ];
+
   function lineFor(n) {
+    if (!n.style.startsWith("tour") && Math.random() < 0.45) return pick(WINKS);
     const pack = LINES[n.zone] && LINES[n.zone][n.style];
     if (pack && pack.length) return pick(pack);
     const zoneLines = Object.values(LINES[n.zone] || {}).flat();
     if (zoneLines.length) return pick(zoneLines);
-    return "Merci, nettoyeur !";
+    return pick(WINKS);
   }
 
   function talk(n, player) {
