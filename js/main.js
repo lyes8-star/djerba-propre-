@@ -111,7 +111,7 @@
     selectedMapId = selectId || Progress.get().campaign.unlocked || 1;
     selectedMapId = Math.min(8, Math.max(1, selectedMapId));
     state = "map";
-    AudioSys.setTheme("title");
+    AudioSys.setTheme("map");
     UI.showScreen("screen-map", true);
     refreshMapInfo();
     startMapLoop();
@@ -125,6 +125,7 @@
     cancelAnimationFrame(mapRaf);
     cancelAnimationFrame(titleRaf);
     document.getElementById("story-chapter").textContent = chapterLabel || "HISTOIRE";
+    AudioSys.setTheme("story");
     UI.showScreen("screen-story", true);
     showStoryLine();
   }
@@ -179,6 +180,17 @@
     startStory(m.storyBefore, "before", `${m.chapter} · ${m.name}`);
   }
 
+  function playMusicTheme() {
+    if (!world || !player) return (world && world.theme) || "beach";
+    const z = Sprites.zoneAt(player.x, player.y);
+    const mt = world.theme;
+    if (z === "beach" && (mt === "sunset" || mt === "festival" || mt === "resort" || mt === "lagoon")) {
+      return mt;
+    }
+    if (z === "port" && mt === "port") return "port";
+    return z;
+  }
+
   function beginMission(id) {
     const mission = quickPlay
       ? {
@@ -196,9 +208,6 @@
       : Campaign.get(id);
 
     currentMissionId = mission.id || id;
-    AudioSys.unlock();
-    AudioSys.setTheme("play");
-    AudioSys.startMusic("play");
     FX.reset();
     cancelAnimationFrame(titleRaf);
     cancelAnimationFrame(mapRaf);
@@ -206,6 +215,9 @@
     const boosts = Progress.consumeBoostsOnStart();
     world = World.create(mission);
     player = Player.create(Progress.toolStats());
+    AudioSys.unlock();
+    AudioSys.setTheme(playMusicTheme());
+    AudioSys.startMusic(playMusicTheme());
     window.__world = world;
     window.__playerRefresh = () => {
       if (player) player.stats = Progress.toolStats();
@@ -241,6 +253,7 @@
 
   function endGame(reason) {
     state = "result";
+    AudioSys.setTheme("map");
     const clean = World.cleanliness(world);
     const beachClean = clean >= (world.cleanTarget || 80);
     const stars = World.stars(world.score, clean, world);
@@ -402,6 +415,7 @@
     Player.update(player, dt, input, world);
     World.tickSpawn(world, dt);
     FX.update(dt);
+    AudioSys.setTheme(playMusicTheme());
     if (Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
       FX.dust(player.x + 12, player.y + 34);
     }
