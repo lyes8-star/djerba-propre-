@@ -114,6 +114,15 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.sign, x, y);
   }
 
+  function drawFlag(ctx, x, y, kind, t, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 22, 28)) return;
+    const f = Math.sin(t * 6 + x) > 0 ? 1 : 0;
+    const img = kind === "il"
+      ? (f ? Atlas.frames.flagIl1 : Atlas.frames.flagIl0)
+      : (f ? Atlas.frames.flagTn1 : Atlas.frames.flagTn0);
+    Atlas.blit(ctx, img, x, y);
+  }
+
   function drawBush(ctx, x, y, cam) {
     if (cam && !Atlas.inView(cam, x, y, 24, 16)) return;
     Atlas.blit(ctx, Atlas.frames.bush, x, y);
@@ -300,6 +309,8 @@ const Sprites = (() => {
     vRoad(ctx, 736, TOWN_Y, ROAD_S - TOWN_Y, cam);
     if (!cam || Atlas.inView(cam, 448, ROAD_N, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_N);
     if (!cam || Atlas.inView(cam, 448, ROAD_S, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_S);
+    drawFlag(ctx, 200, 468, "tn", t, cam);
+    drawFlag(ctx, 700, 468, "il", t, cam);
 
     // PORT
     drawLighthouse(ctx, 820, 196, t, cam);
@@ -310,6 +321,8 @@ const Sprites = (() => {
       drawBoat(ctx, 880, 270, t + 2, cam);
     }
     Atlas.blit(ctx, Atlas.frames.signPort, 760, 310);
+    drawFlag(ctx, 788, 292, "tn", t, cam);
+    drawFlag(ctx, 900, 300, "il", t, cam);
 
     // PLAGE
     const umbrellas = [[40, 360], [120, 348], [200, 368], [280, 352], [360, 372], [520, 356], [600, 368], [80, 428], [240, 440], [520, 432]];
@@ -324,6 +337,9 @@ const Sprites = (() => {
     tileFill(ctx, Atlas.tiles.grass, 400, 400, 48, 32, cam);
     Atlas.blit(ctx, Atlas.frames.signPlage, 16, 332);
     drawSign(ctx, 16, 348, cam);
+    drawFlag(ctx, 70, 328, "tn", t, cam);
+    drawFlag(ctx, 620, 336, "tn", t, cam);
+    drawFlag(ctx, 580, 340, "il", t, cam);
 
     // SOUK
     const shops = [
@@ -334,6 +350,8 @@ const Sprites = (() => {
     ];
     shops.forEach(([sx, sy], i) => (i % 3 === 0 ? drawStall(ctx, sx, sy, cam) : drawShop(ctx, sx, sy, cam)));
     Atlas.blit(ctx, Atlas.frames.signSouk, 24, 508);
+    drawFlag(ctx, 80, 500, "tn", t, cam);
+    drawFlag(ctx, 350, 504, "il", t, cam);
     drawLamp(ctx, 140, 560, cam);
     drawLamp(ctx, 140, 680, cam);
     drawLamp(ctx, 140, 800, cam);
@@ -347,6 +365,8 @@ const Sprites = (() => {
     drawLamp(ctx, 420, 680, cam);
     drawLamp(ctx, 500, 680, cam);
     tileFill(ctx, Atlas.tiles.plaza, 416, 592, 80, 48, cam);
+    drawFlag(ctx, 428, 548, "tn", t, cam);
+    drawFlag(ctx, 508, 548, "il", t, cam);
 
     // VILLE
     drawMinaret(ctx, 800, 500, cam);
@@ -363,6 +383,8 @@ const Sprites = (() => {
     drawHouse(ctx, 800, 740, cam);
     drawHouseWarm(ctx, 864, 744, cam);
     Atlas.blit(ctx, Atlas.frames.signVille, 560, 508);
+    drawFlag(ctx, 616, 500, "tn", t, cam);
+    drawFlag(ctx, 890, 504, "il", t, cam);
     drawLamp(ctx, 716, 560, cam);
     drawLamp(ctx, 716, 680, cam);
     drawLamp(ctx, 716, 800, cam);
@@ -373,6 +395,8 @@ const Sprites = (() => {
     tileFill(ctx, Atlas.tiles.grass, 720, 1020, 48, 32, cam);
     drawBush(ctx, 100, 980, cam);
     drawBush(ctx, 840, 1000, cam);
+    drawFlag(ctx, 48, 910, "tn", t, cam);
+    drawFlag(ctx, 860, 930, "il", t, cam);
     if (theme === "lagoon") tileFill(ctx, seaFrame(0, t), 380, 980, 128, 48, cam);
 
     if (theme === "festival") {
