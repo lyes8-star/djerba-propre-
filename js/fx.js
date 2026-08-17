@@ -1,76 +1,80 @@
-/* Particles, floating text, screen shake */
+/* Particles, floating text, screen shake, rings */
 const FX = (() => {
   let particles = [];
   let texts = [];
+  let rings = [];
   let shake = 0;
   let flash = 0;
 
   function reset() {
     particles = [];
     texts = [];
+    rings = [];
     shake = 0;
     flash = 0;
   }
 
-  function burst(x, y, color, n = 10, speed = 40) {
+  function burst(x, y, color, n = 12, speed = 50) {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const s = speed * (0.4 + Math.random() * 0.8);
+      const s = speed * (0.35 + Math.random());
       particles.push({
-        x,
-        y,
+        x, y,
         vx: Math.cos(a) * s,
-        vy: Math.sin(a) * s - 20,
-        life: 0.35 + Math.random() * 0.45,
-        max: 0.8,
-        size: 1 + Math.floor(Math.random() * 2),
+        vy: Math.sin(a) * s - 25,
+        life: 0.4 + Math.random() * 0.5,
+        max: 0.9,
+        size: 1 + (Math.random() * 3) | 0,
         color,
-        gravity: 60,
+        gravity: 70,
       });
     }
   }
 
   function stars(x, y) {
-    burst(x, y, "#f5c842", 14, 55);
-    burst(x, y, "#ffffff", 8, 35);
+    burst(x, y, "#ffd24a", 16, 60);
+    burst(x, y, "#ffffff", 10, 40);
+    rings.push({ x, y, r: 2, max: 28, life: 0.45 });
   }
 
   function recycle(x, y) {
-    burst(x, y, "#2db84a", 12, 45);
-    burst(x, y, "#7dff8a", 8, 30);
-    flash = 0.18;
+    burst(x, y, "#3ddc5a", 14, 50);
+    burst(x, y, "#8dff9c", 10, 35);
+    flash = 0.22;
+    rings.push({ x, y, r: 2, max: 34, life: 0.5, color: "#3ddc5a" });
   }
 
   function pickup(x, y) {
-    burst(x, y, "#5eb3f0", 6, 35);
+    burst(x, y, "#6ec8ff", 8, 40);
+    rings.push({ x, y, r: 1, max: 16, life: 0.28, color: "#6ec8ff" });
   }
 
   function sweep(x, y) {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 12; i++) {
       particles.push({
-        x: x + (Math.random() - 0.5) * 16,
+        x: x + (Math.random() - 0.5) * 22,
         y: y + 4,
-        vx: (Math.random() - 0.5) * 30,
-        vy: -10 - Math.random() * 25,
-        life: 0.3 + Math.random() * 0.3,
-        max: 0.6,
-        size: 1,
-        color: "#e8d4a8",
-        gravity: 40,
+        vx: (Math.random() - 0.5) * 40,
+        vy: -15 - Math.random() * 30,
+        life: 0.35 + Math.random() * 0.3,
+        max: 0.65,
+        size: 1 + (Math.random() * 2) | 0,
+        color: "#e2c78a",
+        gravity: 45,
       });
     }
   }
 
-  function floatText(x, y, text, color = "#f5c842") {
-    texts.push({ x, y, text, color, life: 0.9, max: 0.9, vy: -28 });
+  function floatText(x, y, text, color = "#ffd24a") {
+    texts.push({ x, y, text, color, life: 1, max: 1, vy: -32 });
   }
 
-  function hitShake(amount = 0.25) {
+  function hitShake(amount = 0.28) {
     shake = Math.max(shake, amount);
   }
 
   function update(dt) {
-    shake = Math.max(0, shake - dt * 1.8);
+    shake = Math.max(0, shake - dt * 2);
     flash = Math.max(0, flash - dt);
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -86,47 +90,52 @@ const FX = (() => {
       t.y += t.vy * dt;
       if (t.life <= 0) texts.splice(i, 1);
     }
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const r = rings[i];
+      r.life -= dt;
+      r.r += dt * 55;
+      if (r.life <= 0) rings.splice(i, 1);
+    }
   }
 
   function applyShake(ctx) {
     if (shake <= 0) return;
-    const mag = shake * 3;
+    const mag = shake * 4;
     ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
   }
 
   function draw(ctx) {
-    for (const p of particles) {
-      const a = Math.max(0, p.life / p.max);
+    for (const r of rings) {
+      const a = Math.max(0, r.life / 0.5);
+      ctx.strokeStyle = r.color || "#ffd24a";
       ctx.globalAlpha = a;
+      ctx.lineWidth = 2;
+      ctx.strokeRect((r.x - r.r) | 0, (r.y - r.r) | 0, (r.r * 2) | 0, (r.r * 2) | 0);
+    }
+    ctx.globalAlpha = 1;
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max);
       ctx.fillStyle = p.color;
-      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+      ctx.fillRect(p.x | 0, p.y | 0, p.size, p.size);
     }
     ctx.globalAlpha = 1;
     for (const t of texts) {
-      const a = Math.max(0, t.life / t.max);
-      ctx.globalAlpha = a;
+      ctx.globalAlpha = Math.max(0, t.life / t.max);
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 9px monospace";
+      ctx.fillText(t.text, (t.x + 1) | 0, (t.y + 1) | 0);
       ctx.fillStyle = t.color;
-      ctx.font = "bold 8px monospace";
-      ctx.fillText(t.text, Math.round(t.x), Math.round(t.y));
+      ctx.fillText(t.text, t.x | 0, t.y | 0);
     }
     ctx.globalAlpha = 1;
     if (flash > 0) {
-      ctx.fillStyle = `rgba(125,255,138,${flash * 0.35})`;
-      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillStyle = `rgba(141,255,156,${flash * 0.4})`;
+      ctx.fillRect(0, 0, 512, 512);
     }
   }
 
   return {
-    reset,
-    burst,
-    stars,
-    recycle,
-    pickup,
-    sweep,
-    floatText,
-    hitShake,
-    update,
-    applyShake,
-    draw,
+    reset, burst, stars, recycle, pickup, sweep, floatText,
+    hitShake, update, applyShake, draw,
   };
 })();

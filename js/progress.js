@@ -6,49 +6,49 @@ const Progress = (() => {
     pince: {
       id: "pince",
       name: "Pince (Scorpion)",
-      icon: "🦂",
+      icon: "P",
       cost: 500,
       maxLevel: 5,
-      desc: (lv) => `+Portée · +Vitesse  Lv.${lv}`,
-      range: (lv) => 14 + lv * 3,
+      desc: (lv) => `+PORTEE +VITESSE  LV.${lv}`,
+      range: (lv) => 22 + lv * 5,
       speed: (lv) => 1 + lv * 0.25,
     },
     sac: {
       id: "sac",
       name: "Sac",
-      icon: "🛍️",
+      icon: "S",
       cost: 700,
       maxLevel: 5,
-      desc: (lv) => `+Capacité · +Résistance  Lv.${lv}`,
+      desc: (lv) => `+CAPACITE +RESIST  LV.${lv}`,
       capacity: (lv) => 8 + lv * 4,
       resistance: (lv) => 0.05 * lv,
     },
     balai: {
       id: "balai",
       name: "Balai",
-      icon: "🧹",
+      icon: "B",
       cost: 300,
       maxLevel: 5,
-      desc: (lv) => `+Efficacité  Lv.${lv}`,
-      radius: (lv) => 8 + lv * 4,
+      desc: (lv) => `+EFFICACITE  LV.${lv}`,
+      radius: (lv) => 16 + lv * 6,
       efficiency: (lv) => 0.5 + lv * 0.25,
     },
     brouette: {
       id: "brouette",
       name: "Brouette",
-      icon: "🛒",
+      icon: "R",
       cost: 600,
       maxLevel: 5,
-      desc: (lv) => `+Capacité · +Vitesse  Lv.${lv}`,
+      desc: (lv) => `+CAPACITE +VITESSE  LV.${lv}`,
       capacity: (lv) => 5 + lv * 5,
       speedBonus: (lv) => 0.1 * lv,
     },
   };
 
   const SHOP_ITEMS = [
-    { id: "boost_xp", name: "Boost XP ×2 (1 partie)", icon: "⭐", cost: 200 },
-    { id: "boost_time", name: "+30s départ", icon: "⏱️", cost: 150 },
-    { id: "hat_gold", name: "Casquette dorée", icon: "🧢", cost: 400 },
+    { id: "boost_xp", name: "Boost XP x2 (1 run)", icon: "X", cost: 200 },
+    { id: "boost_time", name: "+30s depart", icon: "T", cost: 150 },
+    { id: "hat_gold", name: "Casquette or", icon: "H", cost: 400 },
   ];
 
   const defaultState = () => ({
@@ -68,6 +68,13 @@ const Progress = (() => {
       targets: { beaches: 3, objects: 50 },
     },
     totalRecycled: 0,
+    campaign: {
+      unlocked: 1,
+      introSeen: false,
+      endingSeen: false,
+      stars: {},
+      bestScore: {},
+    },
   });
 
   function todayKey() {
@@ -89,6 +96,12 @@ const Progress = (() => {
       state.tools = { ...defaultState().tools, ...(parsed.tools || {}) };
       state.cosmetics = { ...defaultState().cosmetics, ...(parsed.cosmetics || {}) };
       state.boosts = { ...defaultState().boosts, ...(parsed.boosts || {}) };
+      state.campaign = {
+        ...defaultState().campaign,
+        ...(parsed.campaign || {}),
+        stars: { ...(parsed.campaign && parsed.campaign.stars) },
+        bestScore: { ...(parsed.campaign && parsed.campaign.bestScore) },
+      };
       if (!parsed.daily || parsed.daily.day !== todayKey()) {
         state.daily = defaultState().daily;
       } else {
@@ -178,12 +191,42 @@ const Progress = (() => {
     save();
   }
 
-  function recordRun({ score, recycled, beachClean }) {
+  function recordRun({ score, recycled, beachClean, missionId, starsEarned }) {
     if (score > state.highScore) state.highScore = score;
     state.totalRecycled += recycled;
     state.daily.collectObjects += recycled;
     if (beachClean) state.daily.cleanBeaches += 1;
+    if (missionId) {
+      const key = String(missionId);
+      const prev = state.campaign.stars[key] || 0;
+      if (starsEarned > prev) state.campaign.stars[key] = starsEarned;
+      const best = state.campaign.bestScore[key] || 0;
+      if (score > best) state.campaign.bestScore[key] = score;
+      // unlock next if at least 1 star OR beach clean enough
+      if (starsEarned >= 1 || beachClean) {
+        const next = missionId + 1;
+        if (next > state.campaign.unlocked) state.campaign.unlocked = Math.min(8, next);
+      }
+    }
     save();
+  }
+
+  function isUnlocked(missionId) {
+    return missionId <= (state.campaign.unlocked || 1);
+  }
+
+  function markIntroSeen() {
+    state.campaign.introSeen = true;
+    save();
+  }
+
+  function markEndingSeen() {
+    state.campaign.endingSeen = true;
+    save();
+  }
+
+  function totalStars() {
+    return Object.values(state.campaign.stars || {}).reduce((a, b) => a + (b || 0), 0);
   }
 
   function canClaimDaily() {
@@ -238,5 +281,9 @@ const Progress = (() => {
     claimDaily,
     toolStats,
     xpNeeded,
+    isUnlocked,
+    markIntroSeen,
+    markEndingSeen,
+    totalStars,
   };
 })();
