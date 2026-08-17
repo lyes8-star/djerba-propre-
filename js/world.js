@@ -77,7 +77,7 @@ const World = (() => {
     let best = null;
     let bestD = Infinity;
     for (const t of living(world)) {
-      const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 16));
+      const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 20));
       if (d < range && d < bestD) {
         best = t;
         bestD = d;
@@ -99,7 +99,7 @@ const World = (() => {
     let n = 0;
     let pts = 0;
     for (const t of living(world)) {
-      const d = Math.hypot(t.x - player.x - 16, t.y - player.y - 16);
+      const d = Math.hypot(t.x - player.x - 16, t.y - player.y - 20);
       if (d < r) {
         if (player.inventory.length >= stats.capacity) break;
         t.alive = false;
