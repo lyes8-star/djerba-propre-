@@ -463,7 +463,6 @@
       FX.hitShake(0.15);
     } else if (res.type === "talk") {
       AudioSys.sfx("click");
-      UI.toast(`${res.who}<br/>${res.text}`, 2600);
       if (res.coins) {
         Progress.addCoins(res.coins);
         FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
@@ -755,14 +754,20 @@
     });
 
     const btnAction = document.getElementById("btn-action");
+    let actionFromTouch = false;
     btnAction.addEventListener("click", (e) => {
       e.preventDefault();
+      if (actionFromTouch) {
+        actionFromTouch = false;
+        return;
+      }
       doAction();
     });
     btnAction.addEventListener(
       "touchstart",
       (e) => {
         e.preventDefault();
+        actionFromTouch = true;
         holdAction = true;
         doAction();
       },
