@@ -1,7 +1,7 @@
 /* Player — 24x32 SMB-sized sprite on 960x1200 world */
 const Player = (() => {
   const PW = 32;
-  const PH = 32;
+  const PH = 40;
 
   function create(stats) {
     return {

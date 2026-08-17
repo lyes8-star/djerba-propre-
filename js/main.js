@@ -359,7 +359,7 @@
     const vw = canvas.width / ZOOM;
     const vh = canvas.height / ZOOM;
     let camX = player.x + 16 - vw / 2;
-    let camY = player.y + 16 - vh / 2;
+    let camY = player.y + 20 - vh / 2;
     camX = Math.max(0, Math.min(W - vw, camX));
     camY = Math.max(0, Math.min(H - vh, camY));
     cam = { x: camX, y: camY, vw, vh };
@@ -403,7 +403,7 @@
     World.tickSpawn(world, dt);
     FX.update(dt);
     if (Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
-      FX.dust(player.x + 10, player.y + 28);
+      FX.dust(player.x + 12, player.y + 34);
     }
     if (Math.random() < 0.04) {
       FX.glint(player.x + Math.random() * 20, player.y + Math.random() * 16 - 8);

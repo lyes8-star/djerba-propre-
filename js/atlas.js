@@ -1,7 +1,7 @@
 /* Offscreen NES/SNES-style pixel atlas — bake once, blit every frame */
 const Atlas = (() => {
   const PW = 32;
-  const PH = 32;
+  const PH = 40;
 
   const C = {
     ink: "#140c1c",
@@ -23,6 +23,10 @@ const Atlas = (() => {
     cloud: "#fcfcfc", cloudD: "#d0e8fc", cloudK: "#80b8e0",
     hill: "#48a030", hillD: "#2c701c", hillL: "#70d048", hillK: "#184810",
     bush: "#249024",
+    road: "#3a3c48", roadL: "#5a5c68", roadD: "#24262e", roadY: "#fcbc14",
+    cobbleA: "#c4a878", cobbleB: "#a88858", cobbleC: "#8c7048",
+    terra: "#e88850", terraD: "#c06030", terraL: "#f4b078",
+    awnR: "#d43030", awnW: "#fcfcfc", awnG: "#248024",
   };
 
   const tiles = {};
@@ -207,6 +211,52 @@ const Atlas = (() => {
     ], {
       k: C.ink, R: C.woodL, r: C.wood, B: C.sandC, b: C.sandD,
     });
+    return c;
+  }
+
+  function bakeRoad(kind) {
+    const { c, ctx } = make(16, 16);
+    px(ctx, 0, 0, 16, 16, C.road);
+    px(ctx, 0, 0, 16, 1, C.roadL);
+    px(ctx, 0, 15, 16, 1, C.roadD);
+    for (let i = 0; i < 6; i++) p1(ctx, (i * 5 + kind) % 16, (i * 3 + 4) % 16, C.roadD);
+    if (kind === "h") {
+      px(ctx, 2, 7, 5, 2, C.roadY);
+      px(ctx, 10, 7, 5, 2, C.roadY);
+    } else if (kind === "v") {
+      px(ctx, 7, 1, 2, 5, C.roadY);
+      px(ctx, 7, 10, 2, 5, C.roadY);
+    } else if (kind === "x") {
+      px(ctx, 2, 7, 12, 2, C.roadY);
+      px(ctx, 7, 2, 2, 12, C.roadY);
+      px(ctx, 6, 6, 4, 4, C.road);
+    }
+    return c;
+  }
+
+  function bakeCobble(v) {
+    const { c, ctx } = make(16, 16);
+    px(ctx, 0, 0, 16, 16, C.cobbleB);
+    const cols = [C.cobbleA, C.cobbleB, C.cobbleC, C.sandD];
+    for (let y = 0; y < 16; y += 4) {
+      for (let x = 0; x < 16; x += 4) {
+        const ox = ((y / 4) % 2) * 2;
+        const col = cols[(x / 4 + y / 4 + v) % 4];
+        px(ctx, x + ox, y, 3, 3, col);
+        outlineRect(ctx, x + ox, y, 3, 3, C.sandF);
+      }
+    }
+    return c;
+  }
+
+  function bakePlaza() {
+    const { c, ctx } = make(16, 16);
+    px(ctx, 0, 0, 16, 16, C.wall);
+    px(ctx, 0, 0, 16, 1, C.white);
+    px(ctx, 0, 15, 16, 1, C.wallS);
+    outlineRect(ctx, 1, 1, 14, 14, C.wallD);
+    p1(ctx, 4, 4, C.goldL);
+    p1(ctx, 11, 10, C.wallS);
     return c;
   }
 
@@ -408,6 +458,125 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeHouseWarm() {
+    const { c, ctx } = make(48, 56);
+    px(ctx, 4, 53, 40, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 4, 24, 40, 28, C.ink);
+    px(ctx, 5, 25, 38, 26, C.terra);
+    for (let y = 28; y < 50; y += 4) px(ctx, 6, y, 36, 1, C.terraD);
+    px(ctx, 5, 48, 38, 3, C.terraD);
+    px(ctx, 6, 26, 8, 4, C.terraL);
+    px(ctx, 14, 6, 20, 20, C.ink);
+    px(ctx, 15, 8, 18, 18, C.goldD);
+    px(ctx, 17, 6, 14, 6, C.gold);
+    px(ctx, 20, 12, 8, 4, C.goldL);
+    p1(ctx, 23, 8, C.white);
+    px(ctx, 18, 36, 12, 16, C.ink);
+    px(ctx, 19, 37, 10, 14, C.woodX);
+    px(ctx, 20, 38, 3, 12, C.wood);
+    p1(ctx, 27, 45, C.goldL);
+    function win(x, y) {
+      px(ctx, x, y, 10, 10, C.ink);
+      px(ctx, x + 1, y + 1, 8, 8, C.navyD);
+      px(ctx, x + 1, y + 1, 8, 3, C.goldL);
+      px(ctx, x + 5, y + 1, 1, 8, C.white);
+      px(ctx, x + 1, y + 5, 8, 1, C.white);
+    }
+    win(7, 32);
+    win(31, 32);
+    return c;
+  }
+
+  function bakeShop() {
+    const { c, ctx } = make(40, 40);
+    px(ctx, 2, 37, 36, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 4, 16, 32, 22, C.ink);
+    px(ctx, 5, 17, 30, 20, C.wood);
+    px(ctx, 6, 18, 6, 16, C.woodL);
+    const stripes = [C.awnR, C.awnW, C.awnG, C.awnW, C.awnR];
+    for (let i = 0; i < 5; i++) {
+      px(ctx, 2 + i * 7, 6, 8, 12, stripes[i]);
+    }
+    outlineRect(ctx, 2, 6, 36, 12, C.ink);
+    px(ctx, 4, 16, 32, 2, C.ink);
+    px(ctx, 12, 24, 16, 14, C.ink);
+    px(ctx, 13, 25, 14, 12, C.woodX);
+    px(ctx, 8, 22, 6, 6, C.gold);
+    px(ctx, 26, 22, 6, 6, C.red);
+    p1(ctx, 10, 24, C.goldL);
+    return c;
+  }
+
+  function bakeStall() {
+    const { c, ctx } = make(28, 28);
+    px(ctx, 4, 26, 20, 2, "rgba(0,0,0,0.22)");
+    px(ctx, 2, 8, 24, 8, C.ink);
+    px(ctx, 3, 9, 7, 6, C.awnR);
+    px(ctx, 10, 9, 7, 6, C.awnW);
+    px(ctx, 17, 9, 8, 6, C.green);
+    px(ctx, 4, 16, 20, 10, C.woodD);
+    px(ctx, 5, 17, 18, 3, C.woodL);
+    px(ctx, 6, 21, 5, 4, C.gold);
+    px(ctx, 13, 21, 4, 4, C.red);
+    px(ctx, 19, 21, 4, 4, C.bottle);
+    outlineRect(ctx, 4, 16, 20, 10, C.ink);
+    return c;
+  }
+
+  function bakeMinaret() {
+    const { c, ctx } = make(20, 72);
+    px(ctx, 4, 70, 12, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 6, 20, 8, 50, C.ink);
+    px(ctx, 7, 21, 6, 48, C.white);
+    px(ctx, 7, 21, 2, 48, C.wall);
+    px(ctx, 7, 32, 6, 4, C.blue);
+    px(ctx, 7, 48, 6, 4, C.blueD);
+    px(ctx, 4, 8, 12, 14, C.ink);
+    px(ctx, 5, 9, 10, 12, C.goldD);
+    px(ctx, 7, 6, 6, 6, C.gold);
+    px(ctx, 8, 4, 4, 4, C.goldL);
+    p1(ctx, 9, 2, C.ink);
+    p1(ctx, 9, 1, C.goldL);
+    px(ctx, 8, 14, 4, 4, C.navyD);
+    p1(ctx, 9, 15, C.goldL);
+    return c;
+  }
+
+  function bakeLamp() {
+    const { c, ctx } = make(10, 22);
+    px(ctx, 4, 6, 2, 14, C.ink);
+    px(ctx, 4, 6, 1, 14, C.metal);
+    px(ctx, 2, 2, 6, 6, C.ink);
+    px(ctx, 3, 3, 4, 4, C.goldL);
+    p1(ctx, 4, 4, C.white);
+    px(ctx, 3, 20, 4, 2, C.navyD);
+    return c;
+  }
+
+  function bakeFountain() {
+    const { c, ctx } = make(28, 22);
+    px(ctx, 2, 20, 24, 2, "rgba(0,0,0,0.2)");
+    px(ctx, 2, 12, 24, 8, C.ink);
+    px(ctx, 3, 13, 22, 6, C.wall);
+    px(ctx, 6, 14, 16, 4, C.blueL);
+    px(ctx, 12, 4, 4, 10, C.wallS);
+    px(ctx, 11, 2, 6, 4, C.blue);
+    p1(ctx, 13, 1, C.foam);
+    p1(ctx, 14, 6, C.foam);
+    p1(ctx, 12, 8, C.blueL);
+    return c;
+  }
+
+  function bakeBanner(label, bg) {
+    const { c, ctx } = make(52, 14);
+    px(ctx, 0, 0, 52, 14, C.ink);
+    px(ctx, 1, 1, 50, 12, bg);
+    ctx.fillStyle = C.white;
+    ctx.font = "8px monospace";
+    ctx.fillText(label, 4, 10);
+    return c;
+  }
+
   function bakeLighthouse(on) {
     const { c, ctx } = make(24, 64);
     px(ctx, 4, 61, 16, 2, "rgba(0,0,0,0.25)");
@@ -589,7 +758,7 @@ const Atlas = (() => {
     return c;
   }
 
-  /* —— PLAYER 24x32, SMB Super Mario language (hat, 3 shades, 1px ink) —— */
+  /* —— PLAYER 32x40, 3/4 view, TWO EYES, hat, belt, pince —— */
   function bakePlayer(facing, walk, attacking, goldHat) {
     const { c, ctx } = make(PW, PH);
     const flip = facing < 0;
@@ -600,10 +769,17 @@ const Atlas = (() => {
       else px(ctx, X(x + w - 1), y, w, h, col);
     }
     function dot(x, y, col) { p1(ctx, X(x), y, col); }
+    function eye(x, y) {
+      bar(x, y, 4, 4, C.white);
+      bar(x + 1, y + 1, 2, 2, C.navy);
+      dot(x + 2, y + 2, C.ink);
+      dot(x + 1, y + 1, C.white);
+      bar(x, y - 1, 4, 1, C.ink);
+    }
 
     const stride = walk === 1 || walk === 3;
     const bob = stride ? -1 : 0;
-    const y0 = 1 + bob;
+    const y0 = 2 + bob;
     const lLeg = walk === 1 ? -3 : walk === 3 ? 2 : 0;
     const rLeg = walk === 1 ? 2 : walk === 3 ? -3 : 0;
     const lArm = walk === 1 ? 2 : walk === 3 ? -2 : 0;
@@ -613,90 +789,92 @@ const Atlas = (() => {
     const hatL = goldHat ? C.goldL : C.greenL;
     const hatD = goldHat ? C.goldD : C.greenD;
 
-    // shadow
-    bar(5, 30, 14, 2, "rgba(0,0,0,0.28)");
+    bar(7, 37, 18, 2, "rgba(0,0,0,0.28)");
 
-    // shoes + legs
-    bar(6, y0 + 22 + lLeg, 5, 7, C.navy);
-    bar(7, y0 + 23 + lLeg, 3, 5, C.navyL);
-    bar(6, y0 + 28 + lLeg, 6, 3, C.woodX);
-    bar(7, y0 + 28 + lLeg, 4, 1, C.wood);
-    bar(13, y0 + 22 + rLeg, 5, 7, C.navyD);
-    bar(14, y0 + 23 + rLeg, 3, 5, C.navy);
-    bar(13, y0 + 28 + rLeg, 6, 3, C.woodX);
-    bar(14, y0 + 28 + rLeg, 4, 1, C.woodL);
-    // ink shoes
-    bar(6, y0 + 28 + lLeg, 6, 1, C.ink);
-    bar(13, y0 + 28 + rLeg, 6, 1, C.ink);
+    // legs + shoes
+    bar(8, y0 + 26 + lLeg, 6, 8, C.navy);
+    bar(9, y0 + 27 + lLeg, 3, 5, C.navyL);
+    bar(8, y0 + 32 + lLeg, 7, 3, C.woodX);
+    bar(9, y0 + 32 + lLeg, 5, 1, C.wood);
+    bar(8, y0 + 32 + lLeg, 7, 1, C.ink);
+    bar(16, y0 + 26 + rLeg, 6, 8, C.navyD);
+    bar(17, y0 + 27 + rLeg, 3, 5, C.navy);
+    bar(16, y0 + 32 + rLeg, 7, 3, C.woodX);
+    bar(17, y0 + 32 + rLeg, 5, 1, C.woodL);
+    bar(16, y0 + 32 + rLeg, 7, 1, C.ink);
 
-    // torso (overalls + shirt)
-    bar(6, y0 + 13, 12, 11, C.ink);
-    bar(7, y0 + 14, 10, 9, C.greenD);
-    bar(7, y0 + 14, 10, 4, C.green);
-    bar(8, y0 + 14, 3, 3, C.greenL);
-    // straps
-    bar(8, y0 + 13, 2, 5, hatD);
-    bar(14, y0 + 13, 2, 5, hatD);
-    // chest badge
-    bar(10, y0 + 18, 4, 3, C.white);
-    bar(11, y0 + 19, 2, 1, C.greenD);
+    // torso
+    bar(8, y0 + 16, 15, 12, C.ink);
+    bar(9, y0 + 17, 13, 10, C.greenD);
+    bar(9, y0 + 17, 13, 4, C.green);
+    bar(10, y0 + 17, 4, 3, C.greenL);
+    bar(10, y0 + 16, 3, 5, hatD);
+    bar(18, y0 + 16, 3, 5, hatD);
+    bar(9, y0 + 25, 13, 2, C.navyD);
+    bar(10, y0 + 25, 11, 1, C.navyL);
+    bar(12, y0 + 21, 6, 4, C.white);
+    bar(13, y0 + 22, 4, 2, C.greenD);
+    dot(14, y0 + 19, C.gold);
+    dot(18, y0 + 19, C.gold);
 
-    // back arm
-    bar(3, y0 + 15 + lArm, 4, 4, C.greenD);
-    bar(2, y0 + 18 + lArm, 4, 4, C.white);
-    bar(2, y0 + 18 + lArm, 4, 1, C.ink);
+    // back arm + glove
+    bar(4, y0 + 18 + lArm, 5, 5, C.greenD);
+    bar(3, y0 + 22 + lArm, 5, 5, C.white);
+    bar(3, y0 + 22 + lArm, 5, 1, C.ink);
+    dot(4, y0 + 24 + lArm, C.cloudD);
 
-    // head
-    bar(7, y0 + 5, 11, 9, C.ink);
-    bar(8, y0 + 6, 9, 7, C.skin);
-    bar(8, y0 + 6, 3, 3, C.skinL);
-    bar(9, y0 + 11, 7, 2, C.skinD);
-    // nose
-    bar(facing > 0 ? 14 : 7, y0 + 9, 3, 3, C.skinM);
-    dot(facing > 0 ? 16 : 7, y0 + 10, C.skinD);
-    // eyes
-    const ex = facing > 0 ? 13 : 9;
-    bar(ex, y0 + 7, 3, 3, C.white);
-    dot(ex + (facing > 0 ? 1 : 0), y0 + 8, C.ink);
-    dot(ex + (facing > 0 ? 1 : 1), y0 + 7, C.navy);
-    // smile
-    bar(10, y0 + 12, 4, 1, C.redD);
+    // HEAD (3/4) — two eyes always
+    bar(8, y0 + 6, 16, 12, C.ink);
+    bar(9, y0 + 7, 14, 10, C.skin);
+    bar(9, y0 + 7, 4, 4, C.skinL);
+    bar(7, y0 + 11, 2, 4, C.skinD);
+    bar(23, y0 + 11, 2, 4, C.skinD);
+    bar(10, y0 + 14, 12, 2, C.skinD);
+    eye(10, y0 + 9);
+    eye(17, y0 + 9);
+    bar(15, y0 + 12, 4, 3, C.skinM);
+    dot(18, y0 + 13, C.skinD);
+    bar(13, y0 + 16, 6, 1, C.redD);
+    bar(14, y0 + 17, 4, 1, C.skinD);
+    dot(12, y0 + 13, C.redL);
+    dot(20, y0 + 13, C.redL);
 
-    // hat (Mario brim)
-    bar(6, y0 + 4, 13, 3, C.ink);
-    bar(7, y0 + 1, 10, 5, C.ink);
-    bar(8, y0 + 2, 8, 3, hat);
-    bar(9, y0 + 1, 6, 2, hatL);
-    bar(7, y0 + 4, 12, 2, hatD);
-    bar(5, y0 + 5, 15, 2, hat);
-    bar(5, y0 + 5, 15, 1, C.ink);
+    // hat
+    bar(8, y0 + 5, 16, 3, C.ink);
+    bar(9, y0 + 1, 13, 6, C.ink);
+    bar(10, y0 + 2, 11, 4, hat);
+    bar(11, y0 + 1, 8, 2, hatL);
+    bar(9, y0 + 5, 14, 2, hatD);
+    bar(6, y0 + 6, 20, 2, hat);
+    bar(6, y0 + 6, 20, 1, C.ink);
     if (goldHat) {
-      dot(11, y0 + 3, C.goldL);
-      dot(13, y0 + 3, C.white);
+      bar(14, y0 + 3, 4, 3, C.goldL);
+      dot(15, y0 + 4, C.white);
     } else {
-      bar(11, y0 + 3, 3, 2, C.white);
+      bar(13, y0 + 3, 5, 2, C.white);
+      bar(14, y0 + 3, 3, 2, C.greenL);
     }
 
-    // front glove
-    bar(17, y0 + 15 + rArm, 4, 4, C.green);
-    bar(18, y0 + 18 + rArm, 4, 4, C.white);
-    bar(18, y0 + 18 + rArm, 4, 1, C.ink);
-    dot(20, y0 + 20 + rArm, C.cloudD);
+    // front arm + glove
+    bar(22, y0 + 18 + rArm, 5, 5, C.green);
+    bar(23, y0 + 22 + rArm, 5, 5, C.white);
+    bar(23, y0 + 22 + rArm, 5, 1, C.ink);
+    dot(25, y0 + 24 + rArm, C.cloudD);
 
     // scorpion pince
-    const ax = attacking ? 18 : 16;
-    const ay = y0 + (attacking ? 12 : 16) + rArm;
-    bar(ax, ay, attacking ? 7 : 5, 3, C.navyD);
+    const ax = attacking ? 20 : 18;
+    const ay = y0 + (attacking ? 14 : 20) + rArm;
+    bar(ax, ay, attacking ? 8 : 6, 3, C.navyD);
     bar(ax + 1, ay, 3, 3, C.navyL);
     if (attacking) {
-      bar(ax + 4, ay - 3, 5, 2, C.gold);
-      bar(ax + 4, ay + 4, 5, 2, C.gold);
-      bar(ax + 6, ay, 4, 3, C.red);
-      dot(ax + 9, ay + 1, C.goldL);
+      bar(ax + 5, ay - 3, 6, 2, C.gold);
+      bar(ax + 5, ay + 4, 6, 2, C.gold);
+      bar(ax + 7, ay, 4, 3, C.red);
+      dot(ax + 10, ay + 1, C.goldL);
     } else {
-      bar(ax + 3, ay - 2, 4, 2, C.gold);
-      bar(ax + 3, ay + 3, 4, 2, C.goldD);
-      bar(ax + 4, ay, 3, 3, C.red);
+      bar(ax + 4, ay - 2, 5, 2, C.gold);
+      bar(ax + 4, ay + 3, 5, 2, C.goldD);
+      bar(ax + 5, ay, 4, 3, C.red);
     }
 
     return c;
@@ -712,6 +890,13 @@ const Atlas = (() => {
     tiles.grass = bakeGrass();
     tiles.brick = bakeBrick();
     tiles.stone = bakeStone();
+    tiles.road = bakeRoad("plain");
+    tiles.roadH = bakeRoad("h");
+    tiles.roadV = bakeRoad("v");
+    tiles.roadX = bakeRoad("x");
+    tiles.cobble0 = bakeCobble(0);
+    tiles.cobble1 = bakeCobble(1);
+    tiles.plaza = bakePlaza();
     tiles.sea = [
       [bakeSea(0, 0), bakeSea(0, 1), bakeSea(0, 2)],
       [bakeSea(1, 0), bakeSea(1, 1), bakeSea(1, 2)],
@@ -726,6 +911,16 @@ const Atlas = (() => {
     frames.palm0 = bakePalm(0);
     frames.palm1 = bakePalm(2);
     frames.house = bakeHouse();
+    frames.houseWarm = bakeHouseWarm();
+    frames.shop = bakeShop();
+    frames.stall = bakeStall();
+    frames.minaret = bakeMinaret();
+    frames.lamp = bakeLamp();
+    frames.fountain = bakeFountain();
+    frames.signPlage = bakeBanner("PLAGE", C.blue);
+    frames.signSouk = bakeBanner("SOUK", C.terraD);
+    frames.signVille = bakeBanner("VILLE", C.navy);
+    frames.signPort = bakeBanner("PORT", C.navyD);
     frames.lhOn = bakeLighthouse(true);
     frames.lhOff = bakeLighthouse(false);
     frames.boat = bakeBoat();

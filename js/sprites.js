@@ -39,6 +39,64 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.house, x, y);
   }
 
+  function drawShop(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 40, 40)) return;
+    Atlas.blit(ctx, Atlas.frames.shop, x, y);
+  }
+
+  function drawStall(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 28, 28)) return;
+    Atlas.blit(ctx, Atlas.frames.stall, x, y);
+  }
+
+  function drawMinaret(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 20, 72)) return;
+    Atlas.blit(ctx, Atlas.frames.minaret, x, y);
+  }
+
+  function drawLamp(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 10, 22)) return;
+    Atlas.blit(ctx, Atlas.frames.lamp, x, y);
+  }
+
+  function drawFountain(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 28, 22)) return;
+    Atlas.blit(ctx, Atlas.frames.fountain, x, y);
+  }
+
+  function drawHouseWarm(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 48, 56)) return;
+    Atlas.blit(ctx, Atlas.frames.houseWarm, x, y);
+  }
+
+  function hRoad(ctx, x, y, w, cam) {
+    for (let tx = x; tx < x + w; tx += 16) {
+      if (cam && (tx + 16 < cam.x || tx > cam.x + cam.vw)) continue;
+      ctx.drawImage(Atlas.tiles.roadH, tx, y);
+      ctx.drawImage(Atlas.tiles.roadH, tx, y + 16);
+    }
+  }
+
+  function vRoad(ctx, x, y, h, cam) {
+    for (let ty = y; ty < y + h; ty += 16) {
+      if (cam && (ty + 16 < cam.y || ty > cam.y + cam.vh)) continue;
+      ctx.drawImage(Atlas.tiles.roadV, x, ty);
+      ctx.drawImage(Atlas.tiles.roadV, x + 16, ty);
+    }
+  }
+
+  function cobbleFill(ctx, x, y, w, h, cam) {
+    const x0 = cam ? Math.max(x, (cam.x / TILE | 0) * TILE) : x;
+    const y0 = cam ? Math.max(y, (cam.y / TILE | 0) * TILE) : y;
+    const x1 = cam ? Math.min(x + w, cam.x + cam.vw + TILE) : x + w;
+    const y1 = cam ? Math.min(y + h, cam.y + cam.vh + TILE) : y + h;
+    for (let ty = y0; ty < y1; ty += TILE) {
+      for (let tx = x0; tx < x1; tx += TILE) {
+        ctx.drawImage(((tx + ty) / 16 | 0) % 2 ? Atlas.tiles.cobble0 : Atlas.tiles.cobble1, tx, ty);
+      }
+    }
+  }
+
   function drawLighthouse(ctx, x, y, t, cam) {
     if (cam && !Atlas.inView(cam, x, y, 24, 64)) return;
     const on = Math.sin(t * 5) > 0;
@@ -176,7 +234,7 @@ const Sprites = (() => {
       ctx.fillRect(rx - rw / 2 + Math.sin(t * 2 + k) * 3, seaY + 10 + k * 8, rw, 2);
     }
 
-    // sand body
+    // sand body (plage + palmeraie)
     const sands = [Atlas.tiles.sand0, Atlas.tiles.sand1, Atlas.tiles.sand2, Atlas.tiles.sand3];
     const x0 = cam ? Math.max(0, (cam.x / TILE | 0) * TILE) : 0;
     const y0 = cam ? Math.max(sandY, (cam.y / TILE | 0) * TILE) : sandY;
@@ -184,79 +242,110 @@ const Sprites = (() => {
     const y1 = cam ? Math.min(H, cam.y + cam.vh + TILE) : H;
     for (let ty = y0; ty < y1; ty += TILE) {
       for (let tx = x0; tx < x1; tx += TILE) {
-        const img = sands[((tx / 16 | 0) + (ty / 16 | 0) * 3) % 4];
-        ctx.drawImage(img, tx, ty);
+        ctx.drawImage(sands[((tx / 16 | 0) + (ty / 16 | 0) * 3) % 4], tx, ty);
       }
     }
-    // shoreline cap row
     tileFill(ctx, Atlas.tiles.sandCap, 0, sandY, W, 16, cam);
 
-    // stone path down the beach
-    for (let ty = sandY + 32; ty < H; ty += TILE) {
-      if (cam && (ty + 16 < cam.y || ty > cam.y + cam.vh)) continue;
-      ctx.drawImage(Atlas.tiles.stone, 448, ty);
-      ctx.drawImage(Atlas.tiles.stone, 464, ty);
+    const ROAD_N = 496;
+    const TOWN_Y = 528;
+    const ROAD_S = 864;
+    const SOUK_W = 400;
+    const VILLE_X = 544;
+
+    cobbleFill(ctx, 0, TOWN_Y, SOUK_W, ROAD_S - TOWN_Y, cam);
+    tileFill(ctx, Atlas.tiles.plaza, 400, TOWN_Y, 144, 192, cam);
+    cobbleFill(ctx, VILLE_X, TOWN_Y, W - VILLE_X, ROAD_S - TOWN_Y, cam);
+    tileFill(ctx, Atlas.tiles.brick, 720, 256, 240, 64, cam);
+
+    hRoad(ctx, 0, ROAD_N, W, cam);
+    hRoad(ctx, 0, ROAD_S, W, cam);
+    vRoad(ctx, 448, ROAD_N, H - ROAD_N, cam);
+    vRoad(ctx, 160, TOWN_Y, ROAD_S - TOWN_Y, cam);
+    vRoad(ctx, 736, TOWN_Y, ROAD_S - TOWN_Y, cam);
+    if (!cam || Atlas.inView(cam, 448, ROAD_N, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_N);
+    if (!cam || Atlas.inView(cam, 448, ROAD_S, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_S);
+
+    // PORT
+    drawLighthouse(ctx, 820, 196, t, cam);
+    drawBoat(ctx, 740, 268, t, cam);
+    drawBoat(ctx, 820, 278, t + 1.1, cam);
+    if (theme === "port") {
+      drawBoat(ctx, 700, 258, t + 0.4, cam);
+      drawBoat(ctx, 880, 270, t + 2, cam);
     }
+    Atlas.blit(ctx, Atlas.frames.signPort, 760, 310);
 
-    // theme buildings
-    if (theme === "souk") {
-      drawHouse(ctx, 24, 266, cam);
-      drawHouse(ctx, 80, 274, cam);
-      drawHouse(ctx, 300, 262, cam);
-      drawHouse(ctx, 700, 270, cam);
-      tileFill(ctx, Atlas.tiles.brick, 400, 360, 64, 32, cam);
-    } else if (theme === "port") {
-      drawLighthouse(ctx, 520, 196, t, cam);
-      drawBoat(ctx, 80, 276, t, cam);
-      drawBoat(ctx, 400, 282, t + 1, cam);
-      drawBoat(ctx, 620, 270, t + 0.6, cam);
-    } else if (theme === "lagoon") {
-      drawPalm(ctx, 60, 268, t, 0, cam);
-      drawPalm(ctx, 140, 276, t, 1, cam);
-      tileFill(ctx, seaFrame(0, t), 380, 500, 96, 32, cam);
-    } else if (theme === "resort") {
-      drawHouse(ctx, 24, 266, cam);
-      drawHouse(ctx, 88, 274, cam);
-      drawHouse(ctx, 320, 262, cam);
-      drawHouse(ctx, 640, 270, cam);
-      drawUmbrella(ctx, 200, 340, cam);
-      drawUmbrella(ctx, 560, 348, cam);
-    } else if (theme === "festival") {
-      drawHouse(ctx, 40, 270, cam);
-      drawHouse(ctx, 300, 262, cam);
-      drawLighthouse(ctx, 520, 196, t, cam);
-    } else {
-      drawHouse(ctx, 24, 266, cam);
-      drawHouse(ctx, 80, 274, cam);
-      drawHouse(ctx, 300, 262, cam);
-      drawHouse(ctx, 700, 270, cam);
-      drawLighthouse(ctx, 520, 196, t, cam);
-      drawBoat(ctx, 360, 276, t, cam);
+    // PLAGE
+    const umbrellas = [[40, 360], [120, 348], [200, 368], [280, 352], [360, 372], [520, 356], [600, 368], [80, 428], [240, 440], [520, 432]];
+    if (theme === "resort" || theme === "festival") {
+      umbrellas.push([160, 400], [320, 412], [560, 400]);
     }
-
-    const palms = [
-      [48, 272, 0], [200, 264, 1.4], [340, 276, 0.7], [560, 268, 2.1],
-      [800, 272, 2.8], [140, 500, 3.3], [620, 520, 0.4], [64, 680, 1.9],
-      [480, 660, 2.5], [820, 720, 0.9], [220, 880, 1.1], [700, 900, 3.6],
-    ];
-    for (const [px, py, seed] of palms) drawPalm(ctx, px, py, t, seed, cam);
-
-    drawUmbrella(ctx, 180, 360, cam);
-    drawUmbrella(ctx, 600, 380, cam);
-    drawUmbrella(ctx, 760, 640, cam);
-    drawBush(ctx, 430, 400, cam);
-    drawBush(ctx, 200, 640, cam);
-    drawBush(ctx, 760, 560, cam);
-    drawBush(ctx, 100, 800, cam);
+    for (const [ux, uy] of umbrellas) drawUmbrella(ctx, ux, uy, cam);
+    [[48, 272, 0], [200, 264, 1.4], [340, 276, 0.7], [560, 268, 2.1], [640, 280, 3]].forEach(([px, py, s]) => drawPalm(ctx, px, py, t, s, cam));
     drawRock(ctx, 250, 420, cam);
-    drawRock(ctx, 520, 480, cam);
-    drawRock(ctx, 840, 520, cam);
-    drawRock(ctx, 300, 720, cam);
+    drawRock(ctx, 90, 400, cam);
+    drawRock(ctx, 400, 450, cam);
     tileFill(ctx, Atlas.tiles.grass, 400, 400, 48, 32, cam);
-    tileFill(ctx, Atlas.tiles.grass, 160, 640, 32, 32, cam);
-    tileFill(ctx, Atlas.tiles.grass, 720, 560, 32, 32, cam);
-    drawSign(ctx, 16, 332, cam);
-    drawSign(ctx, 900, 348, cam);
+    Atlas.blit(ctx, Atlas.frames.signPlage, 16, 332);
+    drawSign(ctx, 16, 348, cam);
+
+    // SOUK
+    const shops = [
+      [16, 540], [80, 540], [224, 540], [288, 540],
+      [16, 620], [80, 628], [224, 620], [288, 624],
+      [16, 710], [80, 718], [224, 710], [288, 716],
+      [16, 790], [80, 798], [224, 790], [288, 796],
+    ];
+    shops.forEach(([sx, sy], i) => (i % 3 === 0 ? drawStall(ctx, sx, sy, cam) : drawShop(ctx, sx, sy, cam)));
+    Atlas.blit(ctx, Atlas.frames.signSouk, 24, 508);
+    drawLamp(ctx, 140, 560, cam);
+    drawLamp(ctx, 140, 680, cam);
+    drawLamp(ctx, 140, 800, cam);
+    drawBush(ctx, 340, 580, cam);
+    drawBush(ctx, 348, 760, cam);
+
+    // PLACE
+    drawFountain(ctx, 452, 600, cam);
+    drawLamp(ctx, 420, 560, cam);
+    drawLamp(ctx, 500, 560, cam);
+    drawLamp(ctx, 420, 680, cam);
+    drawLamp(ctx, 500, 680, cam);
+    tileFill(ctx, Atlas.tiles.plaza, 416, 592, 80, 48, cam);
+
+    // VILLE
+    drawMinaret(ctx, 800, 500, cam);
+    drawHouse(ctx, 560, 548, cam);
+    drawHouseWarm(ctx, 624, 556, cam);
+    drawHouse(ctx, 800, 548, cam);
+    drawHouseWarm(ctx, 864, 552, cam);
+    drawHouseWarm(ctx, 560, 640, cam);
+    drawHouse(ctx, 624, 648, cam);
+    drawHouse(ctx, 800, 640, cam);
+    drawHouseWarm(ctx, 864, 644, cam);
+    drawHouse(ctx, 560, 740, cam);
+    drawHouseWarm(ctx, 624, 748, cam);
+    drawHouse(ctx, 800, 740, cam);
+    drawHouseWarm(ctx, 864, 744, cam);
+    Atlas.blit(ctx, Atlas.frames.signVille, 560, 508);
+    drawLamp(ctx, 716, 560, cam);
+    drawLamp(ctx, 716, 680, cam);
+    drawLamp(ctx, 716, 800, cam);
+
+    // SUD palmeraie
+    [[64, 920, 1.9], [180, 960, 0.6], [300, 940, 2.2], [620, 920, 0.4], [780, 950, 3.1], [880, 980, 1.1], [220, 1040, 2.8], [700, 1060, 0.9]].forEach(([px, py, s]) => drawPalm(ctx, px, py, t, s, cam));
+    tileFill(ctx, Atlas.tiles.grass, 160, 1000, 64, 48, cam);
+    tileFill(ctx, Atlas.tiles.grass, 720, 1020, 48, 32, cam);
+    drawBush(ctx, 100, 980, cam);
+    drawBush(ctx, 840, 1000, cam);
+    if (theme === "lagoon") tileFill(ctx, seaFrame(0, t), 380, 980, 128, 48, cam);
+
+    if (theme === "festival") {
+      drawLamp(ctx, 100, 360, cam);
+      drawLamp(ctx, 300, 360, cam);
+      drawLamp(ctx, 500, 360, cam);
+    }
+
     drawSeagull(ctx, 120, 70, t, 0);
     drawSeagull(ctx, 480, 50, t, 2.1);
     drawSeagull(ctx, 760, 80, t, 4.2);
@@ -304,7 +393,7 @@ const Sprites = (() => {
     ctx.imageSmoothingEnabled = false;
     const gold = goldHat ? 1 : 0;
     const walk = Math.floor((t || 0) * 8) % 4;
-    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_0_${gold}`], 8, 6);
+    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_0_${gold}`], 4, 0);
     ctx.restore();
   }
 
