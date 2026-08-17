@@ -1,8 +1,8 @@
 /* Beach world — mission-driven */
 const World = (() => {
-  const TYPES = ["can", "bottle", "bag", "can", "bottle", "bag"];
+  const TYPES = ["can", "bottle", "bag", "butt", "cup", "paper", "peel", "can", "bottle", "bag"];
   const POINTS = {
-    can: 40, bottle: 55, bag: 90,
+    can: 40, bottle: 55, bag: 90, butt: 22, cup: 35, paper: 30, peel: 45,
     brik: 420, lablabi: 400, couscous: 520, ojja: 380, makroud: 340,
     mlawi: 320, the: 300, fricasse: 360, bambalouni: 330, harissa: 280,
     kaftaji: 370, mechouia: 350,
@@ -33,16 +33,14 @@ const World = (() => {
     const m = mission || {};
     const W = 960;
     const H = 1200;
-    const count = m.trash || 24;
+    const count = Math.round((m.trash || 24) * 1.65);
     const bagTarget = m.bagTarget || 5;
     const recycleTarget = m.recycleTarget || 12;
     const cleanTarget = m.cleanTarget || 80;
     const bagRatio = m.bagRatio != null ? m.bagRatio : 0.3;
-    const trash = [];
-    for (let i = 0; i < count; i++) {
-      trash.push(spawnOne(W, H, i, bagRatio));
-    }
+    const trash = spawnClustered(W, H, count, bagRatio);
     const rares = spawnRares(W, H);
+    const stains = makeStains(W, H, 90 + count);
     return {
       W,
       H,
@@ -59,6 +57,7 @@ const World = (() => {
       cleanTarget,
       spawnEnabled: !!m.spawn,
       spawnTimer: 0,
+      stains,
       combo: 0,
       comboTimer: 0,
       theme: m.theme || "beach",
@@ -69,15 +68,60 @@ const World = (() => {
     };
   }
 
-  function spawnOne(W, H, seed, bagRatio) {
-    const type = Math.random() < bagRatio ? "bag" : TYPES[(seed + (Math.random() * 4) | 0) % TYPES.length];
+  function clampPos(W, H, x, y) {
+    return {
+      x: Math.max(18, Math.min(W - 28, x)),
+      y: Math.max(338, Math.min(H - 28, y)),
+    };
+  }
+
+  function spawnOne(W, H, seed, bagRatio, x, y) {
+    let type;
+    const r = Math.random();
+    if (r < bagRatio) type = "bag";
+    else type = TYPES[(seed + (Math.random() * TYPES.length) | 0) % TYPES.length];
+    const p = x != null ? clampPos(W, H, x, y) : clampPos(W, H, 30 + Math.random() * (W - 80), 340 + Math.random() * (H - 420));
     return {
       id: `${Date.now()}_${seed}_${Math.random()}`,
       type,
-      x: 30 + Math.random() * (W - 80),
-      y: 340 + Math.random() * (H - 420),
+      x: p.x,
+      y: p.y,
       alive: true,
     };
+  }
+
+  function spawnClustered(W, H, count, bagRatio) {
+    const nCl = Math.max(8, Math.round(count / 5));
+    const centers = [];
+    for (let i = 0; i < nCl; i++) {
+      centers.push({
+        x: 50 + Math.random() * (W - 100),
+        y: 360 + Math.random() * (H - 450),
+      });
+    }
+    const trash = [];
+    for (let i = 0; i < count; i++) {
+      const c = centers[i % nCl];
+      const ang = Math.random() * Math.PI * 2;
+      const rad = 4 + Math.random() * 34;
+      trash.push(spawnOne(W, H, i, bagRatio, c.x + Math.cos(ang) * rad, c.y + Math.sin(ang) * rad * 0.65));
+    }
+    return trash;
+  }
+
+  function makeStains(W, H, n) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      out.push({
+        x: 16 + Math.random() * (W - 40),
+        y: 332 + Math.random() * (H - 380),
+        w: 8 + ((i * 13) % 26),
+        h: 4 + ((i * 7) % 14),
+        kind: i % 5,
+        seed: i * 97,
+      });
+    }
+    return out;
   }
 
   function spawnRares(W, H) {
@@ -111,10 +155,15 @@ const World = (() => {
     if (!world.spawnEnabled) return;
     if (cleanliness(world) >= 88) return;
     world.spawnTimer += dt;
-    if (world.spawnTimer < 3.8) return;
+    if (world.spawnTimer < 2.4) return;
     world.spawnTimer = 0;
-    if (living(world).length >= world.initial + 6) return;
-    world.trash.push(spawnOne(world.W, world.H, world.trash.length, 0.3));
+    if (living(world).length >= world.initial + 10) return;
+    const near = living(world)[0];
+    if (near && Math.random() < 0.55) {
+      world.trash.push(spawnOne(world.W, world.H, world.trash.length, 0.35, near.x + (Math.random() * 40 - 20), near.y + (Math.random() * 24 - 12)));
+    } else {
+      world.trash.push(spawnOne(world.W, world.H, world.trash.length, 0.35));
+    }
   }
 
   function living(world) {
