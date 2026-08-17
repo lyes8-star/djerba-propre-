@@ -769,6 +769,32 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeCabaret() {
+    const { c, ctx } = make(56, 48);
+    px(ctx, 2, 45, 52, 2, "rgba(0,0,0,0.3)");
+    px(ctx, 4, 14, 48, 32, C.ink);
+    px(ctx, 5, 15, 46, 30, "#2a1428");
+    px(ctx, 6, 16, 8, 28, "#3c1c38");
+    for (let i = 0; i < 7; i++) {
+      px(ctx, 4 + i * 7, 4, 8, 12, i % 2 ? C.red : "#fc68a0");
+    }
+    outlineRect(ctx, 4, 4, 48, 12, C.ink);
+    px(ctx, 18, 28, 20, 18, C.ink);
+    px(ctx, 19, 29, 18, 16, "#140818");
+    px(ctx, 20, 30, 4, 14, "#3c1830");
+    p1(ctx, 32, 38, C.gold);
+    function glow(x, y) {
+      px(ctx, x, y, 8, 8, C.ink);
+      px(ctx, x + 1, y + 1, 6, 6, C.redD);
+      px(ctx, x + 1, y + 1, 6, 2, C.goldL);
+    }
+    glow(8, 20);
+    glow(40, 20);
+    px(ctx, 14, 8, 28, 5, C.ink);
+    px(ctx, 15, 9, 26, 3, C.red);
+    return c;
+  }
+
   function bakeMinaret() {
     const { c, ctx } = make(20, 72);
     px(ctx, 4, 70, 12, 2, "rgba(0,0,0,0.25)");
@@ -1063,9 +1089,10 @@ const Atlas = (() => {
     const y0 = (kid ? 6 : 2) + bob;
     const lLeg = walk === 1 ? -3 : walk === 3 ? 2 : 0;
     const rLeg = walk === 1 ? 2 : walk === 3 ? -3 : 0;
-    const wave = !!acting && st.tool !== "pince";
+    const smoke = st.tool === "smoke";
+    const wave = !!acting && st.tool !== "pince" && !smoke;
     const lArm = wave ? -6 : walk === 1 ? 2 : walk === 3 ? -2 : 0;
-    const rArm = wave ? -8 : -(walk === 1 ? 2 : walk === 3 ? -2 : 0);
+    const rArm = smoke && acting ? -10 : wave ? -8 : -(walk === 1 ? 2 : walk === 3 ? -2 : 0);
 
     const skin = st.skin || C.skin;
     const skinL = st.skinL || C.skinL;
@@ -1081,10 +1108,15 @@ const Atlas = (() => {
     bar(7, 37, 18, 2, "rgba(0,0,0,0.28)");
 
     if (woman && st.dress) {
-      bar(7, y0 + 16, 17, 18, C.ink);
-      bar(8, y0 + 17, 15, 16, shirtD);
+      const dh = st.short ? 12 : 18;
+      bar(7, y0 + 16, 17, dh, C.ink);
+      bar(8, y0 + 17, 15, dh - 2, shirtD);
       bar(8, y0 + 17, 15, 5, shirt);
       bar(9, y0 + 17, 5, 3, shirtL);
+      if (st.short) {
+        bar(9, y0 + 28 + lLeg, 5, 5, skin);
+        bar(16, y0 + 28 + rLeg, 5, 5, skin);
+      }
       bar(9, y0 + 30 + lLeg, 5, 4, shoes);
       bar(16, y0 + 30 + rLeg, 5, 4, shoes);
     } else {
@@ -1188,6 +1220,13 @@ const Atlas = (() => {
     } else if (st.tool === "fish") {
       bar(24, y0 + 20, 7, 3, C.blueL);
       bar(30, y0 + 20, 2, 2, C.gold);
+    } else if (st.tool === "smoke") {
+      const cx = acting ? 19 : 23;
+      const cy = y0 + (acting ? 11 : 21) + rArm;
+      bar(cx, cy, 6, 2, "#e8dcc8");
+      bar(cx + 5, cy, 2, 2, C.gold);
+      bar(cx + 6, cy, 1, 2, acting ? C.red : C.goldD);
+      if (acting) bar(cx + 7, cy - 1, 1, 1, C.redL);
     }
 
     return c;
@@ -1208,20 +1247,22 @@ const Atlas = (() => {
   const NPC_STYLES = {
     localM: { gender: "m", hat: "chechia", shirt: C.white, shirtL: C.wall, shirtD: C.wallD, pants: C.navy, pantsL: C.navyL, shoes: C.woodX, hair: "#2a1c14" },
     localM2: { gender: "m", shirt: C.sandC, shirtL: C.sandA, shirtD: C.sandE, pants: C.woodD, pantsL: C.wood, shoes: C.woodX, hair: "#1a1010" },
-    localF: { gender: "f", dress: true, hat: "scarf", scarf: C.terra, scarfL: C.terraL, shirt: C.terra, shirtL: C.terraL, shirtD: C.terraD, shoes: C.woodD, hair: "#1a1010" },
-    localF2: { gender: "f", dress: true, hat: "scarf", scarf: C.blueD, scarfL: C.blueL, shirt: C.blue, shirtL: C.blueL, shirtD: C.blueD, shoes: C.navyD, hair: "#140c0c" },
+    localF: { gender: "f", dress: true, hat: "scarf", scarf: C.terra, scarfL: C.terraL, shirt: C.terra, shirtL: C.terraL, shirtD: C.terraD, shoes: C.woodD, hair: "#1a1010", tool: "smoke" },
+    localF2: { gender: "f", dress: true, hat: "scarf", scarf: C.blueD, scarfL: C.blueL, shirt: C.blue, shirtL: C.blueL, shirtD: C.blueD, shoes: C.navyD, hair: "#140c0c", tool: "smoke" },
     merchM: { gender: "m", hat: "chechia", shirt: C.wood, shirtL: C.woodL, shirtD: C.woodD, pants: C.navyD, pantsL: C.navy, apron: true, tool: "bag" },
     merchF: { gender: "f", dress: true, hat: "scarf", scarf: C.goldD, scarfL: C.gold, shirt: C.red, shirtL: C.redL, shirtD: C.redD, shoes: C.goldD, hair: "#2a1810", tool: "bag" },
     tourM: { gender: "m", hat: "cap", hatCol: C.blue, sunglass: true, shirt: C.blueL, shirtL: C.white, shirtD: C.blue, pants: C.sandC, pantsL: C.sandB, shoes: C.white, skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "camera" },
     tourM2: { gender: "m", hat: "cap", hatCol: C.gold, sunglass: true, shirt: C.goldL, shirtL: C.white, shirtD: C.goldD, pants: C.navyL, pantsL: C.blueL, shoes: C.red, skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890" },
-    tourF: { gender: "f", dress: true, hat: "sun", shirt: "#f878a0", shirtL: "#ffb0c8", shirtD: "#c04870", shoes: C.gold, hair: "#6a3c18", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890" },
+    tourF: { gender: "f", dress: true, hat: "sun", shirt: "#f878a0", shirtL: "#ffb0c8", shirtD: "#c04870", shoes: C.gold, hair: "#6a3c18", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "smoke" },
     tourF2: { gender: "f", dress: true, hat: "sun", shirt: "#40d090", shirtL: "#98f0c0", shirtD: "#1a9060", shoes: C.white, hair: "#c87828", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "camera" },
     fisher: { gender: "m", shirt: C.navyL, shirtL: C.white, shirtD: C.navy, pants: C.navyD, pantsL: C.navy, stripe: true, shoes: C.woodX, hair: "#1a1010", tool: "fish" },
     elder: { gender: "m", hat: "chechia", shirt: C.wall, shirtL: C.white, shirtD: C.wallS, pants: C.wallS, pantsL: C.wallD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060" },
-    elderF: { gender: "f", dress: true, hat: "scarf", scarf: C.wall, scarfL: C.white, shirt: C.wallS, shirtL: C.wall, shirtD: C.woodD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060" },
+    elderF: { gender: "f", dress: true, hat: "scarf", scarf: C.wall, scarfL: C.white, shirt: C.wallS, shirtL: C.wall, shirtD: C.woodD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060", tool: "smoke" },
     kidM: { gender: "m", kid: true, hat: "cap", hatCol: C.red, shirt: C.gold, shirtL: C.goldL, shirtD: C.goldD, pants: C.blue, pantsL: C.blueL, shoes: C.red, hair: "#2a1810" },
     kidF: { gender: "f", kid: true, dress: true, shirt: "#fc68a0", shirtL: "#ffb0d0", shirtD: "#c03870", shoes: C.red, hair: "#2a1010" },
     cafe: { gender: "m", shirt: C.white, shirtL: C.foam, shirtD: C.wallD, pants: C.ink, pantsL: C.navyD, shoes: C.ink, hair: "#1a1010", apron: true },
+    escort: { gender: "f", dress: true, short: true, shirt: "#d43070", shirtL: "#fc88b8", shirtD: "#8c1848", shoes: C.red, hair: "#1a0808", tool: "smoke" },
+    cabaret: { gender: "f", dress: true, short: true, shirt: C.gold, shirtL: C.goldL, shirtD: C.goldD, shoes: C.gold, hair: "#2a1018", tool: "smoke" },
   };
 
   function bake() {
@@ -1288,6 +1329,8 @@ const Atlas = (() => {
     frames.houseWarm = bakeHouseWarm();
     frames.shop = bakeShop();
     frames.stall = bakeStall();
+    frames.cabaret = bakeCabaret();
+    frames.signCabaret = bakeBanner("CABARET", C.redD);
     frames.minaret = bakeMinaret();
     frames.lamp = bakeLamp();
     frames.fountain = bakeFountain();

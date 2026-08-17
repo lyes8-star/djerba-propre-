@@ -39,9 +39,9 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.house, x, y);
   }
 
-  function drawShop(ctx, x, y, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 40, 40)) return;
-    Atlas.blit(ctx, Atlas.frames.shop, x, y);
+  function drawCabaret(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 56, 48)) return;
+    Atlas.blit(ctx, Atlas.frames.cabaret, x, y);
   }
 
   function drawStall(ctx, x, y, cam) {
@@ -263,6 +263,18 @@ const Sprites = (() => {
     const pack = Atlas.frames.npc && Atlas.frames.npc[n.style];
     const img = pack && (pack[`${face}_${walk}_${act}`] || pack[`${face}_0_0`]);
     if (img) Atlas.blit(ctx, img, n.x, n.y);
+    const st = Atlas.NPC_STYLES && Atlas.NPC_STYLES[n.style];
+    if (st && st.tool === "smoke" && !st.kid) {
+      const puff = n.acting || Math.sin(t * 4 + n.y) > 0.55;
+      if (puff) {
+        const side = (n.facing || 1) >= 0 ? 1 : -1;
+        const px = n.x + (side > 0 ? 26 : 4);
+        const py = n.y + 8 - ((t * 18 + n.x) % 8);
+        ctx.fillStyle = "rgba(220,220,220,0.7)";
+        ctx.fillRect(px, py, 2, 2);
+        ctx.fillRect(px + side, py - 3, 1, 1);
+      }
+    }
     if (n.prompt && !(n.bubble > 0)) {
       const bx = n.x + 12;
       const by = n.y - 12;
@@ -392,6 +404,8 @@ const Sprites = (() => {
       drawBoat(ctx, 880, 270, t + 2, cam);
     }
     Atlas.blit(ctx, Atlas.frames.signPort, 760, 310);
+    drawCabaret(ctx, 868, 348, cam);
+    if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 868, 334);
     drawFlag(ctx, 788, 292, "tn", t, cam);
     drawFlag(ctx, 900, 300, "il", t, cam);
 
@@ -456,8 +470,9 @@ const Sprites = (() => {
     drawHouse(ctx, 800, 640, cam);
     drawHouseWarm(ctx, 864, 644, cam);
     drawHouse(ctx, 560, 740, cam);
+    drawCabaret(ctx, 792, 728, cam);
+    if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 792, 714);
     drawHouseWarm(ctx, 624, 748, cam);
-    drawHouse(ctx, 800, 740, cam);
     drawHouseWarm(ctx, 864, 744, cam);
     Atlas.blit(ctx, Atlas.frames.signVille, 560, 508);
     Atlas.blit(ctx, Atlas.frames.signSahit, 640, 508);
