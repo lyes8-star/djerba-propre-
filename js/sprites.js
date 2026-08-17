@@ -156,6 +156,11 @@ const Sprites = (() => {
     const img = Atlas.frames[item.type] || Atlas.frames.can;
     if (cam && !Atlas.inView(cam, item.x, item.y, 16, 22)) return;
     Atlas.blit(ctx, img, item.x, item.y + bob);
+    if (item.rare && Math.sin(t * 8 + item.x) > 0.2) {
+      ctx.fillStyle = "#fcbc14";
+      ctx.fillRect(item.x + 12, item.y + bob - 3, 2, 2);
+      ctx.fillRect(item.x + 2, item.y + bob + 2, 1, 1);
+    }
   }
 
   function drawPlayer(ctx, p, goldHat, t, cam) {
@@ -350,6 +355,9 @@ const Sprites = (() => {
     ];
     shops.forEach(([sx, sy], i) => (i % 3 === 0 ? drawStall(ctx, sx, sy, cam) : drawShop(ctx, sx, sy, cam)));
     Atlas.blit(ctx, Atlas.frames.signSouk, 24, 508);
+    Atlas.blit(ctx, Atlas.frames.signHarissa, 150, 508);
+    Atlas.blit(ctx, Atlas.frames.signThe, 210, 508);
+    Atlas.blit(ctx, Atlas.frames.signYallah, 270, 508);
     drawFlag(ctx, 80, 500, "tn", t, cam);
     drawFlag(ctx, 350, 504, "il", t, cam);
     drawLamp(ctx, 140, 560, cam);
@@ -383,6 +391,8 @@ const Sprites = (() => {
     drawHouse(ctx, 800, 740, cam);
     drawHouseWarm(ctx, 864, 744, cam);
     Atlas.blit(ctx, Atlas.frames.signVille, 560, 508);
+    Atlas.blit(ctx, Atlas.frames.signSahit, 640, 508);
+    Atlas.blit(ctx, Atlas.frames.signInchallah, 720, 508);
     drawFlag(ctx, 616, 500, "tn", t, cam);
     drawFlag(ctx, 890, 504, "il", t, cam);
     drawLamp(ctx, 716, 560, cam);
@@ -495,7 +505,7 @@ const Sprites = (() => {
     ctx.restore();
   }
 
-  function drawMinimap(ctx, W, H, trash, player, t, cam, npcs) {
+  function drawMinimap(ctx, W, H, trash, player, t, cam, npcs, rares) {
     const mw = 44;
     const mh = 44;
     const mx = (cam && cam.x != null ? cam.x : 0) + (cam && cam.vw ? cam.vw : W) - mw - 8;
@@ -508,6 +518,10 @@ const Sprites = (() => {
     trash.forEach((tr) => {
       ctx.fillStyle = "#d43030";
       ctx.fillRect(mx + 3 + (tr.x / W) * (mw - 6), my + 3 + (tr.y / H) * (mh - 6), 2, 2);
+    });
+    (rares || []).forEach((r) => {
+      ctx.fillStyle = "#fcbc14";
+      ctx.fillRect(mx + 3 + (r.x / W) * (mw - 6), my + 3 + (r.y / H) * (mh - 6), 2, 2);
     });
     (npcs || []).forEach((n) => {
       ctx.fillStyle = n.style && n.style.startsWith("tour") ? "#70c8fc" : "#fce46c";

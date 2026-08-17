@@ -355,6 +355,134 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeBrik() {
+    const { c, ctx } = make(16, 16);
+    stamp(ctx, 0, 1, [
+      "......kk......",
+      ".....kGGk.....",
+      "....kGgGGk....",
+      "...kGGyyGGk...",
+      "..kGGyyyyGGk..",
+      ".kGGGyyyyGGGk.",
+      "kGGGGGGGGGGGGk",
+      ".kkkkkkkkkkkk.",
+      "..ssssssssss..",
+    ], { k: C.ink, G: C.gold, g: C.goldL, y: C.goldL, s: "rgba(0,0,0,0.25)" });
+    px(ctx, 7, 5, 3, 2, C.goldL);
+    p1(ctx, 8, 6, C.white);
+    return c;
+  }
+
+  function bakeLablabi() {
+    const { c, ctx } = make(16, 14);
+    px(ctx, 2, 4, 12, 8, C.ink);
+    px(ctx, 3, 5, 10, 6, C.woodD);
+    px(ctx, 4, 6, 8, 4, C.sandC);
+    px(ctx, 5, 7, 3, 2, C.red);
+    px(ctx, 9, 7, 2, 2, C.greenD);
+    px(ctx, 6, 4, 4, 2, C.sandA);
+    return c;
+  }
+
+  function bakeCouscous() {
+    const { c, ctx } = make(16, 14);
+    px(ctx, 1, 6, 14, 6, C.ink);
+    px(ctx, 2, 7, 12, 4, C.wall);
+    px(ctx, 4, 4, 8, 6, C.sandB);
+    px(ctx, 5, 3, 6, 2, C.sandA);
+    p1(ctx, 6, 6, C.red);
+    p1(ctx, 9, 7, C.green);
+    p1(ctx, 8, 5, C.goldD);
+    return c;
+  }
+
+  function bakeOjja() {
+    const { c, ctx } = make(16, 14);
+    px(ctx, 2, 5, 12, 7, C.ink);
+    px(ctx, 3, 6, 10, 5, C.redD);
+    px(ctx, 4, 7, 8, 3, C.red);
+    px(ctx, 5, 7, 3, 2, C.goldL);
+    px(ctx, 9, 8, 3, 2, C.gold);
+    return c;
+  }
+
+  function bakeMakroud() {
+    const { c, ctx } = make(16, 12);
+    px(ctx, 3, 3, 10, 6, C.ink);
+    px(ctx, 4, 4, 8, 4, C.goldD);
+    px(ctx, 5, 5, 6, 2, C.gold);
+    p1(ctx, 7, 5, C.woodD);
+    return c;
+  }
+
+  function bakeMlawi() {
+    const { c, ctx } = make(16, 12);
+    px(ctx, 2, 3, 12, 3, C.ink);
+    px(ctx, 3, 4, 10, 1, C.sandA);
+    px(ctx, 2, 6, 12, 3, C.ink);
+    px(ctx, 3, 7, 10, 1, C.sandB);
+    return c;
+  }
+
+  function bakeThe() {
+    const { c, ctx } = make(12, 16);
+    px(ctx, 3, 4, 6, 9, C.ink);
+    px(ctx, 4, 5, 4, 7, C.greenD);
+    px(ctx, 4, 5, 4, 2, C.greenL);
+    px(ctx, 9, 7, 2, 3, C.gold);
+    p1(ctx, 5, 3, C.green);
+    p1(ctx, 6, 2, C.greenL);
+    return c;
+  }
+
+  function bakeFricasse() {
+    const { c, ctx } = make(16, 12);
+    px(ctx, 2, 3, 12, 7, C.ink);
+    px(ctx, 3, 4, 10, 5, C.sandA);
+    px(ctx, 4, 6, 8, 2, C.red);
+    px(ctx, 5, 5, 6, 1, C.greenD);
+    return c;
+  }
+
+  function bakeBambalouni() {
+    const { c, ctx } = make(16, 14);
+    px(ctx, 3, 3, 10, 8, C.ink);
+    px(ctx, 4, 4, 8, 6, C.gold);
+    px(ctx, 6, 6, 4, 2, C.sandF);
+    px(ctx, 5, 4, 6, 1, C.goldL);
+    return c;
+  }
+
+  function bakeHarissa() {
+    const { c, ctx } = make(12, 16);
+    px(ctx, 4, 2, 4, 3, C.ink);
+    px(ctx, 3, 5, 6, 9, C.ink);
+    px(ctx, 4, 6, 4, 7, C.red);
+    px(ctx, 4, 6, 2, 3, C.redL);
+    px(ctx, 5, 3, 2, 2, C.white);
+    return c;
+  }
+
+  function bakeKaftaji() {
+    const { c, ctx } = make(16, 14);
+    px(ctx, 2, 5, 12, 7, C.ink);
+    px(ctx, 3, 6, 10, 5, C.wood);
+    px(ctx, 4, 7, 3, 2, C.goldD);
+    px(ctx, 8, 7, 3, 2, C.greenD);
+    px(ctx, 6, 8, 3, 2, C.red);
+    return c;
+  }
+
+  function bakeMechouia() {
+    const { c, ctx } = make(16, 14);
+    px(ctx, 2, 4, 12, 8, C.ink);
+    px(ctx, 3, 5, 10, 6, C.redD);
+    px(ctx, 4, 6, 8, 4, C.greenD);
+    px(ctx, 5, 7, 3, 2, C.red);
+    px(ctx, 9, 8, 2, 1, C.gold);
+    return c;
+  }
+
   function bakeBin() {
     const { c, ctx } = make(20, 24);
     stamp(ctx, 0, 0, [
@@ -1005,6 +1133,23 @@ const Atlas = (() => {
     frames.can = bakeCan();
     frames.bottle = bakeBottle();
     frames.bag = bakeBag();
+    frames.brik = bakeBrik();
+    frames.lablabi = bakeLablabi();
+    frames.couscous = bakeCouscous();
+    frames.ojja = bakeOjja();
+    frames.makroud = bakeMakroud();
+    frames.mlawi = bakeMlawi();
+    frames.the = bakeThe();
+    frames.fricasse = bakeFricasse();
+    frames.bambalouni = bakeBambalouni();
+    frames.harissa = bakeHarissa();
+    frames.kaftaji = bakeKaftaji();
+    frames.mechouia = bakeMechouia();
+    frames.signHarissa = bakeBanner("HARISSA", C.redD);
+    frames.signThe = bakeBanner("THE", C.greenD);
+    frames.signYallah = bakeBanner("YALLAH", C.goldD);
+    frames.signSahit = bakeBanner("SAHIT", C.navy);
+    frames.signInchallah = bakeBanner("MELA", C.terraD);
     frames.bin = bakeBin();
     frames.palm0 = bakePalm(0);
     frames.palm1 = bakePalm(2);

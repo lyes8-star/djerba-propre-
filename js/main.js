@@ -435,10 +435,18 @@
     const res = Player.action(player, world, selectedTool);
     if (!res) return;
     if (res.type === "pickup") {
-      AudioSys.sfx("pickup");
-      FX.pickup(res.item.x, res.item.y);
-      FX.floatText(res.item.x, res.item.y - 6, `+${res.points}`);
-      if (res.combo >= 2) UI.showCombo(res.combo);
+      if (res.rare) {
+        AudioSys.sfx("super");
+        FX.stars(res.item.x, res.item.y);
+        FX.floatText(res.item.x, res.item.y - 10, res.name, "#ffd24a");
+        UI.toast(`TROUVE !<br/>${res.name}<span class="bonus">plat rare tunisien +${res.points}</span>`, 2600);
+        if (res.coins) Progress.addCoins(res.coins);
+      } else {
+        AudioSys.sfx("pickup");
+        FX.pickup(res.item.x, res.item.y);
+        FX.floatText(res.item.x, res.item.y - 6, `+${res.points}`);
+        if (res.combo >= 2) UI.showCombo(res.combo);
+      }
     } else if (res.type === "recycle") {
       AudioSys.sfx("recycle");
       FX.recycle(world.bin.x + 6, world.bin.y + 4);
@@ -474,7 +482,7 @@
       FX.hitShake(0.35);
       UI.toast(`SUPER!<br/>Objectif propre! +500<span class="bonus">+25s</span>`, 2200);
     }
-    if (World.objectives(world).every((o) => o.done) && player.inventory.length === 0) {
+    if (World.objectives(world).filter((o) => o.id !== "plats").every((o) => o.done) && player.inventory.length === 0) {
       endGame("clear");
     }
   }
@@ -499,6 +507,7 @@
 
     Sprites.drawWorldBg(ctx, W, H, t, world.theme, cam);
     for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
+    for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
     Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
     const gold = Progress.get().cosmetics.hat_gold;
     const actors = (world.npcs || []).map((n) => ({ n, y: n.y, player: false }));
@@ -510,7 +519,7 @@
     }
     FX.draw(ctx);
 
-    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam, world.npcs);
+    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
     ctx.restore();
     FX.drawFlash(ctx, canvas.width, canvas.height);
   }
