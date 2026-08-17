@@ -215,6 +215,7 @@
     const boosts = Progress.consumeBoostsOnStart();
     world = World.create(mission);
     player = Player.create(Progress.toolStats());
+    Npc.spawn(world);
     AudioSys.unlock();
     AudioSys.setTheme(playMusicTheme());
     AudioSys.startMusic(playMusicTheme());
@@ -346,6 +347,13 @@
     } else if (res.type === "full") {
       UI.toast("SAC PLEIN!<br/>Va recycler");
       FX.hitShake(0.15);
+    } else if (res.type === "talk") {
+      AudioSys.sfx("click");
+      UI.toast(`${res.who}<br/>${res.text}`, 2600);
+      if (res.coins) {
+        Progress.addCoins(res.coins);
+        FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
+      }
     }
   }
 
@@ -386,7 +394,14 @@
     Sprites.drawWorldBg(ctx, W, H, t, world.theme, cam);
     for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
     Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
-    Sprites.drawPlayer(ctx, player, Progress.get().cosmetics.hat_gold, t, cam);
+    const gold = Progress.get().cosmetics.hat_gold;
+    const actors = (world.npcs || []).map((n) => ({ n, y: n.y, player: false }));
+    actors.push({ y: player.y, player: true });
+    actors.sort((a, b) => a.y - b.y);
+    for (const a of actors) {
+      if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
+      else Sprites.drawNpc(ctx, a.n, t, cam);
+    }
     FX.draw(ctx);
 
     // inventory HUD in world space near bottom of view
@@ -401,7 +416,7 @@
     ctx.font = "8px monospace";
     ctx.fillText(`BAG ${player.inventory.length}/${player.stats.capacity}`, ix + 4, iy + 10);
 
-    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam);
+    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam, world.npcs);
     ctx.restore();
     FX.drawFlash(ctx, canvas.width, canvas.height);
   }
@@ -413,6 +428,7 @@
     animTime = ts / 1000;
 
     Player.update(player, dt, input, world);
+    Npc.update(world, dt, player, animTime);
     World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
@@ -442,6 +458,9 @@
     if (state !== "play") return;
     render(animTime);
     UI.updateHud(Progress.get(), world, timeLeft);
+    const nearNpc = Npc.nearest(world, player, 34);
+    if (nearNpc && selectedTool !== "balai") UI.setToolLabel("PARLER");
+    else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
     if ((ts / 200 | 0) % 2 === 0) UI.drawAvatar(animTime);
     raf = requestAnimationFrame(loop);
   }

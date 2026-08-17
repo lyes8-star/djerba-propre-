@@ -758,8 +758,8 @@ const Atlas = (() => {
     return c;
   }
 
-  /* —— PLAYER 32x40, 3/4 view, TWO EYES, hat, belt, pince —— */
-  function bakePlayer(facing, walk, attacking, goldHat) {
+  /* —— Personne 32x40 (joueur + PNJ), 3/4, deux yeux, tenues —— */
+  function bakePerson(st, facing, walk, acting) {
     const { c, ctx } = make(PW, PH);
     const flip = facing < 0;
     function X(x) { return flip ? PW - 1 - x : x; }
@@ -771,114 +771,181 @@ const Atlas = (() => {
     function dot(x, y, col) { p1(ctx, X(x), y, col); }
     function eye(x, y) {
       bar(x, y, 4, 4, C.white);
-      bar(x + 1, y + 1, 2, 2, C.navy);
-      dot(x + 2, y + 2, C.ink);
-      dot(x + 1, y + 1, C.white);
+      bar(x + 1, y + 1, 2, 2, st.sunglass ? C.ink : C.navy);
+      if (!st.sunglass) {
+        dot(x + 2, y + 2, C.ink);
+        dot(x + 1, y + 1, C.white);
+      }
       bar(x, y - 1, 4, 1, C.ink);
     }
 
+    const woman = st.gender === "f";
+    const kid = !!st.kid;
     const stride = walk === 1 || walk === 3;
     const bob = stride ? -1 : 0;
-    const y0 = 2 + bob;
+    const y0 = (kid ? 6 : 2) + bob;
     const lLeg = walk === 1 ? -3 : walk === 3 ? 2 : 0;
     const rLeg = walk === 1 ? 2 : walk === 3 ? -3 : 0;
-    const lArm = walk === 1 ? 2 : walk === 3 ? -2 : 0;
-    const rArm = -lArm;
+    const wave = !!acting && st.tool !== "pince";
+    const lArm = wave ? -6 : walk === 1 ? 2 : walk === 3 ? -2 : 0;
+    const rArm = wave ? -8 : -(walk === 1 ? 2 : walk === 3 ? -2 : 0);
 
-    const hat = goldHat ? C.gold : C.green;
-    const hatL = goldHat ? C.goldL : C.greenL;
-    const hatD = goldHat ? C.goldD : C.greenD;
+    const skin = st.skin || C.skin;
+    const skinL = st.skinL || C.skinL;
+    const skinD = st.skinD || C.skinD;
+    const skinM = st.skinM || C.skinM;
+    const shirt = st.shirt || C.green;
+    const shirtL = st.shirtL || C.greenL;
+    const shirtD = st.shirtD || C.greenD;
+    const pants = st.pants || C.navy;
+    const pantsL = st.pantsL || C.navyL;
+    const shoes = st.shoes || C.woodX;
 
     bar(7, 37, 18, 2, "rgba(0,0,0,0.28)");
 
-    // legs + shoes
-    bar(8, y0 + 26 + lLeg, 6, 8, C.navy);
-    bar(9, y0 + 27 + lLeg, 3, 5, C.navyL);
-    bar(8, y0 + 32 + lLeg, 7, 3, C.woodX);
-    bar(9, y0 + 32 + lLeg, 5, 1, C.wood);
-    bar(8, y0 + 32 + lLeg, 7, 1, C.ink);
-    bar(16, y0 + 26 + rLeg, 6, 8, C.navyD);
-    bar(17, y0 + 27 + rLeg, 3, 5, C.navy);
-    bar(16, y0 + 32 + rLeg, 7, 3, C.woodX);
-    bar(17, y0 + 32 + rLeg, 5, 1, C.woodL);
-    bar(16, y0 + 32 + rLeg, 7, 1, C.ink);
-
-    // torso
-    bar(8, y0 + 16, 15, 12, C.ink);
-    bar(9, y0 + 17, 13, 10, C.greenD);
-    bar(9, y0 + 17, 13, 4, C.green);
-    bar(10, y0 + 17, 4, 3, C.greenL);
-    bar(10, y0 + 16, 3, 5, hatD);
-    bar(18, y0 + 16, 3, 5, hatD);
-    bar(9, y0 + 25, 13, 2, C.navyD);
-    bar(10, y0 + 25, 11, 1, C.navyL);
-    bar(12, y0 + 21, 6, 4, C.white);
-    bar(13, y0 + 22, 4, 2, C.greenD);
-    dot(14, y0 + 19, C.gold);
-    dot(18, y0 + 19, C.gold);
-
-    // back arm + glove
-    bar(4, y0 + 18 + lArm, 5, 5, C.greenD);
-    bar(3, y0 + 22 + lArm, 5, 5, C.white);
-    bar(3, y0 + 22 + lArm, 5, 1, C.ink);
-    dot(4, y0 + 24 + lArm, C.cloudD);
-
-    // HEAD (3/4) — two eyes always
-    bar(8, y0 + 6, 16, 12, C.ink);
-    bar(9, y0 + 7, 14, 10, C.skin);
-    bar(9, y0 + 7, 4, 4, C.skinL);
-    bar(7, y0 + 11, 2, 4, C.skinD);
-    bar(23, y0 + 11, 2, 4, C.skinD);
-    bar(10, y0 + 14, 12, 2, C.skinD);
-    eye(10, y0 + 9);
-    eye(17, y0 + 9);
-    bar(15, y0 + 12, 4, 3, C.skinM);
-    dot(18, y0 + 13, C.skinD);
-    bar(13, y0 + 16, 6, 1, C.redD);
-    bar(14, y0 + 17, 4, 1, C.skinD);
-    dot(12, y0 + 13, C.redL);
-    dot(20, y0 + 13, C.redL);
-
-    // hat
-    bar(8, y0 + 5, 16, 3, C.ink);
-    bar(9, y0 + 1, 13, 6, C.ink);
-    bar(10, y0 + 2, 11, 4, hat);
-    bar(11, y0 + 1, 8, 2, hatL);
-    bar(9, y0 + 5, 14, 2, hatD);
-    bar(6, y0 + 6, 20, 2, hat);
-    bar(6, y0 + 6, 20, 1, C.ink);
-    if (goldHat) {
-      bar(14, y0 + 3, 4, 3, C.goldL);
-      dot(15, y0 + 4, C.white);
+    if (woman && st.dress) {
+      bar(7, y0 + 16, 17, 18, C.ink);
+      bar(8, y0 + 17, 15, 16, shirtD);
+      bar(8, y0 + 17, 15, 5, shirt);
+      bar(9, y0 + 17, 5, 3, shirtL);
+      bar(9, y0 + 30 + lLeg, 5, 4, shoes);
+      bar(16, y0 + 30 + rLeg, 5, 4, shoes);
     } else {
-      bar(13, y0 + 3, 5, 2, C.white);
-      bar(14, y0 + 3, 3, 2, C.greenL);
+      bar(8, y0 + 26 + lLeg, 6, 8, pants);
+      bar(9, y0 + 27 + lLeg, 3, 5, pantsL);
+      bar(8, y0 + 32 + lLeg, 7, 3, shoes);
+      bar(16, y0 + 26 + rLeg, 6, 8, pants);
+      bar(17, y0 + 27 + rLeg, 3, 5, pantsL);
+      bar(16, y0 + 32 + rLeg, 7, 3, shoes);
+      bar(8, y0 + 16, 15, 12, C.ink);
+      bar(9, y0 + 17, 13, 10, shirtD);
+      bar(9, y0 + 17, 13, 4, shirt);
+      bar(10, y0 + 17, 4, 3, shirtL);
+      bar(9, y0 + 25, 13, 2, pants);
     }
 
-    // front arm + glove
-    bar(22, y0 + 18 + rArm, 5, 5, C.green);
-    bar(23, y0 + 22 + rArm, 5, 5, C.white);
-    bar(23, y0 + 22 + rArm, 5, 1, C.ink);
-    dot(25, y0 + 24 + rArm, C.cloudD);
+    if (st.apron) {
+      bar(11, y0 + 18, 9, 10, C.white);
+      bar(12, y0 + 19, 7, 2, C.red);
+    }
+    if (st.stripe) {
+      bar(9, y0 + 20, 13, 2, C.white);
+      bar(9, y0 + 24, 13, 2, C.white);
+    }
 
-    // scorpion pince
-    const ax = attacking ? 20 : 18;
-    const ay = y0 + (attacking ? 14 : 20) + rArm;
-    bar(ax, ay, attacking ? 8 : 6, 3, C.navyD);
-    bar(ax + 1, ay, 3, 3, C.navyL);
-    if (attacking) {
-      bar(ax + 5, ay - 3, 6, 2, C.gold);
-      bar(ax + 5, ay + 4, 6, 2, C.gold);
-      bar(ax + 7, ay, 4, 3, C.red);
-      dot(ax + 10, ay + 1, C.goldL);
-    } else {
-      bar(ax + 4, ay - 2, 5, 2, C.gold);
-      bar(ax + 4, ay + 3, 5, 2, C.goldD);
-      bar(ax + 5, ay, 4, 3, C.red);
+    bar(4, y0 + 18 + lArm, 5, 5, shirtD);
+    bar(3, y0 + 22 + lArm, 5, 5, st.gloves ? C.white : skin);
+    bar(22, y0 + 18 + rArm, 5, 5, shirt);
+    bar(23, y0 + 22 + rArm, 5, 5, st.gloves ? C.white : skin);
+
+    bar(8, y0 + 6, 16, 12, C.ink);
+    bar(9, y0 + 7, 14, 10, skin);
+    bar(9, y0 + 7, 4, 4, skinL);
+    bar(7, y0 + 11, 2, 4, skinD);
+    bar(23, y0 + 11, 2, 4, skinD);
+    if (woman && st.hair) {
+      bar(6, y0 + 8, 3, 10, st.hair);
+      bar(23, y0 + 8, 4, 12, st.hair);
+      if (st.hat !== "scarf") bar(9, y0 + 5, 14, 4, st.hair);
+    }
+    eye(10, y0 + 9);
+    eye(17, y0 + 9);
+    if (st.sunglass) bar(10, y0 + 10, 11, 2, C.ink);
+    bar(15, y0 + 12, 4, 3, skinM);
+    bar(13, y0 + 16, 6, 1, C.redD);
+    if (woman) bar(12, y0 + 13, 2, 1, C.redL);
+
+    const hat = st.hat;
+    if (hat === "green" || hat === "gold") {
+      const hc = hat === "gold" ? C.gold : C.green;
+      const hl = hat === "gold" ? C.goldL : C.greenL;
+      bar(8, y0 + 5, 16, 3, C.ink);
+      bar(9, y0 + 1, 13, 6, C.ink);
+      bar(10, y0 + 2, 11, 4, hc);
+      bar(11, y0 + 1, 8, 2, hl);
+      bar(6, y0 + 6, 20, 2, hc);
+      if (hat === "gold") bar(14, y0 + 3, 4, 3, C.goldL);
+      else bar(13, y0 + 3, 5, 2, C.white);
+    } else if (hat === "chechia") {
+      bar(10, y0 + 0, 12, 7, C.ink);
+      bar(11, y0 + 1, 10, 5, C.red);
+      bar(12, y0 + 1, 8, 2, C.redL);
+      bar(14, y0 + 0, 4, 1, C.redD);
+    } else if (hat === "scarf") {
+      const sc = st.scarf || C.terra;
+      bar(7, y0 + 3, 18, 8, C.ink);
+      bar(8, y0 + 4, 16, 6, sc);
+      bar(6, y0 + 10, 5, 12, sc);
+      bar(7, y0 + 10, 3, 12, st.scarfL || C.terraL);
+    } else if (hat === "sun") {
+      bar(4, y0 + 5, 24, 3, C.ink);
+      bar(5, y0 + 5, 22, 2, C.sandB);
+      bar(10, y0 + 1, 12, 6, C.ink);
+      bar(11, y0 + 2, 10, 4, C.sandA);
+    } else if (hat === "cap") {
+      bar(8, y0 + 3, 16, 5, C.ink);
+      bar(9, y0 + 4, 14, 3, st.hatCol || C.blue);
+      bar(20, y0 + 6, 7, 2, st.hatCol || C.blueD);
+    } else if (st.hair && !woman) {
+      bar(9, y0 + 5, 14, 3, st.hair);
+    }
+
+    if (st.tool === "pince") {
+      const ax = acting ? 20 : 18;
+      const ay = y0 + (acting ? 14 : 20) + rArm;
+      bar(ax, ay, acting ? 8 : 6, 3, C.navyD);
+      if (acting) {
+        bar(ax + 5, ay - 3, 6, 2, C.gold);
+        bar(ax + 5, ay + 4, 6, 2, C.gold);
+        bar(ax + 7, ay, 4, 3, C.red);
+      } else {
+        bar(ax + 4, ay - 2, 5, 2, C.gold);
+        bar(ax + 5, ay, 4, 3, C.red);
+      }
+    } else if (st.tool === "bag") {
+      bar(2, y0 + 24, 6, 8, C.bag);
+      bar(3, y0 + 25, 4, 3, C.bagL);
+    } else if (st.tool === "camera") {
+      bar(24, y0 + 14 + rArm, 6, 5, C.ink);
+      bar(25, y0 + 15 + rArm, 4, 3, C.metal);
+    } else if (st.tool === "fish") {
+      bar(24, y0 + 20, 7, 3, C.blueL);
+      bar(30, y0 + 20, 2, 2, C.gold);
     }
 
     return c;
   }
+
+  function bakePlayer(facing, walk, attacking, goldHat) {
+    return bakePerson({
+      gender: "m",
+      hat: goldHat ? "gold" : "green",
+      shirt: C.green, shirtL: C.greenL, shirtD: C.greenD,
+      pants: C.navy, pantsL: C.navyL,
+      shoes: C.woodX,
+      tool: "pince",
+      gloves: true,
+    }, facing, walk, attacking);
+  }
+
+  const NPC_STYLES = {
+    localM: { gender: "m", hat: "chechia", shirt: C.white, shirtL: C.wall, shirtD: C.wallD, pants: C.navy, pantsL: C.navyL, shoes: C.woodX, hair: "#2a1c14" },
+    localM2: { gender: "m", shirt: C.sandC, shirtL: C.sandA, shirtD: C.sandE, pants: C.woodD, pantsL: C.wood, shoes: C.woodX, hair: "#1a1010" },
+    localF: { gender: "f", dress: true, hat: "scarf", scarf: C.terra, scarfL: C.terraL, shirt: C.terra, shirtL: C.terraL, shirtD: C.terraD, shoes: C.woodD, hair: "#1a1010" },
+    localF2: { gender: "f", dress: true, hat: "scarf", scarf: C.blueD, scarfL: C.blueL, shirt: C.blue, shirtL: C.blueL, shirtD: C.blueD, shoes: C.navyD, hair: "#140c0c" },
+    merchM: { gender: "m", hat: "chechia", shirt: C.wood, shirtL: C.woodL, shirtD: C.woodD, pants: C.navyD, pantsL: C.navy, apron: true, tool: "bag" },
+    merchF: { gender: "f", dress: true, hat: "scarf", scarf: C.goldD, scarfL: C.gold, shirt: C.red, shirtL: C.redL, shirtD: C.redD, shoes: C.goldD, hair: "#2a1810", tool: "bag" },
+    tourM: { gender: "m", hat: "cap", hatCol: C.blue, sunglass: true, shirt: C.blueL, shirtL: C.white, shirtD: C.blue, pants: C.sandC, pantsL: C.sandB, shoes: C.white, skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "camera" },
+    tourM2: { gender: "m", hat: "cap", hatCol: C.gold, sunglass: true, shirt: C.goldL, shirtL: C.white, shirtD: C.goldD, pants: C.navyL, pantsL: C.blueL, shoes: C.red, skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890" },
+    tourF: { gender: "f", dress: true, hat: "sun", shirt: "#f878a0", shirtL: "#ffb0c8", shirtD: "#c04870", shoes: C.gold, hair: "#6a3c18", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890" },
+    tourF2: { gender: "f", dress: true, hat: "sun", shirt: "#40d090", shirtL: "#98f0c0", shirtD: "#1a9060", shoes: C.white, hair: "#c87828", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "camera" },
+    fisher: { gender: "m", shirt: C.navyL, shirtL: C.white, shirtD: C.navy, pants: C.navyD, pantsL: C.navy, stripe: true, shoes: C.woodX, hair: "#1a1010", tool: "fish" },
+    elder: { gender: "m", hat: "chechia", shirt: C.wall, shirtL: C.white, shirtD: C.wallS, pants: C.wallS, pantsL: C.wallD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060" },
+    elderF: { gender: "f", dress: true, hat: "scarf", scarf: C.wall, scarfL: C.white, shirt: C.wallS, shirtL: C.wall, shirtD: C.woodD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060" },
+    kidM: { gender: "m", kid: true, hat: "cap", hatCol: C.red, shirt: C.gold, shirtL: C.goldL, shirtD: C.goldD, pants: C.blue, pantsL: C.blueL, shoes: C.red, hair: "#2a1810" },
+    kidF: { gender: "f", kid: true, dress: true, shirt: "#fc68a0", shirtL: "#ffb0d0", shirtD: "#c03870", shoes: C.red, hair: "#2a1010" },
+    cafe: { gender: "m", shirt: C.white, shirtL: C.foam, shirtD: C.wallD, pants: C.ink, pantsL: C.navyD, shoes: C.ink, hair: "#1a1010", apron: true },
+  };
 
   function bake() {
     if (ready) return;
@@ -944,6 +1011,17 @@ const Atlas = (() => {
         }
       }
     }
+    frames.npc = {};
+    for (const id of Object.keys(NPC_STYLES)) {
+      frames.npc[id] = {};
+      for (const face of [1, -1]) {
+        for (let w = 0; w < 4; w++) {
+          for (const act of [0, 1]) {
+            frames.npc[id][`${face}_${w}_${act}`] = bakePerson(NPC_STYLES[id], face, w, !!act);
+          }
+        }
+      }
+    }
     ready = true;
   }
 
@@ -957,5 +1035,5 @@ const Atlas = (() => {
     return x + w > cam.x && x < cam.x + cam.vw && y + h > cam.y && y < cam.y + cam.vh;
   }
 
-  return { C, tiles, frames, bake, blit, inView, ready: () => ready, PW, PH };
+  return { C, tiles, frames, bake, blit, inView, ready: () => ready, PW, PH, NPC_STYLES };
 })();
