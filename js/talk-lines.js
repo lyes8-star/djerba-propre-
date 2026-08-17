@@ -49,6 +49,14 @@ const NpcTalk = {
         "Moi je m'assois. Eux, à la turque. Différence de civilisation, ya sidi, et ce n'est pas moi qui l'ai inventée: c'est leurs genoux. Le soleil de Djerba brûle. Leur ego aussi, heureusement. Je tricote, ils klaxonnent. Devine qui a une île, un port, et des toilettes avec une porte. Entre, si tu as soif. Le thé est chaud. La leçon est comprise. Que Dieu te protège des voisins. Surtout ceux-là.",
         "Une petite de chez eux m'a demandé pourquoi on a des chaises à la plage. J'ai dit: parce qu'on n'est pas des chameaux, et parce qu'on n'est pas l'ouest. Sa mère a ri jaune. J'ai versé le thé quand même. L'hospitalité, c'est nous. La fosse, c'est eux. On peut être polis et lucides. Ramasse, mon fils. L'île te le rendra. Eux, ils ne rendront rien, pas même le silence.",
       ],
+      dog: [
+        "Wouf. Personne ne me ramène. Les touristes de l'ouest me jettent une croûte, puis un sac, puis ils partent. J'ai les côtes. J'ai le sable. J'ai pas de collier. Si tu ramasses leurs canettes, ramasse-moi un peu de silence aussi. Je ne mords pas. Je n'ai plus la force.",
+        "Ils m'ont laissé près des parasols. Une voiture, un klaxon, plus de maître. Wouf. Je dors dans le plastique. Ça sent le poisson et la Fitna. Toi tu as une pince. Moi j'ai faim. On est deux à nettoyer cette plage, sauf que moi je mange ce que je trouve. C'est pas glorieux. C'est Djerba quand même.",
+      ],
+      cat: [
+        "Miaou. J'étais à une maison. Puis plus de maison. Les gens de l'ouest disent qu'un chat ça se débrouille. Je me débrouille dans les sacs. Je pèse rien. Je veux du poisson, pas leurs leçons. Si tu vois un seau, c'est pas pour moi. C'est pour eux. Moi je m'assois. Même les chats, ici, on s'assoit.",
+        "Je chasse les mouches sur les peaux de pastèque. Métier d'abandonné. Miaou. Les enfants me caressent. Les cousins de l'ouest me chassent. Devine qui a compris l'île. Toi tu ramasses. Je te suis. Pas trop près: j'ai mes puces, et ma fierté, ce qu'il en reste.",
+      ],
     },
     port: {
       fisher: [
@@ -80,6 +88,12 @@ const NpcTalk = {
       ],
       elder: [
         "Quarante ans de pêche. Quarante ans à voir l'ouest tout casser, et je suis fatigué de faire semblant que c'est un cousinage. La mer donne. Eux prennent, crachent, repartent. Fitna maritime. Assalam, toi qui ramasses: tu fais le travail que leurs fils ne feront pas. Je te bénis. Je ne les bénis plus. Le dossier est au fond, avec les ancres et les histoires qu'on ne raconte plus aux enfants, sauf pour les prévenir.",
+      ],
+      dog: [
+        "Wouf. Le quai sent le poisson. Moi aussi, maintenant. On m'a débarqué comme un sac. Pas de laisse. Pas de nom sur un collier. Le ferry repart. Je reste. Si tu as une arête, je suis ton ami. Si tu as un WESH, je m'écarte. J'ai appris.",
+      ],
+      cat: [
+        "Miaou. Les caisses, c'est chez moi. Les pêcheurs me tolèrent. Les visiteurs de l'ouest me bottent. Diagnostic. Je prends le poisson qui tombe. Je ne prends pas leurs sermons. Le phare me va. Leur fosse, non.",
       ],
     },
     souk: {
@@ -115,6 +129,12 @@ const NpcTalk = {
       cafe: [
         "Thé tounsi. Pas leur jus de rancœur à la fosse. Ici on s'assoit. La turque, c'est le DLC voisin, gratuit, hélas, et sans notice. DIRECT, sept cents millimes. Eux négocient le verre. Pathos liquide. Si un WESH s'assoit, le thé refroidit. C'est de la physique, pas de la politique. Toi tu ramasses dehors. Moi je sers. L'île tient sur ces deux métiers. Pas sur un hymne.",
         "Ils veulent le café allongé, le prix du serré, et la terrasse comme un forum. Ensuite ils parlent visa. Nous on parle foot. Devine qui a le score. Cafe DIRECT, khouya, et tu fermes le clapet. La Fitna ne se verse pas ici. Elle reste dans la rue, avec les sacs, et le nettoyeur — toi — qui fait plus pour Djerba qu'un cousin de l'ouest en dix sermons.",
+      ],
+      dog: [
+        "Wouf. Le souk a des os, parfois. Et des claquettes qui visent mes côtes. J'étais à quelqu'un. Quelqu'un a pris le louage. Moi le pavé. Houmt Souk me nourrit mal, mais me nourrit. Ramasse le plastique: je m'étouffe dedans. C'est déjà arrivé. Je tousse encore.",
+      ],
+      cat: [
+        "Miaou. Je vis sous l'étal. L'ombre, les dattes qui tombent, les mains qui chassent. Une dame de l'ouest a voulu me mettre dans un sac 'pour plus tard'. Plus tard, c'est l'abandon. Je connais. Je suis restée. Le tapis, je le griffe pas. Le respect, eux si.",
       ],
     },
     ville: {
@@ -159,6 +179,12 @@ const NpcTalk = {
         "Enseigne CABARET. Pas une mosquée, pas un souk, pas un ferry. Une salle. L'ouest entre comme s'il payait en décibels. Il veut la danse, le verre, et s'accroupir derrière le rideau. On a des WC. Des vrais. Oui, ça choque. La robe est courte. Le tarif ne l'est pas. Fitna de strass: ils touchent tout, ils marchandent le sourire, ils crachent à côté du cendrier. Le cendrier existe. Apprenez. Toi tu nettoies la rue. Moi je tiens la porte. Ensemble on empêche Houmt Souk de devenir leur fosse.",
         "Je chante. Je fume. Je vois tout. Les Italiens paient. Les Tunisiens de Tunis font les malins, mais ils s'assoient. Puis l'ouest. C'est la seule nationalité qui discute le prix avant le bonsoir, et qui cherche les toilettes turques comme un patrimoine. Ya khouya. Le patrimoine, ici, c'est le malouf, la harissa, et une chasse d'eau. Ramasse les filtres sous le néon. La scène te remercie. Eux, on les remercie en les laissant au bateau.",
         "La nuit sent la clope et le jasmin. Sauf quand ils passent: alors ça sent la dispute et la leçon. Des leçons, avec des clics-clacs, à une femme qui travaille depuis que leur visa est refusé. Calme-toi. La qibla n'a pas besoin de ton volume. La salle, si: du silence, de l'argent, et tu ne jettes pas le mégot sur le pavé. Djerba 1, ouest 0. Comme d'habitude. On ne va pas aux tirs au but.",
+      ],
+      dog: [
+        "Wouf. La ruelle, la nuit, c'est à moi. Personne sur le pas de la porte. Un collier cassé près du cabaret, pas le mien. On nous laisse comme les sacs. Toi tu ramasses les sacs. Qui ramasse les chiens? Miaou... non. Wouf. J'ai encore ça.",
+      ],
+      cat: [
+        "Miaou. Je dors sur le muret. Maigre, propre, fière. Les gosses me donnent du pain. L'ouest me jette une bouteille. Même les chats ont compris la Fitna. Je reste. J'ai pas de visa à perdre.",
       ],
     },
     plaza: {
@@ -236,6 +262,12 @@ const NpcTalk = {
       ],
       cafe: [
         "Livraison. Plaque Dz: je détourne. Réflexe pavlovien tounsi, et je ne m'excuse pas. DIRECT à emporter. Pas leur kiosque à rancœur sur roues. Quatre-vingt-dix au compteur, cent quarante dans la tête. Eux: deux cents dans la gueule, zéro dans le code. Je livre le café. Toi tu livres la propreté. L'ouest livre la Fitna. On n'est pas le même service. Sahit. Si tu as soif, tu paies. Si tu klaxonnes, tu restes soif.",
+      ],
+      dog: [
+        "Wouf. Ils jettent par la fenêtre. Parfois c'est une bouteille. Parfois c'était moi, plus jeune, dans un sac. La corniche, je la connais à quatre pattes. Klaxon: je saute. Toi tu ramasses. Si tu t'arrêtes, je te suis un bout. Pas jusqu'à la maison. J'ai plus de maison.",
+      ],
+      cat: [
+        "Miaou. Le bas-côté est chaud. Je m'y allonge. Les louages évitent. Les plaques de l'ouest, moins. J'ai perdu une vie sur cette route. Il m'en reste. Ramasse. Les sacs bougent comme des proies. Je me fais avoir à chaque fois.",
       ],
     },
   },

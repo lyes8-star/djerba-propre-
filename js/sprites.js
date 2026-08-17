@@ -39,6 +39,11 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.house, x, y);
   }
 
+  function drawShop(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 40, 40)) return;
+    Atlas.blit(ctx, Atlas.frames.shop, x, y);
+  }
+
   function drawCabaret(ctx, x, y, cam) {
     if (cam && !Atlas.inView(cam, x, y, 56, 48)) return;
     Atlas.blit(ctx, Atlas.frames.cabaret, x, y);
@@ -254,29 +259,38 @@ const Sprites = (() => {
   }
 
   function drawNpc(ctx, n, t, cam) {
-    if (cam && !Atlas.inView(cam, n.x, n.y, Atlas.PW, Atlas.PH)) return;
+    const animal = n.style === "dog" || n.style === "cat" || n.style === "catGinger";
+    const aw = animal ? 24 : Atlas.PW;
+    const ah = animal ? 16 : Atlas.PH;
+    if (cam && !Atlas.inView(cam, n.x, n.y, aw, ah)) return;
     const moving = Math.hypot(n.vx || 0, n.vy || 0) > 6;
     const idle = !moving && Math.sin(t * 3 + n.y) > 0.82 ? 2 : 0;
     const walk = moving ? Math.floor(t * 10) % 4 : idle;
     const face = (n.facing || 1) >= 0 ? 1 : -1;
-    const act = n.acting ? 1 : 0;
-    const pack = Atlas.frames.npc && Atlas.frames.npc[n.style];
-    const img = pack && (pack[`${face}_${walk}_${act}`] || pack[`${face}_0_0`]);
-    if (img) Atlas.blit(ctx, img, n.x, n.y);
-    const st = Atlas.NPC_STYLES && Atlas.NPC_STYLES[n.style];
-    if (st && st.tool === "smoke" && !st.kid) {
-      const puff = n.acting || Math.sin(t * 4 + n.y) > 0.55;
-      if (puff) {
-        const side = (n.facing || 1) >= 0 ? 1 : -1;
-        const px = n.x + (side > 0 ? 26 : 4);
-        const py = n.y + 8 - ((t * 18 + n.x) % 8);
-        ctx.fillStyle = "rgba(220,220,220,0.7)";
-        ctx.fillRect(px, py, 2, 2);
-        ctx.fillRect(px + side, py - 3, 1, 1);
+    if (animal) {
+      const pack = Atlas.frames.stray && Atlas.frames.stray[n.style];
+      const img = pack && (pack[`${face}_${walk}`] || pack[`${face}_0`]);
+      if (img) Atlas.blit(ctx, img, n.x, n.y);
+    } else {
+      const act = n.acting ? 1 : 0;
+      const pack = Atlas.frames.npc && Atlas.frames.npc[n.style];
+      const img = pack && (pack[`${face}_${walk}_${act}`] || pack[`${face}_0_0`]);
+      if (img) Atlas.blit(ctx, img, n.x, n.y);
+      const st = Atlas.NPC_STYLES && Atlas.NPC_STYLES[n.style];
+      if (st && st.tool === "smoke" && !st.kid) {
+        const puff = n.acting || Math.sin(t * 4 + n.y) > 0.55;
+        if (puff) {
+          const side = (n.facing || 1) >= 0 ? 1 : -1;
+          const px = n.x + (side > 0 ? 26 : 4);
+          const py = n.y + 8 - ((t * 18 + n.x) % 8);
+          ctx.fillStyle = "rgba(220,220,220,0.7)";
+          ctx.fillRect(px, py, 2, 2);
+          ctx.fillRect(px + side, py - 3, 1, 1);
+        }
       }
     }
     if (n.prompt && !(n.bubble > 0)) {
-      const bx = n.x + 12;
+      const bx = n.x + (animal ? 8 : 12);
       const by = n.y - 12;
       ctx.fillStyle = "#140c1c";
       ctx.fillRect(bx, by, 9, 11);

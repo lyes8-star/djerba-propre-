@@ -32,6 +32,9 @@ const Npc = (() => {
     cafe: ["Khaled", "Bilel", "Fares"],
     escort: ["Sondes", "Rania", "Lilia", "Marwa", "Nesrine", "Yosra", "Emna"],
     cabaret: ["Dalila", "Wafa", "Houda", "Samia", "Imen", "Olfa", "Chiraz"],
+    dog: ["Khamis", "Boby", "Max", "Sultan", "Pacha", "Rex"],
+    cat: ["Mimi", "Zgougou", "Minouche", "Luna", "Tigresse"],
+    catGinger: ["Roujina", "Mishmish", "Sfar", "Caramel"],
   };
 
   const LINES = NpcTalk.LINES;
@@ -66,6 +69,8 @@ const Npc = (() => {
   function defaultJob(style, zone) {
     if (style.startsWith("merch")) return "stand";
     if (style === "escort" || style === "cabaret") return "stand";
+    if (style === "dog") return Math.random() < 0.45 ? "run" : "wander";
+    if (style === "cat" || style === "catGinger") return Math.random() < 0.5 ? "sit" : "wander";
     if (style === "fisher") return "fish";
     if (style === "elder" || style === "elderF") return "sit";
     if (style.startsWith("kid")) return "run";
@@ -210,6 +215,20 @@ const Npc = (() => {
 
     spawnFill(npcs, "road", 8, "pace", ["localM", "localF", "tourM", "cafe", "localM2"]);
 
+    spawnFill(npcs, "beach", 3, "wander", ["dog"]);
+    spawnFill(npcs, "beach", 2, "sit", ["cat"]);
+    spawnFill(npcs, "souk", 2, "wander", ["dog"]);
+    spawnFill(npcs, "souk", 3, "sit", ["cat", "catGinger"]);
+    spawnFill(npcs, "ville", 2, "wander", ["dog"]);
+    spawnFill(npcs, "ville", 2, "sit", ["cat"]);
+    spawnFill(npcs, "port", 2, "wander", ["dog", "cat"]);
+    spawnFill(npcs, "road", 2, "pace", ["dog"]);
+    spawnFill(npcs, "lagoon", 2, "wander", ["cat", "catGinger"]);
+    spawnFill(npcs, "plaza", 1, "sit", ["cat"]);
+    npcs.push(place(spawnOne("road", npcs.length, "wander", "dog"), 200, 500));
+    npcs.push(place(spawnOne("beach", npcs.length, "sit", "catGinger"), 160, 430));
+    npcs.push(place(spawnOne("souk", npcs.length, "sit", "cat"), 140, 640));
+
     world.npcs = npcs;
   }
 
@@ -341,6 +360,8 @@ const Npc = (() => {
     if (n.style === "elder" || n.style === "elderF") return `${n.name} (ancien)`;
     if (n.style === "escort") return `${n.name} (escorte)`;
     if (n.style === "cabaret") return `${n.name} (cabaret)`;
+    if (n.style === "dog") return `${n.name} (chien)`;
+    if (n.style === "cat" || n.style === "catGinger") return `${n.name} (chat)`;
     return n.name;
   }
 
@@ -356,6 +377,16 @@ const Npc = (() => {
   }
 
   function lineFor(n) {
+    if (n.style === "dog" || n.style === "cat" || n.style === "catGinger") {
+      const pack = LINES[n.zone] && LINES[n.zone][n.style === "catGinger" ? "cat" : n.style];
+      if (pack && pack.length) return pick(pack);
+      const extra = [];
+      Object.keys(LINES).forEach((zk) => {
+        const p = LINES[zk][n.style === "catGinger" ? "cat" : n.style];
+        if (p) extra.push.apply(extra, p);
+      });
+      if (extra.length) return pick(extra);
+    }
     if (n.style === "escort" || n.style === "cabaret") {
       const pack = LINES[n.zone] && LINES[n.zone][n.style];
       if (pack && pack.length) return pick(pack);
@@ -392,7 +423,14 @@ const Npc = (() => {
     }
 
     if (n.talkCd > 0 && n.talked) {
-      const again = n.style.startsWith("tour")
+      const animal = n.style === "dog" || n.style === "cat" || n.style === "catGinger";
+      const again = animal
+        ? pick([
+            n.style === "dog" ? "Wouf. Toujours faim." : "Miaou. Toujours faim.",
+            "Il te regarde, maigre, et n'ajoute rien.",
+            "Un coup de langue. Puis il retourne aux sacs.",
+          ])
+        : n.style.startsWith("tour")
         ? pick([
             "I've already said it. Algeria still last.",
             "On a deja tout dit. Fitna replay? Non.",
@@ -411,7 +449,9 @@ const Npc = (() => {
     const more = startSpeech(n, text, whoFor(n));
     const first = !n.talked;
     n.talked = true;
-    const coins = first && (n.style.startsWith("tour") || n.style.startsWith("merch")) ? 15 : first ? 8 : 0;
+    const coins = first && (n.style === "dog" || n.style === "cat" || n.style === "catGinger")
+      ? 0
+      : first && (n.style.startsWith("tour") || n.style.startsWith("merch")) ? 15 : first ? 8 : 0;
     return { type: "talk", who: n.whoLabel, text: n.bubbleText, coins, more };
   }
 
