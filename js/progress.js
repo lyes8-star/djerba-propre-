@@ -10,7 +10,7 @@ const Progress = (() => {
       cost: 500,
       maxLevel: 5,
       desc: (lv) => `+PORTEE +VITESSE  LV.${lv}`,
-      range: (lv) => 22 + lv * 5,
+      range: (lv) => 40 + lv * 8,
       speed: (lv) => 1 + lv * 0.25,
     },
     sac: {
@@ -30,7 +30,7 @@ const Progress = (() => {
       cost: 300,
       maxLevel: 5,
       desc: (lv) => `+EFFICACITE  LV.${lv}`,
-      radius: (lv) => 16 + lv * 6,
+      radius: (lv) => 28 + lv * 8,
       efficiency: (lv) => 0.5 + lv * 0.25,
     },
     brouette: {

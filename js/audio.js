@@ -99,6 +99,11 @@ const AudioSys = (() => {
       const t = startTime + i * beat;
       const m = SCALE[melody[i % melody.length]];
       tone(m, t, beat * 0.8, "square", musicGain, 0.1);
+      // hijaz ornament (grace note)
+      if (i % 4 === 3) {
+        const o = SCALE[Math.min(9, (melody[i % melody.length] + 2) % SCALE.length)];
+        tone(o, t + beat * 0.55, beat * 0.22, "square", musicGain, 0.06);
+      }
       // soft counter every other
       if (i % 2 === 1) {
         const c = SCALE[th.counter[(i >> 1) % th.counter.length]] * 2;
@@ -112,6 +117,7 @@ const AudioSys = (() => {
       if (i % 8 === 0) noiseHit(t, 0.09, 0.2, 180); // doum
       else if (i % 8 === 3 || i % 8 === 6) noiseHit(t, 0.05, 0.12, 900); // tek
       else if (i % 8 === 2 || i % 8 === 5) noiseHit(t, 0.04, 0.08, 700);
+      if (barCount % 4 === 3 && i % 8 === 7) noiseHit(t, 0.12, 0.16, 250); // fill
       // drone pulse
       if (i === 0) tone(SCALE[0] / 4, t, beat * 16, "sine", musicGain, 0.03);
     }
@@ -143,10 +149,18 @@ const AudioSys = (() => {
   }
 
   function setTheme(name) {
-    if (theme === name) return;
+    if (theme === name) {
+      if (!playing) startMusic(name);
+      return;
+    }
     theme = name;
     barCount = 0;
     if (!playing) startMusic(name);
+    else if (musicGain && ctx) {
+      const now = ctx.currentTime;
+      musicGain.gain.setTargetAtTime(0.04, now, 0.05);
+      musicGain.gain.setTargetAtTime((THEMES[theme] || THEMES.play).musicVol, now + 0.18, 0.08);
+    }
   }
 
   function stopMusic() {

@@ -65,6 +65,24 @@ const FX = (() => {
     }
   }
 
+  function dust(x, y) {
+    particles.push({
+      x: x + (Math.random() - 0.5) * 8,
+      y: y + 30,
+      vx: (Math.random() - 0.5) * 12,
+      vy: -8 - Math.random() * 10,
+      life: 0.25 + Math.random() * 0.2,
+      max: 0.45,
+      size: 1 + (Math.random() * 2) | 0,
+      color: "#d8c090",
+      gravity: 20,
+    });
+  }
+
+  function glint(x, y) {
+    burst(x, y, "#ffe9a0", 3, 18);
+  }
+
   function floatText(x, y, text, color = "#ffd24a") {
     texts.push({ x, y, text, color, life: 1, max: 1, vy: -32 });
   }
@@ -128,14 +146,16 @@ const FX = (() => {
       ctx.fillText(t.text, t.x | 0, t.y | 0);
     }
     ctx.globalAlpha = 1;
-    if (flash > 0) {
-      ctx.fillStyle = `rgba(141,255,156,${flash * 0.4})`;
-      ctx.fillRect(0, 0, 512, 512);
-    }
+  }
+
+  function drawFlash(ctx, w, h) {
+    if (flash <= 0) return;
+    ctx.fillStyle = `rgba(141,255,156,${flash * 0.35})`;
+    ctx.fillRect(0, 0, w, h);
   }
 
   return {
-    reset, burst, stars, recycle, pickup, sweep, floatText,
-    hitShake, update, applyShake, draw,
+    reset, burst, stars, recycle, pickup, sweep, dust, glint, floatText,
+    hitShake, update, applyShake, draw, drawFlash,
   };
 })();
