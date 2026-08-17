@@ -306,6 +306,19 @@ const Npc = (() => {
     return best;
   }
 
+  function paginate(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return [""];
+    const parts = raw.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean);
+    const pages = [];
+    for (const p of parts) {
+      if (pages.length && (p.length < 18 || pages[pages.length - 1].length < 32)) {
+        pages[pages.length - 1] += " " + p;
+      } else pages.push(p);
+    }
+    return pages.length ? pages : [raw];
+  }
+
   function whoFor(n) {
     if (n.style.startsWith("tour")) return `${n.name} (touriste)`;
     if (n.style.startsWith("merch")) return `${n.name} (souk)`;
@@ -315,13 +328,14 @@ const Npc = (() => {
   }
 
   function startSpeech(n, text, who) {
-    n.pages = null;
+    n.pages = paginate(text);
     n.page = 0;
-    n.bubbleText = text;
-    n.bubble = Math.min(20, 9 + String(text).length / 32);
+    n.bubbleText = n.pages[0];
+    n.bubble = 7;
     n.whoLabel = who;
     n.acting = true;
-    n.actT = 1.5;
+    n.actT = 1.2;
+    return n.pages.length > 1;
   }
 
   function lineFor(n) {
@@ -337,32 +351,41 @@ const Npc = (() => {
     if (player) n.facing = player.x >= n.x ? 1 : -1;
     const who = n.whoLabel || whoFor(n);
 
-    if (n.bubble > 0 && n.bubbleText) {
-      return { type: "talk", who, text: n.bubbleText, coins: 0 };
+    if (n.pages && n.page < n.pages.length - 1) {
+      n.page += 1;
+      n.bubbleText = n.pages[n.page];
+      n.bubble = 7;
+      n.acting = true;
+      n.actT = 1.1;
+      return { type: "talk", who, text: n.bubbleText, coins: 0, more: n.page < n.pages.length - 1 };
+    }
+
+    if (n.bubble > 0) {
+      return { type: "talk", who, text: n.bubbleText, coins: 0, more: false };
     }
 
     if (n.talkCd > 0 && n.talked) {
       const again = n.style.startsWith("tour")
         ? pick([
-            "I've already said it. Algeria still last. Go pick up a bottle, that's the rest of the sermon.",
-            "On a deja tout dit. Fitna replay? Non. Ramasse, c'est plus utile qu'un bis.",
+            "I've already said it. Algeria still last.",
+            "On a deja tout dit. Fitna replay? Non.",
           ])
         : pick([
-            "T'as deja eu le sermon. Va le raconter a Alger, ou ramasse. Le deuxieme marche mieux, ici.",
-            "Yallah, la Fitna continue sans moi. J'ai parle. Toi tu travailles. C'est l'ordre des choses.",
-            "Baraka. La suite c'est le sac, pas encore une these sur l'ouest.",
+            "T'as deja eu le sermon.",
+            "Va le raconter a Alger, ou ramasse.",
+            "Yallah, la Fitna continue sans moi.",
           ]);
-      startSpeech(n, again, who);
-      return { type: "talk", who, text: n.bubbleText, coins: 0 };
+      const more = startSpeech(n, again, who);
+      return { type: "talk", who, text: n.bubbleText, coins: 0, more };
     }
 
     const text = lineFor(n);
-    n.talkCd = 8;
-    startSpeech(n, text, whoFor(n));
+    n.talkCd = 6;
+    const more = startSpeech(n, text, whoFor(n));
     const first = !n.talked;
     n.talked = true;
     const coins = first && (n.style.startsWith("tour") || n.style.startsWith("merch")) ? 15 : first ? 8 : 0;
-    return { type: "talk", who: n.whoLabel, text: n.bubbleText, coins };
+    return { type: "talk", who: n.whoLabel, text: n.bubbleText, coins, more };
   }
 
   return { spawn, update, nearest, talk };

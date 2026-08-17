@@ -16,6 +16,7 @@ const UI = (() => {
     els.talkBox = document.getElementById("hud-talk");
     els.talkWho = document.getElementById("talk-who");
     els.talkText = document.getElementById("talk-text");
+    els.talkHint = document.getElementById("talk-hint");
     els.combo = document.getElementById("combo");
     els.panelOverlay = document.getElementById("panel-overlay");
     els.panelContent = document.getElementById("panel-content");
@@ -85,10 +86,14 @@ const UI = (() => {
     toast._t = setTimeout(() => els.toast.classList.add("hidden"), ms);
   }
 
-  function talkBox(who, text) {
+  function talkBox(who, text, more) {
     if (!els.talkBox) return;
     els.talkWho.textContent = who || "";
     els.talkText.textContent = text || "";
+    if (els.talkHint) {
+      els.talkHint.textContent = more ? "PARLER : suite" : "";
+      els.talkHint.classList.toggle("hidden", !more);
+    }
     els.talkBox.classList.remove("hidden");
     els.talkBox.scrollTop = 0;
     clearTimeout(talkBox._t);
