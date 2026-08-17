@@ -25,9 +25,10 @@ Puis va sur `http://localhost:8080`.
 
 1. Ramasse canettes, bouteilles et sacs avec la **pince (scorpion)**.
 2. Approche-toi de la **poubelle** et utilise l’action pour **recycler**.
-3. Atteins **80 % plage propre** pour le bonus SUPER (+500 pts, +30s).
-4. Dépense tes pièces dans **Améliorations** pour évoluer les outils.
-5. Complète les **Défis du jour** pour une récompense.
+3. Approche un habitant ou un touriste (point d’exclamation) et appuie sur **PARLER**.
+4. Atteins **80 % plage propre** pour le bonus SUPER (+500 pts, +30s).
+5. Dépense tes pièces dans **Améliorations** pour évoluer les outils.
+6. Complète les **Défis du jour** pour une récompense.
 
 Progression sauvegardée dans `localStorage` (`djerba-propre-save`).
 
@@ -45,6 +46,7 @@ Debloque les niveaux en gagnant des etoiles. Carte interactive + partie rapide d
 - Canvas **256×384** + themes par niveau
 - FX : particules, combos, anneaux, shake
 - Musiques titre / gameplay (Web Audio orientale retro)
+- Habitants et touristes dans chaque quartier (plage, souk, ville, port) : parle-leur
 
 ## Stack
 

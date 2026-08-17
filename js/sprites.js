@@ -161,6 +161,41 @@ const Sprites = (() => {
     Atlas.blit(ctx, img, p.x, p.y);
   }
 
+  function drawNpc(ctx, n, t, cam) {
+    if (cam && !Atlas.inView(cam, n.x, n.y, Atlas.PW, Atlas.PH)) return;
+    const moving = Math.hypot(n.vx || 0, n.vy || 0) > 6;
+    const idle = !moving && Math.sin(t * 3 + n.y) > 0.82 ? 2 : 0;
+    const walk = moving ? Math.floor(t * 10) % 4 : idle;
+    const face = (n.facing || 1) >= 0 ? 1 : -1;
+    const act = n.acting ? 1 : 0;
+    const pack = Atlas.frames.npc && Atlas.frames.npc[n.style];
+    const img = pack && (pack[`${face}_${walk}_${act}`] || pack[`${face}_0_0`]);
+    if (img) Atlas.blit(ctx, img, n.x, n.y);
+    if (n.prompt) {
+      const bx = n.x + 12;
+      const by = n.y - 12;
+      ctx.fillStyle = "#140c1c";
+      ctx.fillRect(bx, by, 9, 11);
+      ctx.fillStyle = "#fcbc14";
+      ctx.fillRect(bx + 1, by + 1, 7, 9);
+      ctx.fillStyle = "#140c1c";
+      ctx.fillRect(bx + 3, by + 2, 3, 4);
+      ctx.fillRect(bx + 3, by + 7, 3, 2);
+    }
+    if (n.bubble > 0 && n.bubbleText) {
+      const tw = Math.min(130, 8 + n.bubbleText.length * 5);
+      const bx = n.x + 16 - tw / 2;
+      const by = n.y - 18;
+      ctx.fillStyle = "#140c1c";
+      ctx.fillRect(bx - 1, by - 1, tw + 2, 14);
+      ctx.fillStyle = "#fcfcfc";
+      ctx.fillRect(bx, by, tw, 12);
+      ctx.fillStyle = "#140c1c";
+      ctx.font = "6px monospace";
+      ctx.fillText(n.bubbleText, bx + 3, by + 9);
+    }
+  }
+
   function themeSky(theme) {
     const map = {
       beach: ["#5ec8fc", "#3aacfc", "#2090dc"],
@@ -371,6 +406,11 @@ const Sprites = (() => {
     const walk = Math.floor(t * 10) % 4;
     const atk = Math.sin(t * 2.5) > 0.7 ? 1 : 0;
     Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_${atk}_0`], 118, 92);
+    const npcPack = Atlas.frames.npc || {};
+    const nWalk = Math.floor(t * 8) % 4;
+    if (npcPack.tourF) Atlas.blit(ctx, npcPack.tourF[`-1_${nWalk}_0`], 40, 96);
+    if (npcPack.localM) Atlas.blit(ctx, npcPack.localM[`1_${nWalk}_0`], 188, 98);
+    if (npcPack.kidM) Atlas.blit(ctx, npcPack.kidM[`1_${Math.floor(t * 14) % 4}_0`], 78, 108);
     Atlas.blit(ctx, Atlas.frames.bin, 150, 102);
     Atlas.blit(ctx, Atlas.frames.can, 50, 118);
     Atlas.blit(ctx, Atlas.frames.bottle, 210, 108);
@@ -397,7 +437,7 @@ const Sprites = (() => {
     ctx.restore();
   }
 
-  function drawMinimap(ctx, W, H, trash, player, t, cam) {
+  function drawMinimap(ctx, W, H, trash, player, t, cam, npcs) {
     const mw = 56;
     const mh = 56;
     const mx = (cam && cam.x != null ? cam.x : 0) + (cam && cam.vw ? cam.vw : W) - mw - 8;
@@ -410,6 +450,10 @@ const Sprites = (() => {
     trash.forEach((tr) => {
       ctx.fillStyle = "#d43030";
       ctx.fillRect(mx + 3 + (tr.x / W) * (mw - 6), my + 3 + (tr.y / H) * (mh - 6), 2, 2);
+    });
+    (npcs || []).forEach((n) => {
+      ctx.fillStyle = n.style && n.style.startsWith("tour") ? "#70c8fc" : "#fce46c";
+      ctx.fillRect(mx + 3 + (n.x / W) * (mw - 6), my + 3 + (n.y / H) * (mh - 6), 1, 1);
     });
     ctx.fillStyle = "#3cbc3c";
     ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 3, 3);
@@ -466,7 +510,7 @@ const Sprites = (() => {
 
   return {
     drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
-    drawBin, drawTrash, drawPlayer, drawWorldBg, drawTitleScene,
+    drawBin, drawTrash, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
     drawTitleBackground, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
   };
 })();

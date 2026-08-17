@@ -35,6 +35,7 @@ const World = (() => {
       missionId: m.id || 1,
       missionName: m.name || "Plage",
       bin: { x: 430, y: 448 },
+      npcs: [],
     };
   }
 

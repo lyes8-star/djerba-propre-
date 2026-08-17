@@ -68,11 +68,31 @@ const Player = (() => {
     const rec = World.tryRecycle(world, p, p.stats);
     if (rec && !rec.empty) return { type: "recycle", ...rec };
 
+    const npc = Npc.nearest(world, p, 36);
+    if (npc && mode !== "balai") {
+      const nd = Math.hypot(npc.x - p.x, npc.y - p.y);
+      let trashD = Infinity;
+      for (const t of World.living(world)) {
+        const d = Math.hypot(t.x + 8 - (p.x + 16), t.y + 10 - (p.y + 20));
+        if (d < trashD) trashD = d;
+      }
+      if (nd < 34 && nd <= trashD + 6) {
+        p.attacking = false;
+        p.attackTimer = 0;
+        return Npc.talk(npc, p);
+      }
+    }
+
     const pick = World.tryPickup(world, p, p.stats);
     if (pick && pick.full) return { type: "full" };
     if (pick && pick.item) {
       world.score += pick.points;
       return { type: "pickup", ...pick };
+    }
+    if (npc) {
+      p.attacking = false;
+      p.attackTimer = 0;
+      return Npc.talk(npc, p);
     }
     return { type: "miss" };
   }
