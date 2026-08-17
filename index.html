@@ -16,28 +16,32 @@
   <div id="app">
     <div class="scanlines" aria-hidden="true"></div>
 
-    <!-- TITLE -->
+    <!-- TITLE / INTRO -->
     <section id="screen-title" class="screen active">
-      <canvas id="title-bg-canvas" width="256" height="448" aria-hidden="true"></canvas>
-      <div class="title-content">
-        <div class="pixel-frame title-frame">
-          <div class="pixel-badge blink">* ILE DE DJERBA *</div>
+      <canvas id="title-bg-canvas" width="320" height="560" aria-hidden="true"></canvas>
+      <div id="intro-veil" class="intro-veil">
+        <div id="intro-studio" class="intro-card">
+          <div class="intro-kicker" id="intro-kicker">FITNA GAMES</div>
+          <div class="intro-presents" id="intro-presents">présente</div>
+        </div>
+        <div id="intro-logo-cine" class="intro-card hidden">
           <h1 class="logo">
             <span class="logo-main">DJERBA</span>
             <span class="logo-sub">PROPRE</span>
           </h1>
-          <p class="tagline">NETTOIE · RECYCLE · EVOLUE</p>
-          <div class="title-hero pixel-inset">
-            <canvas id="title-canvas" width="280" height="150"></canvas>
-          </div>
-          <button id="btn-play" class="btn btn-primary pulse">
-            <span class="btn-shine"></span>CAMPAGNE
-          </button>
-          <button id="btn-quick" class="btn btn-secondary">PARTIE RAPIDE</button>
-          <p class="hint">Parle aux habitants · malouf, souk, plage</p>
-          <div class="title-stats pixel-inset" id="title-stats"></div>
         </div>
+        <p class="intro-skip blink hidden" id="intro-skip">APPUIE</p>
       </div>
+      <div id="title-menu" class="title-menu hidden">
+        <h1 class="logo">
+          <span class="logo-main">DJERBA</span>
+          <span class="logo-sub">PROPRE</span>
+        </h1>
+        <p class="press-start blink">APPUIE POUR JOUER</p>
+        <button id="btn-quick" class="title-quiet" type="button">partie rapide</button>
+        <div class="title-stats-quiet" id="title-stats"></div>
+      </div>
+      <button id="btn-play" class="title-hit" type="button" aria-label="Jouer"></button>
     </section>
 
     <!-- STORY / DIALOGUE -->

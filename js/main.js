@@ -2,8 +2,6 @@
 (() => {
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d");
-  const titleCanvas = document.getElementById("title-canvas");
-  const titleCtx = titleCanvas.getContext("2d");
   const titleBg = document.getElementById("title-bg-canvas");
   const titleBgCtx = titleBg.getContext("2d");
   const mapCanvas = document.getElementById("map-canvas");
@@ -11,17 +9,15 @@
 
   canvas.width = 320;
   canvas.height = 400;
-  titleCanvas.width = 280;
-  titleCanvas.height = 150;
   titleBg.width = 320;
-  titleBg.height = 520;
+  titleBg.height = 560;
   mapCanvas.width = 280;
   mapCanvas.height = 250;
 
   const ZOOM = 1.3;
   let cam = { x: 0, y: 0, vw: 0, vh: 0 };
 
-  [ctx, titleCtx, titleBgCtx, mapCtx].forEach((c) => {
+  [ctx, titleBgCtx, mapCtx].forEach((c) => {
     c.imageSmoothingEnabled = false;
   });
 
@@ -61,12 +57,107 @@
     ctx.imageSmoothingEnabled = false;
   }
 
+  let introPhase = "cine";
+  let introStart = 0;
+  let introAudio = false;
+
+  function fitTitleBg() {
+    const w = Math.max(280, Math.round((titleBg.clientWidth || 320) / 2));
+    const h = Math.max(480, Math.round((titleBg.clientHeight || 560) / 2));
+    if (titleBg.width !== w || titleBg.height !== h) {
+      titleBg.width = w;
+      titleBg.height = h;
+      titleBgCtx.imageSmoothingEnabled = false;
+    }
+  }
+
+  function setIntroPhase(phase) {
+    introPhase = phase;
+    const veil = document.getElementById("intro-veil");
+    const studio = document.getElementById("intro-studio");
+    const cineLogo = document.getElementById("intro-logo-cine");
+    const skip = document.getElementById("intro-skip");
+    const menu = document.getElementById("title-menu");
+    const kicker = document.getElementById("intro-kicker");
+    const presents = document.getElementById("intro-presents");
+    if (phase === "cine") {
+      introStart = performance.now();
+      veil.className = "intro-veil";
+      studio.classList.remove("hidden");
+      cineLogo.classList.add("hidden");
+      skip.classList.add("hidden");
+      menu.classList.add("hidden");
+      kicker.classList.remove("show");
+      presents.classList.remove("show");
+      titleBg.classList.remove("lit", "menu");
+      void kicker.offsetWidth;
+      kicker.classList.add("show");
+    } else if (phase === "menu") {
+      veil.className = "intro-veil gone";
+      studio.classList.add("hidden");
+      cineLogo.classList.add("hidden");
+      skip.classList.add("hidden");
+      menu.classList.remove("hidden");
+      titleBg.classList.remove("lit");
+      titleBg.classList.add("menu");
+      AudioSys.setTheme("title");
+      AudioSys.startMusic("title");
+    }
+  }
+
+  function tickIntro(now) {
+    if (introPhase !== "cine") return;
+    const t = (now - introStart) / 1000;
+    const kicker = document.getElementById("intro-kicker");
+    const presents = document.getElementById("intro-presents");
+    const studio = document.getElementById("intro-studio");
+    const cineLogo = document.getElementById("intro-logo-cine");
+    const skip = document.getElementById("intro-skip");
+    const veil = document.getElementById("intro-veil");
+    if (t > 0.15 && !kicker.classList.contains("show")) kicker.classList.add("show");
+    if (t > 1.35) presents.classList.add("show");
+    if (t > 2.2) skip.classList.remove("hidden");
+    if (t > 3.05) {
+      veil.classList.add("dim");
+      titleBg.classList.add("lit");
+    }
+    if (t > 3.6) {
+      studio.classList.add("hidden");
+      cineLogo.classList.remove("hidden");
+    }
+    if (t > 7.2) setIntroPhase("menu");
+  }
+
+  function handleTitlePress(e) {
+    if (e.target && e.target.id === "btn-quick") return;
+    AudioSys.unlock();
+    if (!introAudio) {
+      introAudio = true;
+      if (introPhase === "cine") {
+        AudioSys.setTheme("intro");
+        AudioSys.startMusic("intro");
+      } else {
+        AudioSys.setTheme("title");
+        AudioSys.startMusic("title");
+      }
+    }
+    if (introPhase === "cine") {
+      const elapsed = (performance.now() - introStart) / 1000;
+      if (elapsed > 1.1) setIntroPhase("menu");
+      return;
+    }
+    if (introPhase === "menu") {
+      AudioSys.sfx("click");
+      launchCampaignFromTitle();
+    }
+  }
+
   function drawTitleFrame(ts) {
     if (state !== "title") return;
     animTime = ts / 1000;
-    Sprites.drawTitleBackground(titleBgCtx, titleBg.width, titleBg.height, animTime);
-    titleCtx.clearRect(0, 0, titleCanvas.width, titleCanvas.height);
-    Sprites.drawTitleScene(titleCtx, animTime);
+    fitTitleBg();
+    tickIntro(ts);
+    Sprites.drawCinematic(titleBgCtx, titleBg.width, titleBg.height, animTime);
     titleRaf = requestAnimationFrame(drawTitleFrame);
   }
 
@@ -256,6 +347,9 @@
   function goTitle() {
     state = "title";
     quickPlay = false;
+    introPhase = "menu";
+    introAudio = true;
+    setIntroPhase("menu");
     AudioSys.setTheme("title");
     AudioSys.startMusic("title");
     UI.refreshTitleStats();
@@ -470,6 +564,11 @@
       input.keys[e.key.toLowerCase()] = true;
       const k = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
+      if (state === "title" && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault();
+        handleTitlePress({ target: document.getElementById("btn-play") });
+        return;
+      }
       if (state === "story" && (e.key === " " || e.key === "Enter")) {
         e.preventDefault();
         storyIndex += 1;
@@ -521,9 +620,8 @@
   }
 
   function bindUI() {
-    document.getElementById("btn-play").addEventListener("click", () => {
-      AudioSys.sfx("click");
-      launchCampaignFromTitle();
+    document.getElementById("btn-play").addEventListener("click", (e) => {
+      handleTitlePress(e);
     });
     document.getElementById("btn-quick").addEventListener("click", () => {
       AudioSys.sfx("click");
@@ -667,8 +765,11 @@
 
     const unlock = () => {
       AudioSys.unlock();
-      AudioSys.setTheme("title");
-      AudioSys.startMusic("title");
+      if (state === "title" && introPhase === "cine" && !introAudio) {
+        introAudio = true;
+        AudioSys.setTheme("intro");
+        AudioSys.startMusic("intro");
+      }
       window.removeEventListener("pointerdown", unlock);
     };
     window.addEventListener("pointerdown", unlock);
@@ -686,6 +787,7 @@
     bindUI();
     UI.refreshTitleStats();
     UI.showScreen("screen-title");
+    setIntroPhase("cine");
     startTitleLoop();
   }
 
