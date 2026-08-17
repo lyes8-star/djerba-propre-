@@ -708,6 +708,37 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeFlag(kind, flutter) {
+    const { c, ctx } = make(22, 28);
+    px(ctx, 1, 26, 6, 2, "rgba(0,0,0,0.28)");
+    px(ctx, 2, 1, 2, 25, C.woodX);
+    px(ctx, 2, 0, 2, 2, C.gold);
+    const ox = flutter ? 1 : 0;
+    if (kind === "tn") {
+      px(ctx, 4 + ox, 1, 16, 11, C.ink);
+      px(ctx, 5 + ox, 2, 14, 9, C.red);
+      px(ctx, 5 + ox, 2, 14, 2, C.redL);
+      px(ctx, 9 + ox, 4, 6, 5, C.white);
+      px(ctx, 10 + ox, 5, 4, 3, C.red);
+      p1(ctx, 14 + ox, 5, C.red);
+      p1(ctx, 15 + ox, 6, C.redL);
+      p1(ctx, 14 + ox, 7, C.red);
+    } else {
+      px(ctx, 4 + ox, 1, 16, 11, C.ink);
+      px(ctx, 5 + ox, 2, 14, 9, C.white);
+      px(ctx, 5 + ox, 3, 14, 2, C.blueX);
+      px(ctx, 5 + ox, 8, 14, 2, C.blueX);
+      p1(ctx, 12 + ox, 5, C.blueX);
+      p1(ctx, 11 + ox, 6, C.blueX);
+      p1(ctx, 13 + ox, 6, C.blueX);
+      p1(ctx, 10 + ox, 7, C.blueX);
+      p1(ctx, 12 + ox, 7, C.blueX);
+      p1(ctx, 14 + ox, 7, C.blueX);
+      p1(ctx, 12 + ox, 8, C.blueX);
+    }
+    return c;
+  }
+
   function bakeSign() {
     const { c, ctx } = make(24, 40);
     px(ctx, 11, 8, 3, 30, C.woodX);
@@ -997,6 +1028,10 @@ const Atlas = (() => {
     frames.umbrella = bakeUmbrella();
     frames.rock = bakeRock();
     frames.sign = bakeSign();
+    frames.flagTn0 = bakeFlag("tn", 0);
+    frames.flagTn1 = bakeFlag("tn", 1);
+    frames.flagIl0 = bakeFlag("il", 0);
+    frames.flagIl1 = bakeFlag("il", 1);
     frames.gull0 = bakeSeagull(0);
     frames.gull1 = bakeSeagull(1);
     frames.sun = bakeSun();
