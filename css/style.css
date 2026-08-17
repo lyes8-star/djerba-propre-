@@ -605,11 +605,9 @@ button.hud-chip {
   background: #fcfcfc;
   border: 3px solid #140c1c;
   color: #140c1c;
-  padding: 8px 10px 10px;
+  padding: 8px 10px 8px;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
-  max-height: 46vh;
-  overflow-y: auto;
-  pointer-events: auto;
+  pointer-events: none;
 }
 .hud-talk.hidden { display: none; }
 .hud-talk .talk-who {
@@ -622,11 +620,16 @@ button.hud-chip {
 }
 .hud-talk .talk-text {
   font-size: 8px;
-  line-height: 1.6;
+  line-height: 1.55;
   color: #140c1c;
   margin: 0;
-  white-space: pre-wrap;
 }
+.hud-talk .talk-hint {
+  margin-top: 6px;
+  font-size: 5px;
+  color: #8a4a10;
+}
+.hud-talk .talk-hint.hidden { display: none; }
 @keyframes toastPop {
   from { transform: translateX(-50%) scale(.82); opacity: 0; }
   to { transform: translateX(-50%) scale(1); opacity: 1; }

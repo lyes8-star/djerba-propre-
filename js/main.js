@@ -464,7 +464,7 @@
       FX.hitShake(0.15);
     } else if (res.type === "talk") {
       AudioSys.sfx("click");
-      UI.talkBox(res.who, res.text);
+      UI.talkBox(res.who, res.text, res.more);
       if (res.coins) {
         Progress.addCoins(res.coins);
         FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
@@ -566,8 +566,10 @@
     const speaking = (world.npcs || []).some((n) => n.bubble > 0);
     if (!speaking && UI.hideTalk) UI.hideTalk();
     const nearNpc = Npc.nearest(world, player, 34);
-    if (nearNpc && selectedTool !== "balai") UI.setToolLabel("PARLER");
-    else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
+    if (nearNpc && selectedTool !== "balai") {
+      const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
+      UI.setToolLabel(more && nearNpc.bubble > 0 ? "SUITE" : "PARLER");
+    } else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
     if ((ts / 200 | 0) % 2 === 0) UI.drawAvatar(animTime);
     raf = requestAnimationFrame(loop);
   }
