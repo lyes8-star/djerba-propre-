@@ -53,7 +53,13 @@ const UI = (() => {
     if (els.xpLabel) els.xpLabel.textContent = `${st.xp}/${st.xpToNext}`;
     els.timer.textContent = formatTime(timeLeft);
     if (els.timerBox) els.timerBox.classList.toggle("urgent", timeLeft <= 10);
-    els.score.textContent = world.score.toLocaleString("fr-FR");
+    const scoreTxt = world.score.toLocaleString("fr-FR");
+    if (els.score.textContent !== scoreTxt) {
+      els.score.textContent = scoreTxt;
+      els.score.classList.remove("bump");
+      void els.score.offsetWidth;
+      els.score.classList.add("bump");
+    }
     const clean = World.cleanliness(world);
     els.stars.textContent = starString(World.stars(world.score, clean));
     els.coins.textContent = `$${st.coins}`;

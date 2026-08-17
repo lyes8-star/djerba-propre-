@@ -183,13 +183,15 @@ const Sprites = (() => {
     px(ctx, x + 8, yy + 33, 6, 3, C.navy);
     px(ctx, x + 18, yy + 33, 6, 3, C.navy);
 
-    // torso
+    // torso + recycle logo
     px(ctx, x + 6, yy + 12, 20, 14, C.green);
     px(ctx, x + 8, yy + 13, 16, 3, C.greenL);
-    px(ctx, x + 11, yy + 16, 10, 7, C.white);
-    px(ctx, x + 13, yy + 18, 6, 4, C.greenD);
-    px(ctx, x + 13, yy + 18, 2, 2, C.greenL);
-    px(ctx, x + 17, yy + 20, 2, 2, C.greenL);
+    px(ctx, x + 11, yy + 16, 10, 8, C.white);
+    px(ctx, x + 13, yy + 17, 6, 6, C.greenD);
+    px(ctx, x + 14, yy + 18, 2, 2, C.greenL);
+    px(ctx, x + 17, yy + 18, 2, 2, C.greenL);
+    px(ctx, x + 14, yy + 21, 4, 1, C.greenL);
+    px(ctx, x + 18, yy + 20, 1, 2, C.green);
 
     // head
     px(ctx, x + 10, yy + 4, 12, 9, C.skin);
@@ -275,6 +277,16 @@ const Sprites = (() => {
     for (let i = -12; i < W; i += 12) {
       px(ctx, i + wave, 118, 7, 3, C.foam);
       px(ctx, i + (wave * 2) % 12, 132, 6, 2, th.sea0);
+    }
+    // sun / moon reflection on water
+    const rx = th.moon ? W - 40 : W - 40;
+    for (let k = 0; k < 8; k++) {
+      const rw = 4 + (k % 3) * 3 + Math.sin(t * 3 + k) * 2;
+      px(ctx, rx - rw / 2 + Math.sin(t * 2 + k) * 2, 110 + k * 6, rw, 2, th.moon ? C.goldL : "#ffe9a0");
+    }
+    if (Math.sin(t * 8) > 0.3) {
+      px(ctx, rx + 8, 122, 2, 2, C.foam);
+      px(ctx, rx - 10, 136, 2, 2, C.foam);
     }
 
     px(ctx, 0, 160, W, H - 160, th.sand);

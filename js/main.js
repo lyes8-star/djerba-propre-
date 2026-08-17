@@ -390,6 +390,7 @@
 
     Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam);
     ctx.restore();
+    FX.drawFlash(ctx, canvas.width, canvas.height);
   }
 
   function loop(ts) {
@@ -401,6 +402,12 @@
     Player.update(player, dt, input, world);
     World.tickSpawn(world, dt);
     FX.update(dt);
+    if (Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
+      FX.dust(player.x + 10, player.y);
+    }
+    if (Math.random() < 0.04) {
+      FX.glint(player.x + Math.random() * 40 - 10, player.y + Math.random() * 20 - 30);
+    }
 
     if (holdAction && selectedTool === "balai" && player.cooldown <= 0) doAction();
 
