@@ -189,7 +189,7 @@ const Sprites = (() => {
     const pack = Atlas.frames.npc && Atlas.frames.npc[n.style];
     const img = pack && (pack[`${face}_${walk}_${act}`] || pack[`${face}_0_0`]);
     if (img) Atlas.blit(ctx, img, n.x, n.y);
-    if (n.prompt) {
+    if (n.prompt && !(n.bubble > 0)) {
       const bx = n.x + 12;
       const by = n.y - 12;
       ctx.fillStyle = "#140c1c";
@@ -201,16 +201,29 @@ const Sprites = (() => {
       ctx.fillRect(bx + 3, by + 7, 3, 2);
     }
     if (n.bubble > 0 && n.bubbleText) {
-      const tw = Math.min(130, 8 + n.bubbleText.length * 5);
+      const raw = String(n.bubbleText);
+      const lines = [];
+      let cur = "";
+      raw.split(" ").forEach((w) => {
+        const next = cur ? cur + " " + w : w;
+        if (next.length > 28) {
+          if (cur) lines.push(cur);
+          cur = w;
+        } else cur = next;
+      });
+      if (cur) lines.push(cur);
+      const show = lines.slice(0, 3);
+      const tw = Math.min(148, 10 + Math.max(...show.map((s) => s.length)) * 5);
+      const th = 6 + show.length * 9;
       const bx = n.x + 16 - tw / 2;
-      const by = n.y - 18;
+      const by = n.y - th - 8;
       ctx.fillStyle = "#140c1c";
-      ctx.fillRect(bx - 1, by - 1, tw + 2, 14);
+      ctx.fillRect(bx - 1, by - 1, tw + 2, th + 2);
       ctx.fillStyle = "#fcfcfc";
-      ctx.fillRect(bx, by, tw, 12);
+      ctx.fillRect(bx, by, tw, th);
       ctx.fillStyle = "#140c1c";
       ctx.font = "6px monospace";
-      ctx.fillText(n.bubbleText, bx + 3, by + 9);
+      show.forEach((ln, i) => ctx.fillText(ln, bx + 3, by + 9 + i * 9));
     }
   }
 
