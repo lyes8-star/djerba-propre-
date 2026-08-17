@@ -30,6 +30,8 @@ const Npc = (() => {
     kidM: ["Yassine", "Adam", "Rayan", "Anis", "Malek"],
     kidF: ["Yasmine", "Lina", "Sara", "Nour"],
     cafe: ["Khaled", "Bilel", "Fares"],
+    escort: ["Sondes", "Rania", "Lilia", "Marwa", "Nesrine", "Yosra", "Emna"],
+    cabaret: ["Dalila", "Wafa", "Houda", "Samia", "Imen", "Olfa", "Chiraz"],
   };
 
   const LINES = NpcTalk.LINES;
@@ -46,9 +48,9 @@ const Npc = (() => {
   const HOUSES = [
     [568, 596], [632, 604], [808, 596], [872, 600],
     [568, 688], [632, 696], [808, 688], [872, 692],
-    [568, 788], [632, 796], [808, 788], [872, 792],
+    [568, 788], [632, 796], [872, 792],
   ];
-  const QUAY = [[720, 348], [758, 342], [796, 350], [844, 344], [888, 352], [910, 368]];
+  const QUAY = [[720, 348], [758, 342], [796, 350], [844, 344]];
 
   function pick(arr) {
     return arr[(Math.random() * arr.length) | 0];
@@ -63,6 +65,7 @@ const Npc = (() => {
 
   function defaultJob(style, zone) {
     if (style.startsWith("merch")) return "stand";
+    if (style === "escort" || style === "cabaret") return "stand";
     if (style === "fisher") return "fish";
     if (style === "elder" || style === "elderF") return "sit";
     if (style.startsWith("kid")) return "run";
@@ -167,6 +170,9 @@ const Npc = (() => {
     });
     spawnFill(npcs, "port", 5, "wander", ["localM", "tourM", "tourM2", "localM2"]);
     spawnFill(npcs, "port", 2, "sit", ["elder"]);
+    npcs.push(place(spawnOne("port", npcs.length, "stand", "escort"), 880, 400));
+    npcs.push(place(spawnOne("port", npcs.length, "stand", "cabaret"), 904, 396));
+    npcs.push(place(spawnOne("port", npcs.length, "stand", "escort"), 856, 408));
 
     SHOPS.forEach(([x, y], i) => {
       const st = i % 2 ? "merchF" : "merchM";
@@ -186,6 +192,9 @@ const Npc = (() => {
     spawnFill(npcs, "ville", 6, "wander", ["localM", "localF", "localF2", "cafe"]);
     spawnFill(npcs, "ville", 3, "run", ["kidM", "kidF"]);
     spawnFill(npcs, "ville", 2, "sit", ["elderF"]);
+    npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), 800, 780));
+    npcs.push(place(spawnOne("ville", npcs.length, "stand", "cabaret"), 824, 776));
+    npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), 776, 788));
 
     spawnPair(npcs, "plaza", 430, 580, ["localM", "localF"]);
     spawnPair(npcs, "plaza", 448, 640, ["elder", "elderF"]);
@@ -233,9 +242,10 @@ const Npc = (() => {
     if (n.wait <= 0) {
       if (!n.partner) n.facing = Math.random() < 0.5 ? 1 : -1;
       n.wait = 1.4 + Math.random() * 2.8;
-      if (n.job === "fish" || n.job === "chat" || Math.random() < 0.35) {
+      const smoker = Atlas.NPC_STYLES[n.style] && Atlas.NPC_STYLES[n.style].tool === "smoke";
+      if (n.job === "fish" || n.job === "chat" || smoker || Math.random() < 0.35) {
         n.acting = true;
-        n.actT = 0.45 + Math.random() * 0.4;
+        n.actT = smoker ? 0.85 + Math.random() * 0.7 : 0.45 + Math.random() * 0.4;
       }
     } else n.wait -= dt;
   }
@@ -250,10 +260,14 @@ const Npc = (() => {
 
       const near = player && Math.hypot(n.x - player.x, n.y - player.y) < 44;
       n.prompt = near;
+      const smoker = Atlas.NPC_STYLES[n.style] && Atlas.NPC_STYLES[n.style].tool === "smoke";
       if (near && Math.random() < 0.012) {
         n.acting = true;
-        n.actT = 0.7;
+        n.actT = smoker ? 1.1 : 0.7;
         n.facing = player.x >= n.x ? 1 : -1;
+      } else if (smoker && !n.acting && Math.random() < 0.01) {
+        n.acting = true;
+        n.actT = 0.8 + Math.random() * 0.6;
       }
 
       if (n.job === "stand" || n.job === "sit" || n.job === "lounge" || n.job === "fish" || n.job === "chat") {
@@ -324,6 +338,9 @@ const Npc = (() => {
     if (n.style.startsWith("merch")) return `${n.name} (souk)`;
     if (n.style === "fisher") return `${n.name} (pecheur)`;
     if (n.style.startsWith("kid")) return `${n.name} (gamin)`;
+    if (n.style === "elder" || n.style === "elderF") return `${n.name} (ancien)`;
+    if (n.style === "escort") return `${n.name} (escorte)`;
+    if (n.style === "cabaret") return `${n.name} (cabaret)`;
     return n.name;
   }
 
@@ -339,6 +356,16 @@ const Npc = (() => {
   }
 
   function lineFor(n) {
+    if (n.style === "escort" || n.style === "cabaret") {
+      const pack = LINES[n.zone] && LINES[n.zone][n.style];
+      if (pack && pack.length) return pick(pack);
+      const extra = [];
+      Object.keys(LINES).forEach((zk) => {
+        const p = LINES[zk][n.style];
+        if (p) extra.push.apply(extra, p);
+      });
+      if (extra.length) return pick(extra);
+    }
     if (Math.random() < (n.style.startsWith("tour") ? 0.22 : 0.32)) return pick(WINKS);
     const pack = LINES[n.zone] && LINES[n.zone][n.style];
     if (pack && pack.length) return pick(pack);
