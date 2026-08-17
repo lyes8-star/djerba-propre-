@@ -16,28 +16,32 @@
   <div id="app">
     <div class="scanlines" aria-hidden="true"></div>
 
-    <!-- TITLE -->
+    <!-- TITLE / INTRO -->
     <section id="screen-title" class="screen active">
-      <canvas id="title-bg-canvas" width="256" height="448" aria-hidden="true"></canvas>
-      <div class="title-content">
-        <div class="pixel-frame title-frame">
-          <div class="pixel-badge blink">* ILE DE DJERBA *</div>
+      <canvas id="title-bg-canvas" width="320" height="560" aria-hidden="true"></canvas>
+      <div id="intro-veil" class="intro-veil">
+        <div id="intro-studio" class="intro-card">
+          <div class="intro-kicker" id="intro-kicker">FITNA GAMES</div>
+          <div class="intro-presents" id="intro-presents">présente</div>
+        </div>
+        <div id="intro-logo-cine" class="intro-card hidden">
           <h1 class="logo">
             <span class="logo-main">DJERBA</span>
             <span class="logo-sub">PROPRE</span>
           </h1>
-          <p class="tagline">NETTOIE · RECYCLE · EVOLUE</p>
-          <div class="title-hero pixel-inset">
-            <canvas id="title-canvas" width="280" height="150"></canvas>
-          </div>
-          <button id="btn-play" class="btn btn-primary pulse">
-            <span class="btn-shine"></span>CAMPAGNE
-          </button>
-          <button id="btn-quick" class="btn btn-secondary">PARTIE RAPIDE</button>
-          <p class="hint">Parle aux habitants · malouf, souk, plage</p>
-          <div class="title-stats pixel-inset" id="title-stats"></div>
         </div>
+        <p class="intro-skip blink hidden" id="intro-skip">APPUIE</p>
       </div>
+      <div id="title-menu" class="title-menu hidden">
+        <h1 class="logo">
+          <span class="logo-main">DJERBA</span>
+          <span class="logo-sub">PROPRE</span>
+        </h1>
+        <p class="press-start blink">APPUIE POUR JOUER</p>
+        <button id="btn-quick" class="title-quiet" type="button">partie rapide</button>
+        <div class="title-stats-quiet" id="title-stats"></div>
+      </div>
+      <button id="btn-play" class="title-hit" type="button" aria-label="Jouer"></button>
     </section>
 
     <!-- STORY / DIALOGUE -->
@@ -81,66 +85,73 @@
 
     <!-- GAME -->
     <section id="screen-game" class="screen">
-      <header class="hud-top pixel-frame">
-        <div class="hud-profile">
-          <canvas id="hud-avatar" class="avatar-canvas" width="40" height="40"></canvas>
-          <div class="profile-text">
-            <div class="role" id="hud-mission">MISSION</div>
-            <div class="level-row">
-              <span id="hud-level">NV.1</span>
-              <div class="xp-bar"><div id="hud-xp-fill"></div></div>
-            </div>
-          </div>
-        </div>
-        <div class="hud-timer">
-          <div class="value" id="hud-timer">03:00</div>
-        </div>
-        <div class="hud-score">
-          <div class="stars" id="hud-stars">***</div>
-          <div class="score" id="hud-score">0</div>
-          <div class="coins" id="hud-coins">$*0</div>
-        </div>
-      </header>
-
       <div class="stage">
         <div class="canvas-wrap">
           <canvas id="game-canvas" width="320" height="400"></canvas>
         </div>
 
-        <aside class="hud-objectives pixel-frame" id="hud-objectives">
-          <div class="obj-title">OBJ</div>
+        <header class="hud-overlay">
+          <div class="hud-left">
+            <button type="button" class="hud-chip" id="btn-obj">OBJ</button>
+            <div class="hud-chip hud-mission-chip" id="hud-mission">MISSION</div>
+          </div>
+          <div class="hud-chip hud-timer">
+            <span class="value" id="hud-timer">03:00</span>
+          </div>
+          <div class="hud-right">
+            <div class="hud-chip"><span class="score" id="hud-score">0</span></div>
+            <div class="hud-chip coins" id="hud-coins">$0</div>
+            <button type="button" class="hud-chip hud-pause" id="btn-pause">||</button>
+          </div>
+        </header>
+
+        <aside class="hud-popup hidden" id="hud-objectives">
+          <div class="obj-title">OBJECTIFS</div>
           <ul id="obj-list"></ul>
         </aside>
 
+        <div class="hud-chip hud-bag" id="hud-bag">BAG 0/5</div>
+
         <div id="combo" class="combo hidden">COMBO x2</div>
         <div id="toast" class="toast hidden"></div>
-      </div>
 
-      <div class="controls dock-controls">
-        <div id="joystick" class="joystick">
-          <div class="joy-base"></div>
-          <div class="joy-pad" id="joy-pad"></div>
-          <div class="joy-stick" id="joy-stick"></div>
-        </div>
-        <div class="action-cluster">
-          <button id="btn-tool" class="btn-tool" type="button">Q</button>
-          <button id="btn-action" class="btn-action" aria-label="Action">
-            <span id="btn-action-label">PINCE</span>
-          </button>
+        <div class="controls overlay-controls">
+          <div id="joystick" class="joystick">
+            <div class="joy-base"></div>
+            <div class="joy-pad" id="joy-pad"></div>
+            <div class="joy-stick" id="joy-stick"></div>
+          </div>
+          <button type="button" class="btn-menu-hud" id="btn-menu-hud">MENU</button>
+          <div class="action-cluster">
+            <button id="btn-tool" class="btn-tool" type="button">Q</button>
+            <button id="btn-action" class="btn-action" aria-label="Action">
+              <span id="btn-action-label">PINCE</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      <nav class="bottom-tabs" id="bottom-tabs">
-        <button data-panel="outils" class="tab active">OUTILS</button>
-        <button data-panel="ameliorations" class="tab">UP</button>
-        <button data-panel="defis" class="tab">DEFIS</button>
-        <button data-panel="boutique" class="tab">SHOP</button>
-        <button id="btn-pause" class="tab tab-pause">||</button>
-      </nav>
 
       <div id="panel-overlay" class="panel-overlay hidden">
-        <div class="panel pixel-frame" id="panel-content"></div>
-        <button id="btn-close-panel" class="btn btn-secondary">FERMER</button>
+        <div class="panel-sheet">
+          <div class="panel-status">
+            <canvas id="hud-avatar" class="avatar-canvas" width="40" height="40"></canvas>
+            <div class="profile-text">
+              <div class="level-row">
+                <span id="hud-level">NV.1</span>
+                <div class="xp-bar"><div id="hud-xp-fill"></div></div>
+              </div>
+              <div class="stars" id="hud-stars">***</div>
+            </div>
+          </div>
+          <nav class="panel-tabs" id="bottom-tabs">
+            <button data-panel="outils" class="tab active">OUTILS</button>
+            <button data-panel="ameliorations" class="tab">UP</button>
+            <button data-panel="defis" class="tab">DEFIS</button>
+            <button data-panel="boutique" class="tab">SHOP</button>
+          </nav>
+          <div class="panel pixel-frame" id="panel-content"></div>
+          <button id="btn-close-panel" class="btn btn-secondary">FERMER</button>
+        </div>
       </div>
     </section>
 

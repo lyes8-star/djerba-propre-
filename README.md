@@ -16,10 +16,12 @@ Puis va sur `http://localhost:8080`.
 
 | Mobile | Desktop |
 |--------|---------|
-| Joystick gauche | WASD / flèches |
+| Joystick gauche (transparent) | WASD / flèches |
 | Bouton PINCE | Espace ou E |
-| Double-tap bouton | Q — bascule Pince / Balai |
-| Onglets bas | Outils, Améliorations, Défis, Boutique |
+| **OBJ** | Objectifs (pop-up) |
+| **MENU** | Outils, upgrades, défis, shop |
+| **||** | Pause |
+| Double-tap bouton / Q | Bascule Pince / Balai |
 
 ## Gameplay
 

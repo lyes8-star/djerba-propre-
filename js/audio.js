@@ -29,6 +29,14 @@ const AudioSys = (() => {
   };
 
   const THEMES = {
+    intro: {
+      maqam: "hijaz", beat: 0.4, vol: 0.16, lead: "nay",
+      rhythm: "slow",
+      melodyA: [0, -1, -1, 2, -1, 4, -1, 3, 2, -1, 0, -1, 4, 5, 4, 0],
+      melodyB: [4, -1, 2, -1, 0, -1, 2, 4, 5, 4, 2, 0, 3, 2, -1, 0],
+      bass: [0, 0, 0, 4, 0, 0, 3, 0],
+      counter: [7, -1, 5, -1, 4, -1, 2, 0],
+    },
     title: {
       maqam: "hijaz", beat: 0.3, vol: 0.2, lead: "nay",
       rhythm: "malouf",

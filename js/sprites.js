@@ -422,6 +422,40 @@ const Sprites = (() => {
     drawWorldBg(ctx, W, H, t, "beach", null);
   }
 
+  function drawCinematic(ctx, vw, vh, t) {
+    Atlas.bake();
+    const WW = 960;
+    const WH = 1200;
+    const zoom = 1.32;
+    const camW = vw / zoom;
+    const camH = vh / zoom;
+    const camX = Math.max(0, Math.min(WW - camW, 30 + (t * 26) % 640));
+    const camY = Math.max(0, Math.min(WH - camH, 236 + Math.sin(t * 0.16) * 28));
+    const cam = { x: camX, y: camY, vw: camW, vh: camH };
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.scale(zoom, zoom);
+    ctx.translate(-camX, -camY);
+    drawWorldBg(ctx, WW, WH, t, "sunset", cam);
+    const walk = Math.floor(t * 9) % 4;
+    const nWalk = Math.floor(t * 8) % 4;
+    const pack = Atlas.frames.npc || {};
+    const px = 90 + (t * 20) % 380;
+    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_1_0`], px, 398);
+    Atlas.blit(ctx, Atlas.frames.bin, px + 34, 410);
+    if (pack.tourF) Atlas.blit(ctx, pack.tourF[`-1_${nWalk}_0`], 70, 428);
+    if (pack.localM) Atlas.blit(ctx, pack.localM[`1_${nWalk}_0`], 250, 414);
+    if (pack.kidM) Atlas.blit(ctx, pack.kidM[`1_${Math.floor(t * 14) % 4}_0`], 188, 438);
+    if (pack.tourM) Atlas.blit(ctx, pack.tourM[`1_0_1`], 500, 372);
+    if (pack.elder) Atlas.blit(ctx, pack.elder[`-1_0_0`], 340, 408);
+    Atlas.blit(ctx, Atlas.frames.can, 160, 448);
+    Atlas.blit(ctx, Atlas.frames.bottle, 310, 436);
+    Atlas.blit(ctx, Atlas.frames.bag, 430, 444);
+    Atlas.blit(ctx, Atlas.frames.gull0, 130 + Math.sin(t) * 46, 228);
+    Atlas.blit(ctx, Atlas.frames.gull1 || Atlas.frames.gull0, 420 + Math.cos(t * 0.7) * 40, 210);
+    ctx.restore();
+  }
+
   function drawAvatar(ctx, goldHat, t) {
     Atlas.bake();
     ctx.clearRect(0, 0, 40, 40);
@@ -438,14 +472,14 @@ const Sprites = (() => {
   }
 
   function drawMinimap(ctx, W, H, trash, player, t, cam, npcs) {
-    const mw = 56;
-    const mh = 56;
+    const mw = 44;
+    const mh = 44;
     const mx = (cam && cam.x != null ? cam.x : 0) + (cam && cam.vw ? cam.vw : W) - mw - 8;
-    const my = (cam && cam.y != null ? cam.y : 0) + 8;
-    ctx.fillStyle = "rgba(8,40,72,0.88)";
+    const my = (cam && cam.y != null ? cam.y : 0) + 36;
+    ctx.fillStyle = "rgba(8,40,72,0.4)";
     ctx.fillRect(mx, my, mw, mh);
-    ctx.strokeStyle = Math.sin(t * 4) > 0 ? "#fcbc14" : "#70c8fc";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(110, 200, 255, 0.45)";
+    ctx.lineWidth = 1;
     ctx.strokeRect(mx, my, mw, mh);
     trash.forEach((tr) => {
       ctx.fillStyle = "#d43030";
@@ -511,6 +545,6 @@ const Sprites = (() => {
   return {
     drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
     drawBin, drawTrash, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
-    drawTitleBackground, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
+    drawTitleBackground, drawCinematic, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
   };
 })();

@@ -21,6 +21,8 @@ const UI = (() => {
     els.btnAction = document.getElementById("btn-action");
     els.actionLabel = document.getElementById("btn-action-label");
     els.avatar = document.getElementById("hud-avatar");
+    els.bag = document.getElementById("hud-bag");
+    els.objPopup = document.getElementById("hud-objectives");
   }
 
   function showScreen(id, fade = false) {
@@ -63,6 +65,10 @@ const UI = (() => {
     const clean = World.cleanliness(world);
     els.stars.textContent = starString(World.stars(world.score, clean));
     els.coins.textContent = `$${st.coins}`;
+    if (els.bag && window.__player) {
+      const p = window.__player;
+      els.bag.textContent = `BAG ${p.inventory.length}/${p.stats.capacity}`;
+    }
 
     els.objList.innerHTML = World.objectives(world)
       .map((o) => `<li class="${o.done ? "done" : ""}">${o.done ? "[OK] " : "[  ] "}${o.label} ${o.value}</li>`)
@@ -211,6 +217,16 @@ const UI = (() => {
     els.panelOverlay.classList.add("hidden");
   }
 
+  function toggleObjectives(forceOn) {
+    if (!els.objPopup) return;
+    if (forceOn) els.objPopup.classList.remove("hidden");
+    else els.objPopup.classList.toggle("hidden");
+    if (!els.objPopup.classList.contains("hidden")) {
+      clearTimeout(toggleObjectives._t);
+      toggleObjectives._t = setTimeout(() => els.objPopup.classList.add("hidden"), 4200);
+    }
+  }
+
   function setupJoystick(input) {
     const root = document.getElementById("joystick");
     const stick = els.joyStick;
@@ -295,6 +311,7 @@ const UI = (() => {
     refreshTitleStats,
     openPanel,
     closePanel,
+    toggleObjectives,
     setupJoystick,
     showResult,
     drawAvatar,

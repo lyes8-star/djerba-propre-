@@ -2,8 +2,6 @@
 (() => {
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d");
-  const titleCanvas = document.getElementById("title-canvas");
-  const titleCtx = titleCanvas.getContext("2d");
   const titleBg = document.getElementById("title-bg-canvas");
   const titleBgCtx = titleBg.getContext("2d");
   const mapCanvas = document.getElementById("map-canvas");
@@ -11,17 +9,15 @@
 
   canvas.width = 320;
   canvas.height = 400;
-  titleCanvas.width = 280;
-  titleCanvas.height = 150;
   titleBg.width = 320;
-  titleBg.height = 520;
+  titleBg.height = 560;
   mapCanvas.width = 280;
   mapCanvas.height = 250;
 
   const ZOOM = 1.3;
   let cam = { x: 0, y: 0, vw: 0, vh: 0 };
 
-  [ctx, titleCtx, titleBgCtx, mapCtx].forEach((c) => {
+  [ctx, titleBgCtx, mapCtx].forEach((c) => {
     c.imageSmoothingEnabled = false;
   });
 
@@ -48,16 +44,120 @@
   let quickPlay = false;
 
   function fitGameCanvas() {
-    // Fill stage via CSS object-fit; keep pixels crisp
+    const wrap = canvas.parentElement;
+    const w = (wrap && wrap.clientWidth) || window.innerWidth || 320;
+    const h = (wrap && wrap.clientHeight) || window.innerHeight || 400;
+    const px = Math.max(2, Math.min(3, Math.floor(Math.min(w / 260, h / 340)) || 2));
+    const nw = Math.max(260, Math.round(w / px));
+    const nh = Math.max(340, Math.round(h / px));
+    if (canvas.width !== nw || canvas.height !== nh) {
+      canvas.width = nw;
+      canvas.height = nh;
+    }
     ctx.imageSmoothingEnabled = false;
+  }
+
+  let introPhase = "cine";
+  let introStart = 0;
+  let introAudio = false;
+
+  function fitTitleBg() {
+    const w = Math.max(280, Math.round((titleBg.clientWidth || 320) / 2));
+    const h = Math.max(480, Math.round((titleBg.clientHeight || 560) / 2));
+    if (titleBg.width !== w || titleBg.height !== h) {
+      titleBg.width = w;
+      titleBg.height = h;
+      titleBgCtx.imageSmoothingEnabled = false;
+    }
+  }
+
+  function setIntroPhase(phase) {
+    introPhase = phase;
+    const veil = document.getElementById("intro-veil");
+    const studio = document.getElementById("intro-studio");
+    const cineLogo = document.getElementById("intro-logo-cine");
+    const skip = document.getElementById("intro-skip");
+    const menu = document.getElementById("title-menu");
+    const kicker = document.getElementById("intro-kicker");
+    const presents = document.getElementById("intro-presents");
+    if (phase === "cine") {
+      introStart = performance.now();
+      veil.className = "intro-veil";
+      studio.classList.remove("hidden");
+      cineLogo.classList.add("hidden");
+      skip.classList.add("hidden");
+      menu.classList.add("hidden");
+      kicker.classList.remove("show");
+      presents.classList.remove("show");
+      titleBg.classList.remove("lit", "menu");
+      void kicker.offsetWidth;
+      kicker.classList.add("show");
+    } else if (phase === "menu") {
+      veil.className = "intro-veil gone";
+      studio.classList.add("hidden");
+      cineLogo.classList.add("hidden");
+      skip.classList.add("hidden");
+      menu.classList.remove("hidden");
+      titleBg.classList.remove("lit");
+      titleBg.classList.add("menu");
+      AudioSys.setTheme("title");
+      AudioSys.startMusic("title");
+    }
+  }
+
+  function tickIntro(now) {
+    if (introPhase !== "cine") return;
+    const t = (now - introStart) / 1000;
+    const kicker = document.getElementById("intro-kicker");
+    const presents = document.getElementById("intro-presents");
+    const studio = document.getElementById("intro-studio");
+    const cineLogo = document.getElementById("intro-logo-cine");
+    const skip = document.getElementById("intro-skip");
+    const veil = document.getElementById("intro-veil");
+    if (t > 0.15 && !kicker.classList.contains("show")) kicker.classList.add("show");
+    if (t > 1.35) presents.classList.add("show");
+    if (t > 2.2) skip.classList.remove("hidden");
+    if (t > 3.05) {
+      veil.classList.add("dim");
+      titleBg.classList.add("lit");
+    }
+    if (t > 3.6) {
+      studio.classList.add("hidden");
+      cineLogo.classList.remove("hidden");
+    }
+    if (t > 7.2) setIntroPhase("menu");
+  }
+
+  function handleTitlePress(e) {
+    if (e.target && e.target.id === "btn-quick") return;
+    AudioSys.unlock();
+    if (!introAudio) {
+      introAudio = true;
+      if (introPhase === "cine") {
+        AudioSys.setTheme("intro");
+        AudioSys.startMusic("intro");
+      } else {
+        AudioSys.setTheme("title");
+        AudioSys.startMusic("title");
+      }
+    }
+    if (introPhase === "cine") {
+      const elapsed = (performance.now() - introStart) / 1000;
+      if (elapsed > 1.1) setIntroPhase("menu");
+      return;
+    }
+    if (introPhase === "menu") {
+      AudioSys.sfx("click");
+      launchCampaignFromTitle();
+    }
   }
 
   function drawTitleFrame(ts) {
     if (state !== "title") return;
     animTime = ts / 1000;
-    Sprites.drawTitleBackground(titleBgCtx, titleBg.width, titleBg.height, animTime);
-    titleCtx.clearRect(0, 0, titleCanvas.width, titleCanvas.height);
-    Sprites.drawTitleScene(titleCtx, animTime);
+    fitTitleBg();
+    tickIntro(ts);
+    Sprites.drawCinematic(titleBgCtx, titleBg.width, titleBg.height, animTime);
     titleRaf = requestAnimationFrame(drawTitleFrame);
   }
 
@@ -216,6 +316,7 @@
     world = World.create(mission);
     player = Player.create(Progress.toolStats());
     Npc.spawn(world);
+    window.__player = player;
     AudioSys.unlock();
     AudioSys.setTheme(playMusicTheme());
     AudioSys.startMusic(playMusicTheme());
@@ -237,6 +338,7 @@
     if (missionLabel) missionLabel.textContent = (mission.code || mission.name || "RUN").slice(0, 10);
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
+    UI.toggleObjectives(true);
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
@@ -245,6 +347,9 @@
   function goTitle() {
     state = "title";
     quickPlay = false;
+    introPhase = "menu";
+    introAudio = true;
+    setIntroPhase("menu");
     AudioSys.setTheme("title");
     AudioSys.startMusic("title");
     UI.refreshTitleStats();
@@ -375,6 +480,7 @@
   }
 
   function render(t) {
+    fitGameCanvas();
     const W = world.W;
     const H = world.H;
     const vw = canvas.width / ZOOM;
@@ -403,18 +509,6 @@
       else Sprites.drawNpc(ctx, a.n, t, cam);
     }
     FX.draw(ctx);
-
-    // inventory HUD in world space near bottom of view
-    const ix = camX + 8;
-    const iy = camY + vh - 18;
-    ctx.fillStyle = "rgba(8,40,72,0.9)";
-    ctx.fillRect(ix, iy, 78, 14);
-    ctx.strokeStyle = "#6ec8ff";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(ix, iy, 78, 14);
-    ctx.fillStyle = "#ffd24a";
-    ctx.font = "8px monospace";
-    ctx.fillText(`BAG ${player.inventory.length}/${player.stats.capacity}`, ix + 4, iy + 10);
 
     Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam, world.npcs);
     ctx.restore();
@@ -470,6 +564,11 @@
       input.keys[e.key.toLowerCase()] = true;
       const k = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
+      if (state === "title" && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault();
+        handleTitlePress({ target: document.getElementById("btn-play") });
+        return;
+      }
       if (state === "story" && (e.key === " " || e.key === "Enter")) {
         e.preventDefault();
         storyIndex += 1;
@@ -521,9 +620,8 @@
   }
 
   function bindUI() {
-    document.getElementById("btn-play").addEventListener("click", () => {
-      AudioSys.sfx("click");
-      launchCampaignFromTitle();
+    document.getElementById("btn-play").addEventListener("click", (e) => {
+      handleTitlePress(e);
     });
     document.getElementById("btn-quick").addEventListener("click", () => {
       AudioSys.sfx("click");
@@ -602,7 +700,7 @@
     document.getElementById("btn-close-panel").addEventListener("click", () => {
       AudioSys.sfx("click");
       UI.closePanel();
-      document.querySelectorAll(".bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
+      document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
       if (state === "menu") {
         state = "play";
         lastTs = performance.now();
@@ -610,15 +708,36 @@
       }
     });
 
-    document.querySelectorAll(".bottom-tabs .tab[data-panel]").forEach((tab) => {
+    document.querySelectorAll("#bottom-tabs .tab[data-panel]").forEach((tab) => {
       tab.addEventListener("click", () => {
         AudioSys.sfx("click");
-        document.querySelectorAll(".bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
         tab.classList.add("active");
         if (state === "play") state = "menu";
         UI.openPanel(tab.getAttribute("data-panel"));
       });
     });
+
+    const btnMenu = document.getElementById("btn-menu-hud");
+    if (btnMenu) {
+      btnMenu.addEventListener("click", () => {
+        AudioSys.sfx("click");
+        const first = document.querySelector("#bottom-tabs .tab[data-panel]");
+        document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
+        if (first) first.classList.add("active");
+        if (state === "play") state = "menu";
+        UI.openPanel(first ? first.getAttribute("data-panel") : "outils");
+      });
+    }
+
+    const btnObj = document.getElementById("btn-obj");
+    if (btnObj) {
+      btnObj.addEventListener("click", (e) => {
+        e.preventDefault();
+        AudioSys.sfx("click");
+        UI.toggleObjectives();
+      });
+    }
 
     document.getElementById("btn-tool").addEventListener("click", (e) => {
       e.preventDefault();
@@ -646,8 +765,11 @@
 
     const unlock = () => {
       AudioSys.unlock();
-      AudioSys.setTheme("title");
-      AudioSys.startMusic("title");
+      if (state === "title" && introPhase === "cine" && !introAudio) {
+        introAudio = true;
+        AudioSys.setTheme("intro");
+        AudioSys.startMusic("intro");
+      }
       window.removeEventListener("pointerdown", unlock);
     };
     window.addEventListener("pointerdown", unlock);
@@ -665,6 +787,7 @@
     bindUI();
     UI.refreshTitleStats();
     UI.showScreen("screen-title");
+    setIntroPhase("cine");
     startTitleLoop();
   }
 
