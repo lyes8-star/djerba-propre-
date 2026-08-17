@@ -13,6 +13,10 @@ const UI = (() => {
     els.coins = document.getElementById("hud-coins");
     els.objList = document.getElementById("obj-list");
     els.toast = document.getElementById("toast");
+    els.talkBox = document.getElementById("hud-talk");
+    els.talkWho = document.getElementById("talk-who");
+    els.talkText = document.getElementById("talk-text");
+    els.talkHint = document.getElementById("talk-hint");
     els.combo = document.getElementById("combo");
     els.panelOverlay = document.getElementById("panel-overlay");
     els.panelContent = document.getElementById("panel-content");
@@ -80,6 +84,26 @@ const UI = (() => {
     els.toast.classList.remove("hidden");
     clearTimeout(toast._t);
     toast._t = setTimeout(() => els.toast.classList.add("hidden"), ms);
+  }
+
+  function talkBox(who, text, more) {
+    if (!els.talkBox) return;
+    els.talkWho.textContent = who || "";
+    els.talkText.textContent = text || "";
+    if (els.talkHint) {
+      els.talkHint.textContent = more ? "PARLER : suite" : "";
+      els.talkHint.classList.toggle("hidden", !more);
+    }
+    els.talkBox.classList.remove("hidden");
+    clearTimeout(talkBox._t);
+    const ms = more ? 16000 : Math.min(14000, 5500 + String(text || "").length * 38);
+    talkBox._t = setTimeout(() => els.talkBox.classList.add("hidden"), ms);
+  }
+
+  function hideTalk() {
+    if (!els.talkBox) return;
+    els.talkBox.classList.add("hidden");
+    clearTimeout(talkBox._t);
   }
 
   function showCombo(n) {
@@ -307,6 +331,8 @@ const UI = (() => {
     showScreen,
     updateHud,
     toast,
+    talkBox,
+    hideTalk,
     showCombo,
     refreshTitleStats,
     openPanel,

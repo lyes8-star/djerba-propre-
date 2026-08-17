@@ -200,30 +200,17 @@ const Sprites = (() => {
       ctx.fillRect(bx + 3, by + 2, 3, 4);
       ctx.fillRect(bx + 3, by + 7, 3, 2);
     }
-    if (n.bubble > 0 && n.bubbleText) {
-      const raw = String(n.bubbleText);
-      const lines = [];
-      let cur = "";
-      raw.split(" ").forEach((w) => {
-        const next = cur ? cur + " " + w : w;
-        if (next.length > 28) {
-          if (cur) lines.push(cur);
-          cur = w;
-        } else cur = next;
-      });
-      if (cur) lines.push(cur);
-      const show = lines.slice(0, 3);
-      const tw = Math.min(148, 10 + Math.max(...show.map((s) => s.length)) * 5);
-      const th = 6 + show.length * 9;
-      const bx = n.x + 16 - tw / 2;
-      const by = n.y - th - 8;
+    if (n.bubble > 0) {
+      const bx = n.x + 10;
+      const by = n.y - 14;
       ctx.fillStyle = "#140c1c";
-      ctx.fillRect(bx - 1, by - 1, tw + 2, th + 2);
+      ctx.fillRect(bx - 1, by - 1, 16, 11);
       ctx.fillStyle = "#fcfcfc";
-      ctx.fillRect(bx, by, tw, th);
+      ctx.fillRect(bx, by, 14, 9);
       ctx.fillStyle = "#140c1c";
-      ctx.font = "6px monospace";
-      show.forEach((ln, i) => ctx.fillText(ln, bx + 3, by + 9 + i * 9));
+      ctx.fillRect(bx + 2, by + 4, 2, 2);
+      ctx.fillRect(bx + 6, by + 4, 2, 2);
+      ctx.fillRect(bx + 10, by + 4, 2, 2);
     }
   }
 
