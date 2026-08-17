@@ -200,18 +200,6 @@ const Sprites = (() => {
       ctx.fillRect(bx + 3, by + 2, 3, 4);
       ctx.fillRect(bx + 3, by + 7, 3, 2);
     }
-    if (n.bubble > 0) {
-      const bx = n.x + 10;
-      const by = n.y - 14;
-      ctx.fillStyle = "#140c1c";
-      ctx.fillRect(bx - 1, by - 1, 16, 11);
-      ctx.fillStyle = "#fcfcfc";
-      ctx.fillRect(bx, by, 14, 9);
-      ctx.fillStyle = "#140c1c";
-      ctx.fillRect(bx + 2, by + 4, 2, 2);
-      ctx.fillRect(bx + 6, by + 4, 2, 2);
-      ctx.fillRect(bx + 10, by + 4, 2, 2);
-    }
   }
 
   function themeSky(theme) {
