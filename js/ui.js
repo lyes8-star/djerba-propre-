@@ -218,7 +218,7 @@ const UI = (() => {
     let pid = null;
 
     function setStick(dx, dy) {
-      const max = 30;
+      const max = 36;
       const m = Math.hypot(dx, dy) || 1;
       const cl = Math.min(1, Math.hypot(dx, dy) / max);
       const nx = (dx / m) * cl * max;
