@@ -394,6 +394,17 @@ const Npc = (() => {
     "Ojja merguez et on discute politique.",
     "Kaftaji, mechouia, harissa. Le triple.",
     "Mlawi du coin, pas la baguette.",
+    "Chorba du ramadan, meme en aout.",
+    "Tajine tunisien, pas le tajine marocain. Difference.",
+    "Kasra encore chaude, beurre et harissa.",
+    "Zlebia collante, les doigts aussi.",
+    "Merguez qui crache, barbecue du dimanche.",
+    "Baklawa trop sucree, c'est voulu.",
+    "Louage plein, on part quand meme.",
+    "Cafe DIRECT, 700 millimes, khouya.",
+    "On dit sahit, pas merci. Presque.",
+    "Djerba: 4x4, zebre, et photo au coucher.",
+    "Bambalouni de Houmt Souk, queue comprise.",
   ];
 
   function lineFor(n) {

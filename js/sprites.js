@@ -156,10 +156,14 @@ const Sprites = (() => {
     const img = Atlas.frames[item.type] || Atlas.frames.can;
     if (cam && !Atlas.inView(cam, item.x, item.y, 16, 22)) return;
     Atlas.blit(ctx, img, item.x, item.y + bob);
-    if (item.rare && Math.sin(t * 8 + item.x) > 0.2) {
-      ctx.fillStyle = "#fcbc14";
-      ctx.fillRect(item.x + 12, item.y + bob - 3, 2, 2);
-      ctx.fillRect(item.x + 2, item.y + bob + 2, 1, 1);
+    if (item.rare) {
+      ctx.fillStyle = "rgba(252,188,20,0.35)";
+      ctx.fillRect(item.x - 1, item.y + bob + 10, 18, 3);
+      if (Math.sin(t * 8 + item.x) > 0.2) {
+        ctx.fillStyle = "#fcbc14";
+        ctx.fillRect(item.x + 12, item.y + bob - 3, 2, 2);
+        ctx.fillRect(item.x + 2, item.y + bob + 2, 1, 1);
+      }
     }
   }
 
@@ -358,6 +362,9 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.signHarissa, 150, 508);
     Atlas.blit(ctx, Atlas.frames.signThe, 210, 508);
     Atlas.blit(ctx, Atlas.frames.signYallah, 270, 508);
+    Atlas.blit(ctx, Atlas.frames.signLouage, 24, 528);
+    Atlas.blit(ctx, Atlas.frames.signBrik, 150, 528);
+    Atlas.blit(ctx, Atlas.frames.signDirect, 270, 528);
     drawFlag(ctx, 80, 500, "tn", t, cam);
     drawFlag(ctx, 350, 504, "il", t, cam);
     drawLamp(ctx, 140, 560, cam);
