@@ -1,8 +1,9 @@
-/* World renderer — tiled atlas blit, camera cull */
+/* World renderer — NES/SNES tiles, animated sea, camera cull */
 const Sprites = (() => {
   const TILE = 16;
 
   function tileFill(ctx, img, x, y, w, h, cam) {
+    if (!img) return;
     const x0 = Math.max(0, x);
     const y0 = Math.max(0, y);
     const x1 = x + w;
@@ -22,81 +23,95 @@ const Sprites = (() => {
     }
   }
 
+  function seaFrame(depth, t) {
+    const f = Math.floor(t * 7) % 3;
+    return Atlas.tiles.sea[depth][f];
+  }
+
   function drawPalm(ctx, x, y, t, seed, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 48, 72)) return;
-    const img = Math.sin(t * 2.2 + seed) > 0 ? Atlas.frames.palm1 : Atlas.frames.palm0;
+    if (cam && !Atlas.inView(cam, x, y, 32, 48)) return;
+    const img = Math.sin(t * 2.4 + seed) > 0 ? Atlas.frames.palm1 : Atlas.frames.palm0;
     Atlas.blit(ctx, img, x, y);
   }
 
   function drawHouse(ctx, x, y, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 56, 64)) return;
+    if (cam && !Atlas.inView(cam, x, y, 48, 56)) return;
     Atlas.blit(ctx, Atlas.frames.house, x, y);
   }
 
   function drawLighthouse(ctx, x, y, t, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 36, 80)) return;
+    if (cam && !Atlas.inView(cam, x, y, 24, 64)) return;
     const on = Math.sin(t * 5) > 0;
     Atlas.blit(ctx, on ? Atlas.frames.lhOn : Atlas.frames.lhOff, x, y);
   }
 
   function drawBoat(ctx, x, y, t, cam) {
-    const bob = Math.sin(t * 2) * 2;
-    if (cam && !Atlas.inView(cam, x, y + bob, 44, 28)) return;
+    const bob = Math.sin(t * 2.2) * 2;
+    if (cam && !Atlas.inView(cam, x, y + bob, 36, 20)) return;
     Atlas.blit(ctx, Atlas.frames.boat, x, y + bob);
   }
 
   function drawSign(ctx, x, y, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 40, 56)) return;
+    if (cam && !Atlas.inView(cam, x, y, 24, 40)) return;
     Atlas.blit(ctx, Atlas.frames.sign, x, y);
   }
 
+  function drawBush(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 24, 16)) return;
+    Atlas.blit(ctx, Atlas.frames.bush, x, y);
+  }
+
+  function drawRock(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 16, 12)) return;
+    Atlas.blit(ctx, Atlas.frames.rock, x, y);
+  }
+
+  function drawUmbrella(ctx, x, y, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 32, 32)) return;
+    Atlas.blit(ctx, Atlas.frames.umbrella, x, y);
+  }
+
   function drawSeagull(ctx, x, y, t, seed) {
-    const flap = Math.sin(t * 7 + seed) > 0 ? 2 : -2;
     const ox = x + Math.sin(t * 0.35 + seed) * 48;
     const oy = y + Math.cos(t * 0.5 + seed) * 6;
-    const ctxf = ctx;
-    ctxf.fillStyle = "#f7fbff";
-    ctxf.fillRect(ox | 0, oy | 0, 8, 3);
-    ctxf.fillRect((ox - 7) | 0, (oy - flap) | 0, 7, 2);
-    ctxf.fillRect((ox + 8) | 0, (oy - flap) | 0, 7, 2);
-    ctxf.fillStyle = "#0c355e";
-    ctxf.fillRect((ox + 3) | 0, (oy + 1) | 0, 2, 2);
+    const img = Math.sin(t * 8 + seed) > 0 ? Atlas.frames.gull1 : Atlas.frames.gull0;
+    Atlas.blit(ctx, img, ox, oy);
   }
 
   function drawBin(ctx, x, y, t, cam) {
     const wob = Math.sin(t * 10) * 0.4;
-    if (cam && !Atlas.inView(cam, x, y, 28, 36)) return;
+    if (cam && !Atlas.inView(cam, x, y, 20, 24)) return;
     Atlas.blit(ctx, Atlas.frames.bin, x + wob, y);
   }
 
   function drawTrash(ctx, item, t, cam) {
-    const bob = Math.sin(t * 3 + item.y) * 0.8;
+    const bob = (Math.sin(t * 6 + item.y) > 0 ? 0 : -2);
     const img = Atlas.frames[item.type] || Atlas.frames.can;
-    if (cam && !Atlas.inView(cam, item.x, item.y, 24, 32)) return;
+    if (cam && !Atlas.inView(cam, item.x, item.y, 16, 22)) return;
     Atlas.blit(ctx, img, item.x, item.y + bob);
   }
 
   function drawPlayer(ctx, p, goldHat, t, cam) {
     const moving = Math.hypot(p.vx || 0, p.vy || 0) > 8;
-    const walk = moving ? Math.floor(t * 10) % 4 : 0;
+    const walk = moving ? Math.floor(t * 12) % 4 : (Math.sin(t * 3) > 0.85 ? 2 : 0);
     const face = (p.facing || 1) >= 0 ? 1 : -1;
     const atk = p.attacking ? 1 : 0;
     const gold = goldHat ? 1 : 0;
     const key = `${face}_${walk}_${atk}_${gold}`;
     const img = Atlas.frames.player[key] || Atlas.frames.player["1_0_0_0"];
-    if (cam && !Atlas.inView(cam, p.x, p.y, 80, 96)) return;
+    if (cam && !Atlas.inView(cam, p.x, p.y, Atlas.PW, Atlas.PH)) return;
     Atlas.blit(ctx, img, p.x, p.y);
   }
 
   function themeSky(theme) {
     const map = {
-      beach: ["#8ad8ff", "#52b4ec", "#2e90d0"],
-      souk: ["#9ad4ff", "#5eb3e8", "#3a90c8"],
-      lagoon: ["#9ae0ff", "#62c4e8", "#3aa8c8"],
-      port: ["#7ec0e8", "#4a98c8", "#2a7098"],
-      sunset: ["#ffb068", "#f08050", "#c05070"],
-      resort: ["#90d8ff", "#58b8f0", "#3890d0"],
-      festival: ["#b090ff", "#7860d8", "#4840a8"],
+      beach: ["#5ec8fc", "#3aacfc", "#2090dc"],
+      souk: ["#7ad0fc", "#48b0e8", "#2c90c8"],
+      lagoon: ["#70e0fc", "#40c0e8", "#2098c8"],
+      port: ["#68b8e8", "#3c90c8", "#206898"],
+      sunset: ["#fcb068", "#f08050", "#c05070"],
+      resort: ["#80d8fc", "#50b8f0", "#308fd0"],
+      festival: ["#b090fc", "#7860d8", "#4840a8"],
     };
     return map[theme] || map.beach;
   }
@@ -104,31 +119,22 @@ const Sprites = (() => {
   function drawWorldBg(ctx, W, H, t, theme = "beach", cam) {
     Atlas.bake();
     const sky = themeSky(theme);
-    const seaY = 210;
+    const seaY = 208;
     const sandY = 320;
 
     ctx.fillStyle = sky[0];
-    ctx.fillRect(0, 0, W, 80);
+    ctx.fillRect(0, 0, W, 90);
     ctx.fillStyle = sky[1];
-    ctx.fillRect(0, 80, W, 80);
+    ctx.fillRect(0, 90, W, 70);
     ctx.fillStyle = sky[2];
     ctx.fillRect(0, 160, W, seaY - 160);
 
-    // clouds
-    const cx = [40, 280, 620, 820];
-    cx.forEach((x, i) => {
-      const ox = x + Math.sin(t * 0.12 + i) * 8;
-      if (!cam || Atlas.inView(cam, ox, 20 + i * 8, 48, 20)) {
-        Atlas.blit(ctx, Atlas.frames.cloud, ox, 20 + (i % 3) * 10);
-      }
-    });
-
-    // sun / moon
+    // sun
     if (theme === "festival") {
       ctx.fillStyle = "#fff0a8";
-      ctx.fillRect(W - 90, 24, 22, 22);
+      ctx.fillRect(W - 86, 18, 18, 18);
       ctx.fillStyle = sky[1];
-      ctx.fillRect(W - 82, 28, 14, 14);
+      ctx.fillRect(W - 80, 22, 12, 12);
       for (let i = 0; i < 18; i++) {
         if (Math.sin(t * 3 + i) > 0) {
           ctx.fillStyle = "#fff";
@@ -136,122 +142,151 @@ const Sprites = (() => {
         }
       }
     } else if (theme === "sunset") {
-      ctx.fillStyle = "#ff9040";
-      ctx.fillRect(W - 110, 50, 36, 36);
-      ctx.fillStyle = "#ffd24a";
-      ctx.fillRect(W - 100, 60, 16, 16);
+      Atlas.blit(ctx, Atlas.frames.sun, W - 120, 40);
     } else {
-      ctx.fillStyle = "#fff0a8";
-      ctx.fillRect(W - 100, 22, 28, 28);
-      ctx.fillStyle = "#ffd24a";
-      ctx.fillRect(W - 94, 28, 16, 16);
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2 + t * 0.2;
-        ctx.fillStyle = "#fff0a8";
-        ctx.fillRect(W - 86 + Math.cos(a) * 22, 36 + Math.sin(a) * 22, 3, 3);
-      }
+      Atlas.blit(ctx, Atlas.frames.sun, W - 110, 8);
     }
 
-    // sea tiles
-    tileFill(ctx, Atlas.tiles.sea0, 0, seaY, W, 48, cam);
-    tileFill(ctx, Atlas.tiles.foam, 0, seaY + 32, W, 16, cam);
-    tileFill(ctx, Atlas.tiles.sea1, 0, seaY + 48, W, 32, cam);
-    tileFill(ctx, Atlas.tiles.sea2, 0, seaY + 80, W, 16, cam);
+    // SMB hills behind the water
+    if (!cam || Atlas.inView(cam, 40, seaY - 28, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 40, seaY - 28);
+    if (!cam || Atlas.inView(cam, 280, seaY - 36, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 280, seaY - 36);
+    if (!cam || Atlas.inView(cam, 620, seaY - 24, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 620, seaY - 24);
+    if (!cam || Atlas.inView(cam, 820, seaY - 32, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 820, seaY - 32);
+
+    // clouds (slow drift)
+    const cx = [30, 180, 360, 540, 720, 860];
+    cx.forEach((x, i) => {
+      const ox = x + Math.sin(t * 0.15 + i) * 10 + (t * (4 + i % 3)) % 20;
+      const oy = 12 + (i % 4) * 10;
+      if (!cam || Atlas.inView(cam, ox, oy, 48, 20)) Atlas.blit(ctx, Atlas.frames.cloud, ox, oy);
+    });
+
+    // animated sea bands
+    tileFill(ctx, seaFrame(0, t), 0, seaY, W, 32, cam);
+    tileFill(ctx, Atlas.tiles.foam[Math.floor(t * 6) % 3], 0, seaY + 28, W, 16, cam);
+    tileFill(ctx, seaFrame(1, t + 0.4), 0, seaY + 40, W, 32, cam);
+    tileFill(ctx, seaFrame(2, t + 0.8), 0, seaY + 72, W, 24, cam);
+    tileFill(ctx, Atlas.tiles.foam[Math.floor(t * 6 + 1) % 3], 0, sandY - 16, W, 16, cam);
 
     // sun reflection
     const rx = W - 86;
-    for (let k = 0; k < 12; k++) {
-      const rw = 5 + (k % 3) * 4 + Math.sin(t * 3 + k) * 2;
+    for (let k = 0; k < 10; k++) {
+      const rw = 4 + (k % 3) * 3 + Math.sin(t * 4 + k) * 2;
       ctx.fillStyle = theme === "festival" ? "#c8d8ff" : "#ffe9a0";
-      ctx.fillRect(rx - rw / 2 + Math.sin(t * 2 + k) * 3, seaY + 8 + k * 8, rw, 2);
+      ctx.fillRect(rx - rw / 2 + Math.sin(t * 2 + k) * 3, seaY + 10 + k * 8, rw, 2);
     }
 
-    // sand tiles
-    const sands = [Atlas.tiles.sand0, Atlas.tiles.sand1, Atlas.tiles.sand2];
+    // sand body
+    const sands = [Atlas.tiles.sand0, Atlas.tiles.sand1, Atlas.tiles.sand2, Atlas.tiles.sand3];
     const x0 = cam ? Math.max(0, (cam.x / TILE | 0) * TILE) : 0;
     const y0 = cam ? Math.max(sandY, (cam.y / TILE | 0) * TILE) : sandY;
     const x1 = cam ? Math.min(W, cam.x + cam.vw + TILE) : W;
     const y1 = cam ? Math.min(H, cam.y + cam.vh + TILE) : H;
     for (let ty = y0; ty < y1; ty += TILE) {
       for (let tx = x0; tx < x1; tx += TILE) {
-        const img = sands[((tx / 16 | 0) + (ty / 16 | 0) * 3) % 3];
+        const img = sands[((tx / 16 | 0) + (ty / 16 | 0) * 3) % 4];
         ctx.drawImage(img, tx, ty);
       }
     }
-    // foam shoreline
-    tileFill(ctx, Atlas.tiles.foam, 0, sandY - 8, W, 16, cam);
+    // shoreline cap row
+    tileFill(ctx, Atlas.tiles.sandCap, 0, sandY, W, 16, cam);
 
-    // props — on the shore + along the playable sand so the camera always sees décor
+    // stone path down the beach
+    for (let ty = sandY + 32; ty < H; ty += TILE) {
+      if (cam && (ty + 16 < cam.y || ty > cam.y + cam.vh)) continue;
+      ctx.drawImage(Atlas.tiles.stone, 448, ty);
+      ctx.drawImage(Atlas.tiles.stone, 464, ty);
+    }
+
+    // theme buildings
     if (theme === "souk") {
-      drawHouse(ctx, 28, 258, cam);
-      drawHouse(ctx, 100, 266, cam);
-      drawHouse(ctx, 300, 252, cam);
-      drawHouse(ctx, 700, 260, cam);
-      tileFill(ctx, Atlas.tiles.grass, 400, 360, 96, 48, cam);
-      tileFill(ctx, Atlas.tiles.grass, 520, 620, 80, 48, cam);
+      drawHouse(ctx, 24, 266, cam);
+      drawHouse(ctx, 80, 274, cam);
+      drawHouse(ctx, 300, 262, cam);
+      drawHouse(ctx, 700, 270, cam);
+      tileFill(ctx, Atlas.tiles.brick, 400, 360, 64, 32, cam);
     } else if (theme === "port") {
-      drawLighthouse(ctx, 520, 200, t, cam);
-      drawBoat(ctx, 80, 270, t, cam);
-      drawBoat(ctx, 400, 278, t + 1, cam);
-      drawBoat(ctx, 620, 268, t + 0.6, cam);
+      drawLighthouse(ctx, 520, 196, t, cam);
+      drawBoat(ctx, 80, 276, t, cam);
+      drawBoat(ctx, 400, 282, t + 1, cam);
+      drawBoat(ctx, 620, 270, t + 0.6, cam);
     } else if (theme === "lagoon") {
-      drawPalm(ctx, 60, 250, t, 0, cam);
-      drawPalm(ctx, 140, 260, t, 1, cam);
-      tileFill(ctx, Atlas.tiles.sea0, 380, 500, 120, 32, cam);
+      drawPalm(ctx, 60, 268, t, 0, cam);
+      drawPalm(ctx, 140, 276, t, 1, cam);
+      tileFill(ctx, seaFrame(0, t), 380, 500, 96, 32, cam);
     } else if (theme === "resort") {
-      drawHouse(ctx, 28, 252, cam);
-      drawHouse(ctx, 108, 260, cam);
-      drawHouse(ctx, 320, 248, cam);
-      drawHouse(ctx, 640, 256, cam);
+      drawHouse(ctx, 24, 266, cam);
+      drawHouse(ctx, 88, 274, cam);
+      drawHouse(ctx, 320, 262, cam);
+      drawHouse(ctx, 640, 270, cam);
+      drawUmbrella(ctx, 200, 340, cam);
+      drawUmbrella(ctx, 560, 348, cam);
     } else if (theme === "festival") {
-      drawHouse(ctx, 40, 258, cam);
-      drawHouse(ctx, 300, 250, cam);
-      drawLighthouse(ctx, 520, 200, t, cam);
+      drawHouse(ctx, 40, 270, cam);
+      drawHouse(ctx, 300, 262, cam);
+      drawLighthouse(ctx, 520, 196, t, cam);
     } else {
-      drawHouse(ctx, 28, 258, cam);
-      drawHouse(ctx, 108, 266, cam);
-      drawHouse(ctx, 300, 250, cam);
-      drawHouse(ctx, 700, 260, cam);
-      drawLighthouse(ctx, 520, 200, t, cam);
-      drawBoat(ctx, 360, 272, t, cam);
+      drawHouse(ctx, 24, 266, cam);
+      drawHouse(ctx, 80, 274, cam);
+      drawHouse(ctx, 300, 262, cam);
+      drawHouse(ctx, 700, 270, cam);
+      drawLighthouse(ctx, 520, 196, t, cam);
+      drawBoat(ctx, 360, 276, t, cam);
     }
 
     const palms = [
-      [70, 248, 0], [220, 240, 1.4], [340, 268, 0.7], [560, 252, 2.1],
-      [800, 255, 2.8], [160, 520, 3.3], [620, 540, 0.4], [80, 700, 1.9],
-      [480, 680, 2.5], [820, 740, 0.9], [240, 900, 1.1], [700, 920, 3.6],
+      [48, 272, 0], [200, 264, 1.4], [340, 276, 0.7], [560, 268, 2.1],
+      [800, 272, 2.8], [140, 500, 3.3], [620, 520, 0.4], [64, 680, 1.9],
+      [480, 660, 2.5], [820, 720, 0.9], [220, 880, 1.1], [700, 900, 3.6],
     ];
     for (const [px, py, seed] of palms) drawPalm(ctx, px, py, t, seed, cam);
 
-    tileFill(ctx, Atlas.tiles.grass, 430, 400, 64, 32, cam);
-    tileFill(ctx, Atlas.tiles.grass, 200, 640, 48, 32, cam);
-    tileFill(ctx, Atlas.tiles.grass, 760, 560, 48, 32, cam);
-    drawSign(ctx, 16, 340, cam);
-    drawSign(ctx, 880, 360, cam);
-    drawSeagull(ctx, 120, 90, t, 0);
-    drawSeagull(ctx, 480, 70, t, 2.1);
+    drawUmbrella(ctx, 180, 360, cam);
+    drawUmbrella(ctx, 600, 380, cam);
+    drawUmbrella(ctx, 760, 640, cam);
+    drawBush(ctx, 430, 400, cam);
+    drawBush(ctx, 200, 640, cam);
+    drawBush(ctx, 760, 560, cam);
+    drawBush(ctx, 100, 800, cam);
+    drawRock(ctx, 250, 420, cam);
+    drawRock(ctx, 520, 480, cam);
+    drawRock(ctx, 840, 520, cam);
+    drawRock(ctx, 300, 720, cam);
+    tileFill(ctx, Atlas.tiles.grass, 400, 400, 48, 32, cam);
+    tileFill(ctx, Atlas.tiles.grass, 160, 640, 32, 32, cam);
+    tileFill(ctx, Atlas.tiles.grass, 720, 560, 32, 32, cam);
+    drawSign(ctx, 16, 332, cam);
+    drawSign(ctx, 900, 348, cam);
+    drawSeagull(ctx, 120, 70, t, 0);
+    drawSeagull(ctx, 480, 50, t, 2.1);
+    drawSeagull(ctx, 760, 80, t, 4.2);
   }
 
   function drawTitleScene(ctx, t) {
     Atlas.bake();
     const W = 280;
     const H = 150;
-    ctx.fillStyle = "#52b4ec";
+    ctx.fillStyle = "#3aacfc";
     ctx.fillRect(0, 0, W, 50);
-    tileFill(ctx, Atlas.tiles.sea1, 0, 48, W, 32);
-    tileFill(ctx, Atlas.tiles.foam, 0, 72, W, 16);
+    Atlas.blit(ctx, Atlas.frames.hill, -10, 28);
+    Atlas.blit(ctx, Atlas.frames.cloud, 20, 8);
+    Atlas.blit(ctx, Atlas.frames.sun, 230, 2);
+    tileFill(ctx, seaFrame(1, t), 0, 48, W, 32);
+    tileFill(ctx, Atlas.tiles.foam[Math.floor(t * 6) % 3], 0, 72, W, 16);
     tileFill(ctx, Atlas.tiles.sand0, 0, 84, W, H);
-    Atlas.blit(ctx, Atlas.frames.house, 4, 20);
-    Atlas.blit(ctx, Math.sin(t * 5) > 0 ? Atlas.frames.lhOn : Atlas.frames.lhOff, 200, -10);
-    Atlas.blit(ctx, Math.sin(t * 2) > 0 ? Atlas.frames.palm1 : Atlas.frames.palm0, 90, 20);
-    Atlas.blit(ctx, Atlas.frames.boat, 140, 55);
-    const walk = Math.floor(t * 8) % 4;
+    Atlas.blit(ctx, Atlas.frames.house, 4, 40);
+    Atlas.blit(ctx, Math.sin(t * 5) > 0 ? Atlas.frames.lhOn : Atlas.frames.lhOff, 232, 20);
+    Atlas.blit(ctx, Math.sin(t * 2) > 0 ? Atlas.frames.palm1 : Atlas.frames.palm0, 90, 36);
+    Atlas.blit(ctx, Atlas.frames.boat, 150, 62);
+    Atlas.blit(ctx, Atlas.frames.umbrella, 200, 88);
+    const walk = Math.floor(t * 10) % 4;
     const atk = Math.sin(t * 2.5) > 0.7 ? 1 : 0;
-    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_${atk}_0`], 90, 55);
-    Atlas.blit(ctx, Atlas.frames.bin, 165, 90);
-    Atlas.blit(ctx, Atlas.frames.can, 50, 110);
-    Atlas.blit(ctx, Atlas.frames.bottle, 210, 100);
-    Atlas.blit(ctx, Atlas.frames.bag, 30, 115);
+    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_${atk}_0`], 118, 92);
+    Atlas.blit(ctx, Atlas.frames.bin, 150, 102);
+    Atlas.blit(ctx, Atlas.frames.can, 50, 118);
+    Atlas.blit(ctx, Atlas.frames.bottle, 210, 108);
+    Atlas.blit(ctx, Atlas.frames.bag, 30, 120);
+    Atlas.blit(ctx, Atlas.frames.gull0, 70 + Math.sin(t) * 8, 18);
   }
 
   function drawTitleBackground(ctx, W, H, t) {
@@ -261,13 +296,15 @@ const Sprites = (() => {
   function drawAvatar(ctx, goldHat, t) {
     Atlas.bake();
     ctx.clearRect(0, 0, 40, 40);
-    ctx.fillStyle = "#52b4ec";
+    ctx.fillStyle = "#3aacfc";
     ctx.fillRect(0, 0, 40, 40);
+    ctx.drawImage(Atlas.tiles.sand1, 0, 24);
+    ctx.drawImage(Atlas.tiles.sand1, 16, 24);
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.scale(0.42, 0.42);
     const gold = goldHat ? 1 : 0;
-    Atlas.blit(ctx, Atlas.frames.player[`1_0_0_${gold}`], 4, 0);
+    const walk = Math.floor((t || 0) * 8) % 4;
+    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_0_${gold}`], 8, 6);
     ctx.restore();
   }
 
@@ -278,49 +315,51 @@ const Sprites = (() => {
     const my = (cam && cam.y != null ? cam.y : 0) + 8;
     ctx.fillStyle = "rgba(8,40,72,0.88)";
     ctx.fillRect(mx, my, mw, mh);
-    ctx.strokeStyle = Math.sin(t * 4) > 0 ? "#ffd24a" : "#7ad0ff";
+    ctx.strokeStyle = Math.sin(t * 4) > 0 ? "#fcbc14" : "#70c8fc";
     ctx.lineWidth = 2;
     ctx.strokeRect(mx, my, mw, mh);
     trash.forEach((tr) => {
-      ctx.fillStyle = "#ff5550";
+      ctx.fillStyle = "#d43030";
       ctx.fillRect(mx + 3 + (tr.x / W) * (mw - 6), my + 3 + (tr.y / H) * (mh - 6), 2, 2);
     });
-    ctx.fillStyle = "#3ddc5a";
-    ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 4, 4);
+    ctx.fillStyle = "#3cbc3c";
+    ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 3, 3);
   }
 
   function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId) {
-    ctx.fillStyle = "#1a6bb5";
+    ctx.fillStyle = "#1c7cc0";
     ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < 50; i++) {
-      ctx.fillStyle = "#3aa0d8";
+    for (let i = 0; i < 40; i++) {
+      ctx.fillStyle = "#38a4e8";
       ctx.fillRect((i * 37) % W, 10 + (i * 19) % H, 3, 2);
     }
-    // stepped island
-    ctx.fillStyle = "#e8d4a8";
+    Atlas.blit(ctx, Atlas.frames.cloud, 16, 8);
+    Atlas.blit(ctx, Atlas.frames.cloud, 200, 20);
+    ctx.fillStyle = "#f0cc84";
     for (let y = 28; y < 210; y += 2) {
       const inset = Math.abs(y - 118) / 8 | 0;
       ctx.fillRect(24 + inset, y, W - 48 - inset * 2, 2);
     }
-    ctx.fillStyle = "#3ddc5a";
+    ctx.fillStyle = "#3cbc3c";
     ctx.fillRect(80, 90, 50, 28);
     ctx.fillRect(140, 130, 44, 22);
+    Atlas.blit(ctx, Atlas.frames.hill, 40, 70);
 
     Campaign.list().forEach((lv) => {
       const open = lv.id <= unlocked;
       const st = (starsMap && starsMap[String(lv.id)]) || 0;
       const sel = lv.id === selectedId;
       const pulse = sel && Math.sin(t * 6) > 0 ? 2 : 0;
-      ctx.fillStyle = sel ? "#ffd24a" : "#000";
+      ctx.fillStyle = sel ? "#fcbc14" : "#140c1c";
       ctx.fillRect(lv.mapX - 6 - pulse, lv.mapY - 6 - pulse, 18 + pulse * 2, 18 + pulse * 2);
-      ctx.fillStyle = open ? "#3ddc5a" : "#555";
+      ctx.fillStyle = open ? "#3cbc3c" : "#555";
       ctx.fillRect(lv.mapX - 4, lv.mapY - 4, 14, 14);
       if (open) {
         ctx.fillStyle = "#fff";
         ctx.font = "8px monospace";
         ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 6);
         if (st > 0) {
-          ctx.fillStyle = "#ffd24a";
+          ctx.fillStyle = "#fcbc14";
           ctx.fillText("*".repeat(st), lv.mapX - 4, lv.mapY + 20);
         }
       }
