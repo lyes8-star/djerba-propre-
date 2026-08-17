@@ -439,7 +439,8 @@
         AudioSys.sfx("super");
         FX.stars(res.item.x, res.item.y);
         FX.floatText(res.item.x, res.item.y - 10, res.name, "#ffd24a");
-        UI.toast(`TROUVE !<br/>${res.name}<span class="bonus">plat rare tunisien +${res.points}</span>`, 2600);
+        UI.toast(`SUCCES !<br/>${res.name}<span class="bonus">plat rare tunisien +${res.points} pts</span>`, 2800);
+        FX.hitShake(0.2);
         if (res.coins) Progress.addCoins(res.coins);
       } else {
         AudioSys.sfx("pickup");

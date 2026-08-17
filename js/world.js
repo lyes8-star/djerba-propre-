@@ -6,6 +6,7 @@ const World = (() => {
     brik: 420, lablabi: 400, couscous: 520, ojja: 380, makroud: 340,
     mlawi: 320, the: 300, fricasse: 360, bambalouni: 330, harissa: 280,
     kaftaji: 370, mechouia: 350,
+    chorba: 390, tajine: 410, kasra: 300, zlebia: 340, merguez: 360, baklawa: 380,
   };
   const RARES = [
     { type: "brik", name: "BRIK A L'OEUF" },
@@ -20,6 +21,12 @@ const World = (() => {
     { type: "harissa", name: "POT DE HARISSA" },
     { type: "kaftaji", name: "KAFTAJI" },
     { type: "mechouia", name: "SALADE MECHOUIA" },
+    { type: "chorba", name: "CHORBA" },
+    { type: "tajine", name: "TAJINE TUNISIEN" },
+    { type: "kasra", name: "KASRA" },
+    { type: "zlebia", name: "ZLEBIA" },
+    { type: "merguez", name: "MERGUEZ" },
+    { type: "baklawa", name: "BAKLAWA" },
   ];
 
   function create(mission) {
@@ -81,7 +88,7 @@ const World = (() => {
       pool[i] = pool[j];
       pool[j] = tmp;
     }
-    const n = 6 + ((Math.random() * 3) | 0);
+    const n = 9 + ((Math.random() * 3) | 0);
     const out = [];
     for (let i = 0; i < n && i < pool.length; i++) {
       const d = pool[i];
