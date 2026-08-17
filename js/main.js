@@ -18,7 +18,7 @@
   mapCanvas.width = 280;
   mapCanvas.height = 250;
 
-  const ZOOM = 1.42;
+  const ZOOM = 0.85;
   let cam = { x: 0, y: 0, vw: 0, vh: 0 };
 
   [ctx, titleCtx, titleBgCtx, mapCtx].forEach((c) => {

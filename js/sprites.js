@@ -181,39 +181,53 @@ const Sprites = (() => {
     // foam shoreline
     tileFill(ctx, Atlas.tiles.foam, 0, sandY - 8, W, 16, cam);
 
-    // props
+    // props — on the shore + along the playable sand so the camera always sees décor
     if (theme === "souk") {
-      drawHouse(ctx, 20, 170, cam);
-      drawHouse(ctx, 90, 178, cam);
-      drawHouse(ctx, 700, 172, cam);
+      drawHouse(ctx, 28, 258, cam);
+      drawHouse(ctx, 100, 266, cam);
+      drawHouse(ctx, 300, 252, cam);
+      drawHouse(ctx, 700, 260, cam);
       tileFill(ctx, Atlas.tiles.grass, 400, 360, 96, 48, cam);
+      tileFill(ctx, Atlas.tiles.grass, 520, 620, 80, 48, cam);
     } else if (theme === "port") {
-      drawLighthouse(ctx, 520, 140, t, cam);
+      drawLighthouse(ctx, 520, 200, t, cam);
       drawBoat(ctx, 80, 270, t, cam);
       drawBoat(ctx, 400, 278, t + 1, cam);
+      drawBoat(ctx, 620, 268, t + 0.6, cam);
     } else if (theme === "lagoon") {
-      drawPalm(ctx, 60, 230, t, 0, cam);
-      drawPalm(ctx, 140, 240, t, 1, cam);
+      drawPalm(ctx, 60, 250, t, 0, cam);
+      drawPalm(ctx, 140, 260, t, 1, cam);
       tileFill(ctx, Atlas.tiles.sea0, 380, 500, 120, 32, cam);
     } else if (theme === "resort") {
-      drawHouse(ctx, 24, 165, cam);
-      drawHouse(ctx, 100, 172, cam);
-      drawHouse(ctx, 640, 168, cam);
+      drawHouse(ctx, 28, 252, cam);
+      drawHouse(ctx, 108, 260, cam);
+      drawHouse(ctx, 320, 248, cam);
+      drawHouse(ctx, 640, 256, cam);
     } else if (theme === "festival") {
-      drawHouse(ctx, 40, 175, cam);
-      drawLighthouse(ctx, 520, 140, t, cam);
+      drawHouse(ctx, 40, 258, cam);
+      drawHouse(ctx, 300, 250, cam);
+      drawLighthouse(ctx, 520, 200, t, cam);
     } else {
-      drawHouse(ctx, 24, 175, cam);
-      drawHouse(ctx, 100, 182, cam);
-      drawHouse(ctx, 700, 178, cam);
-      drawLighthouse(ctx, 520, 140, t, cam);
-      drawBoat(ctx, 300, 272, t, cam);
+      drawHouse(ctx, 28, 258, cam);
+      drawHouse(ctx, 108, 266, cam);
+      drawHouse(ctx, 300, 250, cam);
+      drawHouse(ctx, 700, 260, cam);
+      drawLighthouse(ctx, 520, 200, t, cam);
+      drawBoat(ctx, 360, 272, t, cam);
     }
 
-    drawPalm(ctx, 70, 230, t, 0, cam);
-    drawPalm(ctx, 220, 220, t, 1.4, cam);
-    drawPalm(ctx, 800, 235, t, 2.8, cam);
+    const palms = [
+      [70, 248, 0], [220, 240, 1.4], [340, 268, 0.7], [560, 252, 2.1],
+      [800, 255, 2.8], [160, 520, 3.3], [620, 540, 0.4], [80, 700, 1.9],
+      [480, 680, 2.5], [820, 740, 0.9], [240, 900, 1.1], [700, 920, 3.6],
+    ];
+    for (const [px, py, seed] of palms) drawPalm(ctx, px, py, t, seed, cam);
+
+    tileFill(ctx, Atlas.tiles.grass, 430, 400, 64, 32, cam);
+    tileFill(ctx, Atlas.tiles.grass, 200, 640, 48, 32, cam);
+    tileFill(ctx, Atlas.tiles.grass, 760, 560, 48, 32, cam);
     drawSign(ctx, 16, 340, cam);
+    drawSign(ctx, 880, 360, cam);
     drawSeagull(ctx, 120, 90, t, 0);
     drawSeagull(ctx, 480, 70, t, 2.1);
   }

@@ -3,7 +3,7 @@ const Player = (() => {
   function create(stats) {
     return {
       x: 420,
-      y: 700,
+      y: 430;
       vx: 0,
       vy: 0,
       facing: 1,
