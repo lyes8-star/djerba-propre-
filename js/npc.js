@@ -306,23 +306,6 @@ const Npc = (() => {
     return best;
   }
 
-  function paginate(text, maxLen) {
-    const raw = String(text || "").trim();
-    if (!raw) return [""];
-    const parts = raw.split(/(?<=[.!?…])\s+/);
-    const pages = [];
-    let cur = "";
-    for (const p of parts) {
-      const next = cur ? `${cur} ${p}` : p;
-      if (cur && next.length > maxLen) {
-        pages.push(cur);
-        cur = p;
-      } else cur = next;
-    }
-    if (cur) pages.push(cur);
-    return pages;
-  }
-
   function whoFor(n) {
     if (n.style.startsWith("tour")) return `${n.name} (touriste)`;
     if (n.style.startsWith("merch")) return `${n.name} (souk)`;
@@ -332,14 +315,13 @@ const Npc = (() => {
   }
 
   function startSpeech(n, text, who) {
-    n.pages = paginate(text, 280);
+    n.pages = null;
     n.page = 0;
-    n.bubbleText = n.pages[0];
-    n.bubble = 14;
+    n.bubbleText = text;
+    n.bubble = Math.min(20, 9 + String(text).length / 32);
     n.whoLabel = who;
     n.acting = true;
     n.actT = 1.5;
-    return n.page < n.pages.length - 1;
   }
 
   function lineFor(n) {
@@ -355,18 +337,8 @@ const Npc = (() => {
     if (player) n.facing = player.x >= n.x ? 1 : -1;
     const who = n.whoLabel || whoFor(n);
 
-    if (n.pages && n.page < n.pages.length - 1) {
-      n.page += 1;
-      n.bubbleText = n.pages[n.page];
-      n.bubble = 14;
-      n.acting = true;
-      n.actT = 1.4;
-      n.talkCd = 7;
-      return { type: "talk", who, text: n.bubbleText, coins: 0, more: n.page < n.pages.length - 1 };
-    }
-
-    if (n.bubble > 0) {
-      return { type: "talk", who, text: n.bubbleText, coins: 0, more: false };
+    if (n.bubble > 0 && n.bubbleText) {
+      return { type: "talk", who, text: n.bubbleText, coins: 0 };
     }
 
     if (n.talkCd > 0 && n.talked) {
@@ -380,17 +352,17 @@ const Npc = (() => {
             "Yallah, la Fitna continue sans moi. J'ai parle. Toi tu travailles. C'est l'ordre des choses.",
             "Baraka. La suite c'est le sac, pas encore une these sur l'ouest.",
           ]);
-      const more = startSpeech(n, again, who);
-      return { type: "talk", who, text: n.bubbleText, coins: 0, more };
+      startSpeech(n, again, who);
+      return { type: "talk", who, text: n.bubbleText, coins: 0 };
     }
 
     const text = lineFor(n);
     n.talkCd = 8;
-    const more = startSpeech(n, text, whoFor(n));
+    startSpeech(n, text, whoFor(n));
     const first = !n.talked;
     n.talked = true;
     const coins = first && (n.style.startsWith("tour") || n.style.startsWith("merch")) ? 15 : first ? 8 : 0;
-    return { type: "talk", who: n.whoLabel, text: n.bubbleText, coins, more };
+    return { type: "talk", who: n.whoLabel, text: n.bubbleText, coins };
   }
 
   return { spawn, update, nearest, talk };
