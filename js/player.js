@@ -1,8 +1,11 @@
-/* Player — 80x96 sprite footprint on 960x1200 world */
+/* Player — 24x32 SMB-sized sprite on 960x1200 world */
 const Player = (() => {
+  const PW = 32;
+  const PH = 32;
+
   function create(stats) {
     return {
-      x: 420,
+      x: 448,
       y: 430,
       vx: 0,
       vy: 0,
@@ -11,7 +14,7 @@ const Player = (() => {
       attackTimer: 0,
       cooldown: 0,
       inventory: [],
-      baseSpeed: 110,
+      baseSpeed: 78,
       stats,
     };
   }
@@ -36,8 +39,8 @@ const Player = (() => {
     if (ix > 0.1) p.facing = 1;
     if (ix < -0.1) p.facing = -1;
 
-    p.x = Math.max(8, Math.min(world.W - 80, p.x));
-    p.y = Math.max(330, Math.min(world.H - 96, p.y));
+    p.x = Math.max(8, Math.min(world.W - PW, p.x));
+    p.y = Math.max(330, Math.min(world.H - PH, p.y));
 
     if (p.attackTimer > 0) {
       p.attackTimer -= dt;

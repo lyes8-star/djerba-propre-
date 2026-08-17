@@ -34,7 +34,7 @@ const World = (() => {
       theme: m.theme || "beach",
       missionId: m.id || 1,
       missionName: m.name || "Plage",
-      bin: { x: 460, y: 720 },
+      bin: { x: 430, y: 448 },
     };
   }
 
@@ -77,7 +77,7 @@ const World = (() => {
     let best = null;
     let bestD = Infinity;
     for (const t of living(world)) {
-      const d = Math.hypot(t.x + 10 - (player.x + 40), t.y + 10 - (player.y + 48));
+      const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 16));
       if (d < range && d < bestD) {
         best = t;
         bestD = d;
@@ -99,7 +99,7 @@ const World = (() => {
     let n = 0;
     let pts = 0;
     for (const t of living(world)) {
-      const d = Math.hypot(t.x - player.x - 40, t.y - player.y - 48);
+      const d = Math.hypot(t.x - player.x - 16, t.y - player.y - 16);
       if (d < r) {
         if (player.inventory.length >= stats.capacity) break;
         t.alive = false;
@@ -117,7 +117,7 @@ const World = (() => {
   }
 
   function tryRecycle(world, player, stats) {
-    if (Math.hypot(player.x - world.bin.x, player.y - world.bin.y) > 56) return null;
+    if (Math.hypot(player.x - world.bin.x, player.y - world.bin.y) > 40) return null;
     if (player.inventory.length === 0) return { empty: true };
     let pts = 0;
     const count = player.inventory.length;
@@ -130,8 +130,8 @@ const World = (() => {
   }
 
   function followBin(world, player) {
-    world.bin.x += (player.x - 20 - world.bin.x) * 0.1;
-    world.bin.y += (player.y + 20 - world.bin.y) * 0.1;
+    world.bin.x += (player.x - 18 - world.bin.x) * 0.12;
+    world.bin.y += (player.y + 8 - world.bin.y) * 0.12;
   }
 
   function objectives(world) {
