@@ -18,7 +18,7 @@
   mapCanvas.width = 280;
   mapCanvas.height = 250;
 
-  const ZOOM = 2.15;
+  const ZOOM = 1.15;
   let cam = { x: 0, y: 0, vw: 0, vh: 0 };
 
   [ctx, titleCtx, titleBgCtx, mapCtx].forEach((c) => {
@@ -358,8 +358,8 @@
     const H = world.H;
     const vw = canvas.width / ZOOM;
     const vh = canvas.height / ZOOM;
-    let camX = player.x + 14 - vw / 2;
-    let camY = player.y + 16 - vh / 2;
+    let camX = player.x + 40 - vw / 2;
+    let camY = player.y + 48 - vh / 2;
     camX = Math.max(0, Math.min(W - vw, camX));
     camY = Math.max(0, Math.min(H - vh, camY));
     cam = { x: camX, y: camY, vw, vh };
@@ -370,10 +370,10 @@
     ctx.scale(ZOOM, ZOOM);
     ctx.translate(-camX, -camY);
 
-    Sprites.drawWorldBg(ctx, W, H, t, world.theme);
-    for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t);
-    Sprites.drawBin(ctx, world.bin.x, world.bin.y, t);
-    Sprites.drawPlayer(ctx, player, Progress.get().cosmetics.hat_gold, t);
+    Sprites.drawWorldBg(ctx, W, H, t, world.theme, cam);
+    for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
+    Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
+    Sprites.drawPlayer(ctx, player, Progress.get().cosmetics.hat_gold, t, cam);
     FX.draw(ctx);
 
     // inventory HUD in world space near bottom of view
@@ -403,10 +403,10 @@
     World.tickSpawn(world, dt);
     FX.update(dt);
     if (Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
-      FX.dust(player.x + 10, player.y);
+      FX.dust(player.x + 36, player.y + 50);
     }
     if (Math.random() < 0.04) {
-      FX.glint(player.x + Math.random() * 40 - 10, player.y + Math.random() * 20 - 30);
+      FX.glint(player.x + Math.random() * 70, player.y + Math.random() * 40 - 20);
     }
 
     if (holdAction && selectedTool === "balai" && player.cooldown <= 0) doAction();
@@ -622,6 +622,7 @@
   }
 
   function init() {
+    Atlas.bake();
     UI.cache();
     UI.setupJoystick(input);
     const joy = document.getElementById("joystick");
