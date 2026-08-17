@@ -298,7 +298,7 @@
           name: "Partie Rapide",
           theme: "beach",
           time: 150,
-          trash: 28,
+          trash: 48,
           bagRatio: 0.3,
           bagTarget: 6,
           recycleTarget: 14,
@@ -508,6 +508,7 @@
     ctx.translate(-camX, -camY);
 
     Sprites.drawWorldBg(ctx, W, H, t, world.theme, cam);
+    Sprites.drawFilth(ctx, world, t, cam);
     for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
     for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
     Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);

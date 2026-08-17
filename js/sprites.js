@@ -152,10 +152,21 @@ const Sprites = (() => {
   }
 
   function drawTrash(ctx, item, t, cam) {
-    const bob = (Math.sin(t * 6 + item.y) > 0 ? 0 : -2);
+    if (cam && !Atlas.inView(cam, item.x - 4, item.y - 2, 22, 24)) return;
+    const bob = item.rare && Math.sin(t * 6 + item.y) > 0 ? 0 : (item.rare ? -2 : 0);
+    ctx.fillStyle = "rgba(32, 16, 8, 0.5)";
+    ctx.fillRect(item.x + 1, item.y + 11 + bob, 14, 5);
+    ctx.fillStyle = "rgba(12, 8, 4, 0.28)";
+    ctx.fillRect(item.x + 3, item.y + 13 + bob, 10, 3);
     const img = Atlas.frames[item.type] || Atlas.frames.can;
-    if (cam && !Atlas.inView(cam, item.x, item.y, 16, 22)) return;
     Atlas.blit(ctx, img, item.x, item.y + bob);
+    if (item.type === "bag" || item.type === "peel") {
+      const fx = item.x + 7 + Math.sin(t * 10 + item.x) * 5;
+      const fy = item.y - 2 + Math.cos(t * 13 + item.y) * 3;
+      ctx.fillStyle = "#140c1c";
+      ctx.fillRect(fx, fy, 2, 1);
+      ctx.fillRect(fx + 4 + Math.sin(t * 7), fy + 3, 1, 1);
+    }
     if (item.rare) {
       ctx.fillStyle = "rgba(252,188,20,0.35)";
       ctx.fillRect(item.x - 1, item.y + bob + 10, 18, 3);
@@ -163,6 +174,69 @@ const Sprites = (() => {
         ctx.fillStyle = "#fcbc14";
         ctx.fillRect(item.x + 12, item.y + bob - 3, 2, 2);
         ctx.fillRect(item.x + 2, item.y + bob + 2, 1, 1);
+      }
+    }
+  }
+
+  function drawFilth(ctx, world, t, cam) {
+    const dirty = 1 - World.cleanliness(world) / 100;
+    if (dirty < 0.04) return;
+    const x0 = cam ? cam.x - 8 : 0;
+    const y0 = cam ? Math.max(320, cam.y - 8) : 320;
+    const x1 = cam ? cam.x + cam.vw + 8 : world.W;
+    const y1 = cam ? cam.y + cam.vh + 8 : world.H;
+    const a = 0.12 + dirty * 0.42;
+
+    for (const s of world.stains || []) {
+      if (s.x > x1 || s.x + s.w < x0 || s.y > y1 || s.y + s.h < y0) continue;
+      if (s.kind === 0) {
+        ctx.fillStyle = `rgba(48, 28, 12, ${a})`;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
+        ctx.fillStyle = `rgba(20, 12, 8, ${a * 0.7})`;
+        ctx.fillRect(s.x + 2, s.y + 1, Math.max(3, s.w - 4), Math.max(2, s.h - 3));
+      } else if (s.kind === 1) {
+        ctx.fillStyle = `rgba(16, 16, 12, ${a * 0.85})`;
+        ctx.fillRect(s.x, s.y, s.w * 0.7, s.h);
+        ctx.fillRect(s.x + 3, s.y + 2, s.w * 0.5, 2);
+      } else if (s.kind === 2) {
+        ctx.fillStyle = `rgba(72, 48, 24, ${a})`;
+        ctx.fillRect(s.x, s.y, 3, 2);
+        ctx.fillRect(s.x + 5, s.y + 3, 2, 2);
+        ctx.fillRect(s.x + 2, s.y + 5, 4, 1);
+      } else if (s.kind === 3) {
+        ctx.fillStyle = `rgba(36, 40, 28, ${a * 0.75})`;
+        ctx.fillRect(s.x, s.y, s.w, 3);
+        ctx.fillRect(s.x + 1, s.y + 2, s.w - 3, 2);
+      } else {
+        ctx.fillStyle = `rgba(90, 40, 16, ${a * 0.6})`;
+        ctx.fillRect(s.x, s.y, 5, 4);
+        ctx.fillRect(s.x + 4, s.y + 1, 6, 3);
+      }
+    }
+
+    const step = 16;
+    const tx0 = (x0 / step | 0) * step;
+    const ty0 = (y0 / step | 0) * step;
+    for (let ty = ty0; ty < y1; ty += step) {
+      for (let tx = tx0; tx < x1; tx += step) {
+        const h = ((tx * 374761 + ty * 668265) >>> 0) % 11;
+        if (h > dirty * 9) continue;
+        ctx.fillStyle = `rgba(40, 22, 10, ${0.14 + dirty * 0.22})`;
+        ctx.fillRect(tx + (h % 9), ty + ((h * 3) % 8), 2 + (h % 5), 1 + (h % 3));
+        if (h < 2 && dirty > 0.35) {
+          ctx.fillStyle = `rgba(12, 12, 10, ${0.2 + dirty * 0.2})`;
+          ctx.fillRect(tx + 4, ty + 6, 6, 2);
+        }
+      }
+    }
+
+    const sandY = 320;
+    if (!cam || cam.y < sandY + 20) {
+      ctx.fillStyle = `rgba(20, 28, 24, ${0.2 + dirty * 0.35})`;
+      for (let i = 0; i < 18; i++) {
+        const sx = (i * 53 + 20) % world.W;
+        if (cam && (sx < cam.x - 8 || sx > cam.x + cam.vw)) continue;
+        ctx.fillRect(sx, sandY - 10 + (i % 3) * 3, 3 + (i % 4), 2);
       }
     }
   }
@@ -577,7 +651,7 @@ const Sprites = (() => {
 
   return {
     drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
-    drawBin, drawTrash, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
+    drawBin, drawTrash, drawFilth, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
     drawTitleBackground, drawCinematic, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
   };
 })();

@@ -355,6 +355,69 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeButt() {
+    const { c, ctx } = make(10, 8);
+    stamp(ctx, 0, 1, [
+      "kkkkkkkk",
+      "kwwwrrfk",
+      "kwwwrrfk",
+      "kkkkkkkk",
+      ".ssssss.",
+    ], {
+      k: C.ink, w: "#e8dcc8", r: C.redD, f: "#c4a070", s: "rgba(0,0,0,0.3)",
+    });
+    return c;
+  }
+
+  function bakeCup() {
+    const { c, ctx } = make(12, 14);
+    stamp(ctx, 0, 0, [
+      ".kkkkkkkk.",
+      "kwwwwwwwwk",
+      "kwwrwwrwwk",
+      ".kwwwwwwk.",
+      ".kwwBBwwk.",
+      ".kwwwwwwk.",
+      ".kkkkkkkk.",
+      "..ssssss..",
+    ], {
+      k: C.ink, w: C.white, r: C.red, B: C.blueL, s: "rgba(0,0,0,0.3)",
+    });
+    return c;
+  }
+
+  function bakePaper() {
+    const { c, ctx } = make(14, 12);
+    stamp(ctx, 0, 0, [
+      "..kkkkkk....",
+      ".kwwwwwwk...",
+      "kwwkwwwwwk..",
+      "kwwwwwkwwk..",
+      ".kwwwwwwwk..",
+      "..kkkkkkkk..",
+      "...ssssss...",
+    ], {
+      k: C.ink, w: "#e8e0c8", s: "rgba(0,0,0,0.28)",
+    });
+    return c;
+  }
+
+  function bakePeel() {
+    const { c, ctx } = make(14, 12);
+    stamp(ctx, 0, 0, [
+      "...kk.......",
+      "..kggk.kk...",
+      ".kgGGkggk...",
+      "kggggggGk...",
+      ".kkgggkk....",
+      "...kkkk.....",
+      "...ssss.....",
+    ], {
+      k: C.ink, g: "#d88818", G: "#f0b020", s: "rgba(0,0,0,0.3)",
+    });
+    return c;
+  }
+
   function bakeBrik() {
     const { c, ctx } = make(16, 16);
     stamp(ctx, 0, 1, [
@@ -1188,6 +1251,10 @@ const Atlas = (() => {
     frames.can = bakeCan();
     frames.bottle = bakeBottle();
     frames.bag = bakeBag();
+    frames.butt = bakeButt();
+    frames.cup = bakeCup();
+    frames.paper = bakePaper();
+    frames.peel = bakePeel();
     frames.brik = bakeBrik();
     frames.lablabi = bakeLablabi();
     frames.couscous = bakeCouscous();
