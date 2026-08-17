@@ -1061,6 +1061,66 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeStray(kind, facing, walk) {
+    const { c, ctx } = make(24, 16);
+    const flip = facing < 0;
+    function X(x) { return flip ? 23 - x : x; }
+    function bar(x, y, w, h, col) {
+      if (w <= 0 || h <= 0 || !col) return;
+      if (!flip) px(ctx, x, y, w, h, col);
+      else px(ctx, X(x + w - 1), y, w, h, col);
+    }
+    const step = walk === 1 || walk === 3;
+    const bob = step ? 1 : 0;
+    const lLeg = step ? 1 : 0;
+    const rLeg = step ? 0 : 1;
+    bar(4, 14, 16, 2, "rgba(0,0,0,0.28)");
+    if (kind === "dog") {
+      const fur = "#c48438";
+      const furD = "#8c4c18";
+      const furL = "#e0b070";
+      bar(6, 7 + bob, 12, 6, C.ink);
+      bar(7, 8 + bob, 10, 4, fur);
+      bar(7, 8 + bob, 4, 2, furL);
+      bar(8, 10 + bob, 8, 1, furD);
+      bar(7, 12 + bob + lLeg, 3, 3, furD);
+      bar(14, 12 + bob + rLeg, 3, 3, furD);
+      bar(6, 13 + bob + lLeg, 3, 2, C.ink);
+      bar(15, 13 + bob + rLeg, 3, 2, C.ink);
+      bar(16, 6 + bob, 6, 6, C.ink);
+      bar(17, 7 + bob, 4, 4, furL);
+      bar(20, 8 + bob, 2, 2, C.ink);
+      bar(18, 8 + bob, 1, 1, C.white);
+      bar(21, 9 + bob, 2, 1, C.ink);
+      bar(16, 4 + bob, 3, 4, furD);
+      bar(17, 4 + bob, 2, 3, fur);
+      bar(4, 8 + bob, 3, 2, furD);
+      bar(3, 7 + bob, 3, 2, fur);
+    } else {
+      const fur = kind === "catGinger" ? "#d48840" : "#9098a8";
+      const furD = kind === "catGinger" ? "#8c4c18" : "#585e70";
+      const furL = kind === "catGinger" ? "#f0b878" : "#c8d0dc";
+      bar(7, 8 + bob, 10, 5, C.ink);
+      bar(8, 9 + bob, 8, 3, fur);
+      bar(8, 9 + bob, 3, 2, furL);
+      bar(8, 12 + bob + lLeg, 2, 3, furD);
+      bar(14, 12 + bob + rLeg, 2, 3, furD);
+      bar(8, 14 + bob + lLeg, 2, 1, C.ink);
+      bar(14, 14 + bob + rLeg, 2, 1, C.ink);
+      bar(16, 6 + bob, 6, 6, C.ink);
+      bar(17, 7 + bob, 4, 4, furL);
+      bar(19, 8 + bob, 1, 1, C.ink);
+      bar(20, 8 + bob, 1, 1, C.white);
+      bar(21, 9 + bob, 1, 1, C.ink);
+      bar(17, 4 + bob, 2, 3, fur);
+      bar(20, 4 + bob, 2, 3, fur);
+      bar(17, 4 + bob, 1, 1, furL);
+      bar(4, 7 + bob, 4, 2, fur);
+      bar(3, 6 + bob, 2, 2, furD);
+    }
+    return c;
+  }
+
   /* —— Personne 32x40 (joueur + PNJ), 3/4, deux yeux, tenues —— */
   function bakePerson(st, facing, walk, acting) {
     const { c, ctx } = make(PW, PH);
@@ -1354,6 +1414,14 @@ const Atlas = (() => {
     frames.gull0 = bakeSeagull(0);
     frames.gull1 = bakeSeagull(1);
     frames.sun = bakeSun();
+    frames.stray = { dog: {}, cat: {}, catGinger: {} };
+    for (const kind of ["dog", "cat", "catGinger"]) {
+      for (const face of [1, -1]) {
+        for (let w = 0; w < 4; w++) {
+          frames.stray[kind][`${face}_${w}`] = bakeStray(kind, face, w);
+        }
+      }
+    }
 
     frames.player = {};
     for (const face of [1, -1]) {
