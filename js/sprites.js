@@ -438,14 +438,14 @@ const Sprites = (() => {
   }
 
   function drawMinimap(ctx, W, H, trash, player, t, cam, npcs) {
-    const mw = 56;
-    const mh = 56;
+    const mw = 44;
+    const mh = 44;
     const mx = (cam && cam.x != null ? cam.x : 0) + (cam && cam.vw ? cam.vw : W) - mw - 8;
-    const my = (cam && cam.y != null ? cam.y : 0) + 8;
-    ctx.fillStyle = "rgba(8,40,72,0.88)";
+    const my = (cam && cam.y != null ? cam.y : 0) + 36;
+    ctx.fillStyle = "rgba(8,40,72,0.4)";
     ctx.fillRect(mx, my, mw, mh);
-    ctx.strokeStyle = Math.sin(t * 4) > 0 ? "#fcbc14" : "#70c8fc";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(110, 200, 255, 0.45)";
+    ctx.lineWidth = 1;
     ctx.strokeRect(mx, my, mw, mh);
     trash.forEach((tr) => {
       ctx.fillStyle = "#d43030";

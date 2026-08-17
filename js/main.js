@@ -48,7 +48,16 @@
   let quickPlay = false;
 
   function fitGameCanvas() {
-    // Fill stage via CSS object-fit; keep pixels crisp
+    const wrap = canvas.parentElement;
+    const w = (wrap && wrap.clientWidth) || window.innerWidth || 320;
+    const h = (wrap && wrap.clientHeight) || window.innerHeight || 400;
+    const px = Math.max(2, Math.min(3, Math.floor(Math.min(w / 260, h / 340)) || 2));
+    const nw = Math.max(260, Math.round(w / px));
+    const nh = Math.max(340, Math.round(h / px));
+    if (canvas.width !== nw || canvas.height !== nh) {
+      canvas.width = nw;
+      canvas.height = nh;
+    }
     ctx.imageSmoothingEnabled = false;
   }
 
@@ -216,6 +225,7 @@
     world = World.create(mission);
     player = Player.create(Progress.toolStats());
     Npc.spawn(world);
+    window.__player = player;
     AudioSys.unlock();
     AudioSys.setTheme(playMusicTheme());
     AudioSys.startMusic(playMusicTheme());
@@ -237,6 +247,7 @@
     if (missionLabel) missionLabel.textContent = (mission.code || mission.name || "RUN").slice(0, 10);
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
+    UI.toggleObjectives(true);
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
@@ -375,6 +386,7 @@
   }
 
   function render(t) {
+    fitGameCanvas();
     const W = world.W;
     const H = world.H;
     const vw = canvas.width / ZOOM;
@@ -403,18 +415,6 @@
       else Sprites.drawNpc(ctx, a.n, t, cam);
     }
     FX.draw(ctx);
-
-    // inventory HUD in world space near bottom of view
-    const ix = camX + 8;
-    const iy = camY + vh - 18;
-    ctx.fillStyle = "rgba(8,40,72,0.9)";
-    ctx.fillRect(ix, iy, 78, 14);
-    ctx.strokeStyle = "#6ec8ff";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(ix, iy, 78, 14);
-    ctx.fillStyle = "#ffd24a";
-    ctx.font = "8px monospace";
-    ctx.fillText(`BAG ${player.inventory.length}/${player.stats.capacity}`, ix + 4, iy + 10);
 
     Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam, world.npcs);
     ctx.restore();
@@ -602,7 +602,7 @@
     document.getElementById("btn-close-panel").addEventListener("click", () => {
       AudioSys.sfx("click");
       UI.closePanel();
-      document.querySelectorAll(".bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
+      document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
       if (state === "menu") {
         state = "play";
         lastTs = performance.now();
@@ -610,15 +610,36 @@
       }
     });
 
-    document.querySelectorAll(".bottom-tabs .tab[data-panel]").forEach((tab) => {
+    document.querySelectorAll("#bottom-tabs .tab[data-panel]").forEach((tab) => {
       tab.addEventListener("click", () => {
         AudioSys.sfx("click");
-        document.querySelectorAll(".bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
         tab.classList.add("active");
         if (state === "play") state = "menu";
         UI.openPanel(tab.getAttribute("data-panel"));
       });
     });
+
+    const btnMenu = document.getElementById("btn-menu-hud");
+    if (btnMenu) {
+      btnMenu.addEventListener("click", () => {
+        AudioSys.sfx("click");
+        const first = document.querySelector("#bottom-tabs .tab[data-panel]");
+        document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
+        if (first) first.classList.add("active");
+        if (state === "play") state = "menu";
+        UI.openPanel(first ? first.getAttribute("data-panel") : "outils");
+      });
+    }
+
+    const btnObj = document.getElementById("btn-obj");
+    if (btnObj) {
+      btnObj.addEventListener("click", (e) => {
+        e.preventDefault();
+        AudioSys.sfx("click");
+        UI.toggleObjectives();
+      });
+    }
 
     document.getElementById("btn-tool").addEventListener("click", (e) => {
       e.preventDefault();

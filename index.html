@@ -81,66 +81,73 @@
 
     <!-- GAME -->
     <section id="screen-game" class="screen">
-      <header class="hud-top pixel-frame">
-        <div class="hud-profile">
-          <canvas id="hud-avatar" class="avatar-canvas" width="40" height="40"></canvas>
-          <div class="profile-text">
-            <div class="role" id="hud-mission">MISSION</div>
-            <div class="level-row">
-              <span id="hud-level">NV.1</span>
-              <div class="xp-bar"><div id="hud-xp-fill"></div></div>
-            </div>
-          </div>
-        </div>
-        <div class="hud-timer">
-          <div class="value" id="hud-timer">03:00</div>
-        </div>
-        <div class="hud-score">
-          <div class="stars" id="hud-stars">***</div>
-          <div class="score" id="hud-score">0</div>
-          <div class="coins" id="hud-coins">$*0</div>
-        </div>
-      </header>
-
       <div class="stage">
         <div class="canvas-wrap">
           <canvas id="game-canvas" width="320" height="400"></canvas>
         </div>
 
-        <aside class="hud-objectives pixel-frame" id="hud-objectives">
-          <div class="obj-title">OBJ</div>
+        <header class="hud-overlay">
+          <div class="hud-left">
+            <button type="button" class="hud-chip" id="btn-obj">OBJ</button>
+            <div class="hud-chip hud-mission-chip" id="hud-mission">MISSION</div>
+          </div>
+          <div class="hud-chip hud-timer">
+            <span class="value" id="hud-timer">03:00</span>
+          </div>
+          <div class="hud-right">
+            <div class="hud-chip"><span class="score" id="hud-score">0</span></div>
+            <div class="hud-chip coins" id="hud-coins">$0</div>
+            <button type="button" class="hud-chip hud-pause" id="btn-pause">||</button>
+          </div>
+        </header>
+
+        <aside class="hud-popup hidden" id="hud-objectives">
+          <div class="obj-title">OBJECTIFS</div>
           <ul id="obj-list"></ul>
         </aside>
 
+        <div class="hud-chip hud-bag" id="hud-bag">BAG 0/5</div>
+
         <div id="combo" class="combo hidden">COMBO x2</div>
         <div id="toast" class="toast hidden"></div>
-      </div>
 
-      <div class="controls dock-controls">
-        <div id="joystick" class="joystick">
-          <div class="joy-base"></div>
-          <div class="joy-pad" id="joy-pad"></div>
-          <div class="joy-stick" id="joy-stick"></div>
-        </div>
-        <div class="action-cluster">
-          <button id="btn-tool" class="btn-tool" type="button">Q</button>
-          <button id="btn-action" class="btn-action" aria-label="Action">
-            <span id="btn-action-label">PINCE</span>
-          </button>
+        <div class="controls overlay-controls">
+          <div id="joystick" class="joystick">
+            <div class="joy-base"></div>
+            <div class="joy-pad" id="joy-pad"></div>
+            <div class="joy-stick" id="joy-stick"></div>
+          </div>
+          <button type="button" class="btn-menu-hud" id="btn-menu-hud">MENU</button>
+          <div class="action-cluster">
+            <button id="btn-tool" class="btn-tool" type="button">Q</button>
+            <button id="btn-action" class="btn-action" aria-label="Action">
+              <span id="btn-action-label">PINCE</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      <nav class="bottom-tabs" id="bottom-tabs">
-        <button data-panel="outils" class="tab active">OUTILS</button>
-        <button data-panel="ameliorations" class="tab">UP</button>
-        <button data-panel="defis" class="tab">DEFIS</button>
-        <button data-panel="boutique" class="tab">SHOP</button>
-        <button id="btn-pause" class="tab tab-pause">||</button>
-      </nav>
 
       <div id="panel-overlay" class="panel-overlay hidden">
-        <div class="panel pixel-frame" id="panel-content"></div>
-        <button id="btn-close-panel" class="btn btn-secondary">FERMER</button>
+        <div class="panel-sheet">
+          <div class="panel-status">
+            <canvas id="hud-avatar" class="avatar-canvas" width="40" height="40"></canvas>
+            <div class="profile-text">
+              <div class="level-row">
+                <span id="hud-level">NV.1</span>
+                <div class="xp-bar"><div id="hud-xp-fill"></div></div>
+              </div>
+              <div class="stars" id="hud-stars">***</div>
+            </div>
+          </div>
+          <nav class="panel-tabs" id="bottom-tabs">
+            <button data-panel="outils" class="tab active">OUTILS</button>
+            <button data-panel="ameliorations" class="tab">UP</button>
+            <button data-panel="defis" class="tab">DEFIS</button>
+            <button data-panel="boutique" class="tab">SHOP</button>
+          </nav>
+          <div class="panel pixel-frame" id="panel-content"></div>
+          <button id="btn-close-panel" class="btn btn-secondary">FERMER</button>
+        </div>
       </div>
     </section>
 
