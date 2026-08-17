@@ -458,9 +458,15 @@ const Sprites = (() => {
     ctx.fillText("CARTE DE DJERBA", 55, 18);
   }
 
+  function zoneAt(x, y) {
+    if (y < 496) return x >= 700 ? "port" : "beach";
+    if (y < 864) return x < 400 ? "souk" : "ville";
+    return "lagoon";
+  }
+
   return {
     drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
     drawBin, drawTrash, drawPlayer, drawWorldBg, drawTitleScene,
-    drawTitleBackground, drawAvatar, drawMinimap, drawIslandMap,
+    drawTitleBackground, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
   };
 })();
