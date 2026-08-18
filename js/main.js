@@ -737,7 +737,7 @@
         const z = player ? Island.zoneLabel(Sprites.zoneAt(player.x, player.y)) : "DJERBA";
         document.getElementById("map-level-name").textContent = z;
         document.getElementById("map-level-sub").textContent = "MONDE LIBRE";
-        document.getElementById("map-level-desc").textContent = "Triangle vert = toi. Toute l'ile est ouverte, sans chrono.";
+        document.getElementById("map-level-desc").textContent = "Carte pixel = le vrai terrain. Triangle vert = toi. Toute l'ile est ouverte.";
         startMapLoop();
       });
     }

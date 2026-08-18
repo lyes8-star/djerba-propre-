@@ -652,57 +652,94 @@ const Sprites = (() => {
     }
   }
 
+  function drawCoastFoam(ctx, t, cam) {
+    const poly = Island.poly;
+    const n = poly.length;
+    for (let i = 0; i < n; i++) {
+      const a = poly[i];
+      const b = poly[(i + 1) % n];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      const steps = Math.max(1, (len / 14) | 0);
+      for (let k = 0; k < steps; k++) {
+        const u = (k + 0.5) / steps;
+        const x = a.x + (b.x - a.x) * u;
+        const y = a.y + (b.y - a.y) * u;
+        if (cam && !Atlas.inView(cam, x - 10, y - 10, 20, 20)) continue;
+        const dx = x - Island.cx;
+        const dy = y - Island.cy;
+        const inv = 1 / (Math.hypot(dx, dy) || 1);
+        const pulse = 5 + Math.sin(t * 5 + i * 0.7 + k * 0.45) * 4;
+        const ox = x + dx * inv * pulse;
+        const oy = y + dy * inv * pulse;
+        const w = 4 + ((i + k) % 3);
+        ctx.fillStyle = ((i + k + (t * 6 | 0)) & 1) ? Atlas.C.foam : Atlas.C.foamD;
+        ctx.fillRect((ox - w / 2) | 0, (oy - 1) | 0, w, 2);
+      }
+    }
+  }
+
+  function drawRoadPulse(ctx, t) {
+    ctx.save();
+    ctx.strokeStyle = Atlas.C.roadY;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 10]);
+    ctx.lineDashOffset = -((t * 22) % 18);
+    ctx.beginPath();
+    const loop = Island.loopPts();
+    ctx.moveTo(loop[0].x, loop[0].y);
+    for (let i = 1; i < loop.length; i++) ctx.lineTo(loop[i].x, loop[i].y);
+    ctx.closePath();
+    Island.roads().forEach(([x1, y1, x2, y2]) => {
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    });
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFerry(ctx, t, cam) {
+    const aj = Island.xy("ajim");
+    const destX = 90;
+    const destY = Island.H - 140;
+    ctx.save();
+    ctx.strokeStyle = Atlas.C.foam;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 8]);
+    ctx.lineDashOffset = -((t * 14) % 14);
+    ctx.beginPath();
+    ctx.moveTo(aj.x - 70, aj.y + 36);
+    ctx.lineTo(destX, destY);
+    ctx.stroke();
+    ctx.restore();
+    const fx = destX + (aj.x - 70 - destX) * (0.35 + Math.sin(t * 0.35) * 0.2);
+    const fy = destY + (aj.y + 36 - destY) * (0.35 + Math.sin(t * 0.35) * 0.2);
+    drawBoat(ctx, fx - 16, fy - 8, t + 3.2, cam);
+  }
+
   function drawWorldBg(ctx, W, H, t, theme = "beach", cam) {
     Atlas.bake();
+    Island.bake();
     const sky = themeSky(theme);
     ctx.fillStyle = sky[2];
     if (cam) ctx.fillRect(cam.x - 8, cam.y - 8, cam.vw + 16, cam.vh + 16);
     else ctx.fillRect(0, 0, W, H);
 
-    tileFill(ctx, seaFrame(1, t), 0, 0, W, H, cam);
-    tileFill(ctx, seaFrame(0, t + 0.3), 0, 0, W, 80, cam);
-
-    ctx.save();
-    Island.path(ctx);
-    ctx.clip();
-    const sands = [Atlas.tiles.sand0, Atlas.tiles.sand1, Atlas.tiles.sand2, Atlas.tiles.sand3];
-    const x0 = cam ? Math.max(0, (cam.x / TILE | 0) * TILE) : 0;
-    const y0 = cam ? Math.max(0, (cam.y / TILE | 0) * TILE) : 0;
-    const x1 = cam ? Math.min(W, cam.x + cam.vw + TILE) : W;
-    const y1 = cam ? Math.min(H, cam.y + cam.vh + TILE) : H;
-    for (let ty = y0; ty < y1; ty += TILE) {
-      for (let tx = x0; tx < x1; tx += TILE) {
-        ctx.drawImage(sands[((tx / 16 | 0) + (ty / 16 | 0) * 3) % 4], tx, ty);
+    const seaA = seaFrame(1, t);
+    const seaB = seaFrame(2, t + 0.5);
+    const sx0 = cam ? Math.max(0, (cam.x / TILE | 0) * TILE - TILE) : 0;
+    const sy0 = cam ? Math.max(0, (cam.y / TILE | 0) * TILE - TILE) : 0;
+    const sx1 = cam ? Math.min(W, cam.x + cam.vw + TILE) : W;
+    const sy1 = cam ? Math.min(H, cam.y + cam.vh + TILE) : H;
+    for (let ty = sy0; ty < sy1; ty += TILE) {
+      for (let tx = sx0; tx < sx1; tx += TILE) {
+        ctx.drawImage(((tx + ty) >> 4) & 1 ? seaA : seaB, tx, ty);
       }
     }
-    ctx.restore();
 
-    ctx.save();
-    Island.path(ctx);
-    ctx.strokeStyle = Atlas.C.foam;
-    ctx.lineWidth = 10;
-    ctx.stroke();
-    ctx.strokeStyle = Atlas.C.sea1;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.restore();
-
-    Island.roads().forEach(([x1, y1, x2, y2]) => {
-      ctx.strokeStyle = Atlas.C.road;
-      ctx.lineWidth = 22;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-      ctx.strokeStyle = Atlas.C.roadY;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 12]);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    });
+    Island.drawGround(ctx, cam);
+    drawCoastFoam(ctx, t, cam);
+    drawRoadPulse(ctx, t);
+    drawFerry(ctx, t, cam);
 
     const grassAt = (name, ox, oy, w, h) => {
       const p = Island.xy(name);
@@ -710,7 +747,6 @@ const Sprites = (() => {
     };
     grassAt("elmay", -40, 80, 128, 80);
     grassAt("guellala", 40, 100, 112, 64);
-    grassAt("aghir", -60, 40, 96, 64);
     grassAt("lagoon", -20, 40, 100, 70);
 
     function blitSign(frame, name, ox, oy) {
@@ -774,14 +810,26 @@ const Sprites = (() => {
     const aj = Island.xy("ajim");
     drawBoat(ctx, aj.x - 70, aj.y + 20, t + 0.4, cam);
     drawBoat(ctx, aj.x - 30, aj.y + 50, t + 2, cam);
+    drawBoat(ctx, aj.x - 110, aj.y + 70, t + 2.8, cam);
 
     const sidi = Island.xy("sidi");
     [[-80, 20], [-20, 8], [40, 24], [100, 10], [160, 28], [-50, 70], [80, 80]].forEach(([ux, uy]) => {
       drawUmbrella(ctx, sidi.x + ux, sidi.y + uy, cam);
     });
+    const agh = Island.xy("aghir");
+    [[-30, 30], [20, 18], [70, 36]].forEach(([ux, uy]) => {
+      drawUmbrella(ctx, agh.x + ux, agh.y + uy, cam);
+    });
     Island.poly.forEach((p, i) => {
       if (i % 3 !== 0) return;
       drawPalm(ctx, p.x - 16, p.y - 20, t, i, cam);
+    });
+    [
+      ["lagoon", -40, 20], ["lagoon", 30, 50], ["elmay", 50, 90],
+      ["guellala", -80, 10], ["guellala", 90, 70], ["ajim", 40, 80],
+    ].forEach(([name, ox, oy], i) => {
+      const p = Island.xy(name);
+      drawPalm(ctx, p.x + ox, p.y + oy, t, i + 11, cam);
     });
     drawFountain(ctx, Island.xy("plaza").x - 16, Island.xy("plaza").y, cam);
     drawMinaret(ctx, Island.xy("houmt").x + 200, Island.xy("houmt").y - 80, cam);
@@ -892,8 +940,13 @@ const Sprites = (() => {
     const mh = 44;
     const mx = (cam && cam.x != null ? cam.x : 0) + (cam && cam.vw ? cam.vw : W) - mw - 8;
     const my = (cam && cam.y != null ? cam.y : 0) + 36;
-    ctx.fillStyle = "rgba(8,40,72,0.4)";
+    ctx.fillStyle = Atlas.C.sea3;
     ctx.fillRect(mx, my, mw, mh);
+    const g = Island.groundCanvas();
+    if (g) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(g, mx, my, mw, mh);
+    }
     ctx.strokeStyle = "rgba(110, 200, 255, 0.45)";
     ctx.lineWidth = 1;
     ctx.strokeRect(mx, my, mw, mh);
@@ -913,20 +966,47 @@ const Sprites = (() => {
     ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 3, 3);
   }
 
-  const islandArt = new Image();
-  islandArt.src = "img/djerba-map.jpg?v=25";
-
   function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId, player) {
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.fillStyle = "#7ec8e0";
+    Atlas.bake();
+    Island.bake();
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = Atlas.C.sea2;
     ctx.fillRect(0, 0, W, H);
-    if (islandArt.complete && islandArt.naturalWidth) {
-      ctx.drawImage(islandArt, 0, 0, W, H);
+    tileFill(ctx, seaFrame(1, t), 0, 0, W, H);
+    const g = Island.groundCanvas();
+    const mw = Math.round(Math.min(W - 16, H * (Island.W / Island.H)));
+    const mh = Math.round(mw * (Island.H / Island.W));
+    const ox = ((W - mw) / 2) | 0;
+    const oy = ((H - mh) / 2) | 0;
+    if (g) ctx.drawImage(g, ox, oy, mw, mh);
+
+    const foam = Atlas.C.foam;
+    ctx.fillStyle = foam;
+    const n = Island.poly.length;
+    for (let i = 0; i < n; i++) {
+      const a = Island.poly[i];
+      const x = ox + (a.x / Island.W) * mw;
+      const y = oy + (a.y / Island.H) * mh;
+      if (Math.sin(t * 6 + i) > 0) ctx.fillRect(x | 0, y | 0, 2, 2);
     }
+
+    ctx.font = "6px monospace";
     ctx.textAlign = "left";
+    (Island.MAP_LABELS || []).forEach(([name, label]) => {
+      const p = Island.xy(name);
+      const x = ox + (p.x / Island.W) * mw;
+      const y = oy + (p.y / Island.H) * mh;
+      ctx.fillStyle = "rgba(20,12,28,0.7)";
+      ctx.fillRect((x - 2) | 0, (y - 9) | 0, 4 + label.length * 4, 8);
+      ctx.fillStyle = "#fce46c";
+      ctx.fillText(label, x, y - 3);
+    });
+
     if (player) {
-      const m = Island.worldToMap(player.x, player.y, W, H);
+      const m = {
+        x: ox + (player.x / Island.W) * mw,
+        y: oy + (player.y / Island.H) * mh,
+      };
       ctx.fillStyle = "#140c1c";
       ctx.beginPath();
       ctx.moveTo(m.x, m.y - 8);
