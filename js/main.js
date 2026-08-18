@@ -285,7 +285,13 @@
     const z = world.inside ? world.inside.room : Sprites.zoneAt(player.x, player.y);
     if (z === "hotel" || z === "cabaret") return "resort";
     if (z === "airport") return "port";
-    if (z === "inside") return "ville";
+    if (z === "inside" || z === "holy") return "ville";
+    if (z === "mosque" || z === "synagogue" || z === "cemetery" || z === "menzel") return "ville";
+    if (z === "erriadh" || z === "elmay" || z === "midounv" || z === "aghir") return "ville";
+    if (z === "guellala" || z === "workshop" || z === "kiln" || z === "mill" || z === "oven") return "souk";
+    if (z === "explore" || z === "museum" || z === "fort") return "resort";
+    if (z === "graffiti") return "festival";
+    if (z === "cistern") return "lagoon";
     const mt = world.theme;
     if (z === "beach" && (mt === "sunset" || mt === "festival" || mt === "resort" || mt === "lagoon")) {
       return mt;

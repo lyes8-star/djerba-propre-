@@ -1,4 +1,4 @@
-/* Player — 24x32 SMB-sized sprite on 960x1200 world */
+/* Player — 32x40 sprite on the enlarged island */
 const Player = (() => {
   const PW = 32;
   const PH = 40;

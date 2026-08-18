@@ -939,6 +939,183 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeMosque() {
+    const { c, ctx } = make(48, 56);
+    px(ctx, 4, 53, 40, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 6, 22, 36, 32, C.ink);
+    px(ctx, 7, 23, 34, 30, C.white);
+    px(ctx, 7, 23, 6, 30, C.wall);
+    px(ctx, 16, 6, 16, 18, C.ink);
+    px(ctx, 17, 8, 14, 16, C.white);
+    px(ctx, 19, 6, 10, 6, C.wall);
+    px(ctx, 22, 2, 4, 6, C.gold);
+    px(ctx, 38, 10, 6, 16, C.ink);
+    px(ctx, 39, 11, 4, 14, C.white);
+    px(ctx, 40, 6, 2, 6, C.gold);
+    px(ctx, 18, 38, 12, 16, C.ink);
+    px(ctx, 19, 39, 10, 14, C.woodD);
+    px(ctx, 8, 28, 8, 8, C.blueX);
+    px(ctx, 32, 28, 8, 8, C.blueX);
+    px(ctx, 8, 28, 8, 3, C.blueL);
+    px(ctx, 32, 28, 8, 3, C.blueL);
+    return c;
+  }
+
+  function bakeFort() {
+    const { c, ctx } = make(72, 64);
+    px(ctx, 4, 61, 64, 2, "rgba(0,0,0,0.28)");
+    px(ctx, 6, 18, 60, 44, C.ink);
+    px(ctx, 7, 19, 58, 42, C.sandC);
+    px(ctx, 7, 19, 58, 6, C.sandE);
+    for (let i = 0; i < 6; i++) px(ctx, 8 + i * 10, 12, 8, 8, C.sandD);
+    px(ctx, 8, 12, 8, 8, C.sandE);
+    px(ctx, 56, 12, 8, 8, C.sandE);
+    px(ctx, 12, 28, 10, 10, C.ink);
+    px(ctx, 13, 29, 8, 8, C.navyD);
+    px(ctx, 50, 28, 10, 10, C.ink);
+    px(ctx, 51, 29, 8, 8, C.navyD);
+    px(ctx, 28, 46, 16, 16, C.ink);
+    px(ctx, 29, 47, 14, 14, C.woodX);
+    px(ctx, 30, 48, 4, 12, C.wood);
+    p1(ctx, 40, 54, C.gold);
+    return c;
+  }
+
+  function bakeMuseum() {
+    const { c, ctx } = make(64, 56);
+    px(ctx, 4, 53, 56, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 6, 16, 52, 38, C.ink);
+    px(ctx, 7, 17, 50, 36, C.wall);
+    px(ctx, 7, 17, 50, 8, C.navy);
+    px(ctx, 8, 18, 48, 6, C.navyL);
+    px(ctx, 14, 28, 10, 10, C.goldD);
+    px(ctx, 28, 28, 10, 10, C.terra);
+    px(ctx, 42, 28, 10, 10, C.blue);
+    px(ctx, 24, 40, 16, 14, C.ink);
+    px(ctx, 25, 41, 14, 12, C.woodD);
+    return c;
+  }
+
+  function bakeSynagogue() {
+    const { c, ctx } = make(56, 56);
+    px(ctx, 4, 53, 48, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 6, 18, 44, 36, C.ink);
+    px(ctx, 7, 19, 42, 34, C.white);
+    px(ctx, 7, 19, 42, 8, C.blue);
+    px(ctx, 18, 6, 20, 14, C.ink);
+    px(ctx, 19, 8, 18, 12, C.white);
+    px(ctx, 24, 10, 8, 8, C.blue);
+    px(ctx, 26, 12, 4, 4, C.gold);
+    px(ctx, 12, 30, 8, 8, C.blueL);
+    px(ctx, 36, 30, 8, 8, C.blueL);
+    px(ctx, 20, 40, 16, 14, C.ink);
+    px(ctx, 21, 41, 14, 12, C.wood);
+    return c;
+  }
+
+  function bakeMenzel() {
+    const { c, ctx } = make(56, 48);
+    px(ctx, 4, 45, 48, 2, "rgba(0,0,0,0.25)");
+    px(ctx, 6, 14, 44, 32, C.ink);
+    px(ctx, 7, 15, 42, 30, C.sandB);
+    px(ctx, 18, 18, 20, 16, C.sandD);
+    px(ctx, 20, 20, 16, 12, C.greenX);
+    px(ctx, 10, 20, 8, 8, C.blueX);
+    px(ctx, 38, 20, 8, 8, C.blueX);
+    px(ctx, 20, 32, 16, 14, C.ink);
+    px(ctx, 21, 33, 14, 12, C.woodD);
+    p1(ctx, 32, 40, C.gold);
+    return c;
+  }
+
+  function bakeKiln() {
+    const { c, ctx } = make(40, 40);
+    px(ctx, 4, 37, 32, 2, "rgba(0,0,0,0.22)");
+    px(ctx, 8, 10, 24, 26, C.ink);
+    px(ctx, 9, 11, 22, 24, C.terra);
+    px(ctx, 12, 6, 16, 8, C.terraD);
+    px(ctx, 16, 22, 8, 14, C.ink);
+    px(ctx, 17, 23, 6, 12, C.goldD);
+    px(ctx, 18, 26, 4, 6, C.red);
+    return c;
+  }
+
+  function bakeMill() {
+    const { c, ctx } = make(48, 48);
+    px(ctx, 4, 45, 40, 2, "rgba(0,0,0,0.22)");
+    px(ctx, 8, 16, 32, 30, C.ink);
+    px(ctx, 9, 17, 30, 28, C.wood);
+    px(ctx, 16, 8, 16, 12, C.ink);
+    px(ctx, 17, 9, 14, 10, C.woodD);
+    px(ctx, 20, 4, 8, 6, C.goldD);
+    px(ctx, 16, 32, 16, 14, C.ink);
+    px(ctx, 17, 33, 14, 12, C.woodX);
+    return c;
+  }
+
+  function bakeCistern() {
+    const { c, ctx } = make(36, 32);
+    px(ctx, 4, 29, 28, 2, "rgba(0,0,0,0.2)");
+    px(ctx, 6, 10, 24, 20, C.ink);
+    px(ctx, 7, 11, 22, 18, C.wallS);
+    px(ctx, 12, 6, 12, 8, C.ink);
+    px(ctx, 13, 7, 10, 6, C.wall);
+    px(ctx, 14, 16, 8, 10, C.navyD);
+    px(ctx, 15, 17, 6, 4, C.blueL);
+    return c;
+  }
+
+  function bakeGraffiti() {
+    const { c, ctx } = make(48, 40);
+    px(ctx, 2, 37, 44, 2, "rgba(0,0,0,0.22)");
+    px(ctx, 4, 8, 40, 30, C.ink);
+    px(ctx, 5, 9, 38, 28, C.wall);
+    px(ctx, 8, 12, 10, 14, C.red);
+    px(ctx, 20, 10, 12, 16, C.blue);
+    px(ctx, 34, 14, 8, 12, C.gold);
+    px(ctx, 10, 26, 28, 6, C.green);
+    px(ctx, 16, 24, 16, 14, C.ink);
+    px(ctx, 17, 25, 14, 12, C.woodD);
+    return c;
+  }
+
+  function bakeCemetery() {
+    const { c, ctx } = make(64, 40);
+    px(ctx, 4, 37, 56, 2, "rgba(0,0,0,0.18)");
+    px(ctx, 4, 20, 56, 4, C.wallS);
+    for (let i = 0; i < 5; i++) {
+      px(ctx, 8 + i * 11, 24, 6, 12, C.wall);
+      px(ctx, 9 + i * 11, 22, 4, 4, C.white);
+    }
+    px(ctx, 24, 8, 16, 16, C.ink);
+    px(ctx, 25, 9, 14, 14, C.white);
+    px(ctx, 28, 12, 8, 8, C.blue);
+    return c;
+  }
+
+  function bakeOven() {
+    const { c, ctx } = make(32, 32);
+    px(ctx, 4, 29, 24, 2, "rgba(0,0,0,0.2)");
+    px(ctx, 6, 10, 20, 20, C.ink);
+    px(ctx, 7, 11, 18, 18, C.sandE);
+    px(ctx, 10, 16, 12, 12, C.ink);
+    px(ctx, 11, 18, 10, 8, C.redD);
+    px(ctx, 13, 20, 6, 4, C.gold);
+    return c;
+  }
+
+  function bakeFoggara() {
+    const { c, ctx } = make(48, 28);
+    px(ctx, 2, 25, 44, 2, "rgba(0,0,0,0.18)");
+    px(ctx, 4, 12, 40, 12, C.ink);
+    px(ctx, 5, 13, 38, 10, C.sandE);
+    px(ctx, 8, 16, 32, 4, C.navyD);
+    px(ctx, 10, 17, 28, 2, C.blue);
+    px(ctx, 20, 6, 8, 10, C.wallS);
+    px(ctx, 22, 8, 4, 6, C.blueL);
+    return c;
+  }
+
   function bakeLighthouse(on) {
     const { c, ctx } = make(24, 64);
     px(ctx, 4, 61, 16, 2, "rgba(0,0,0,0.25)");
@@ -1487,6 +1664,29 @@ const Atlas = (() => {
     frames.signHotel = bakeBanner("HOTEL", C.navy);
     frames.signPool = bakeBanner("PISCINE", C.blue);
     frames.signAirport = bakeBanner("AEROPORT", C.navyD);
+    frames.signHoumt = bakeBanner("HOUMT", C.navy);
+    frames.signAjim = bakeBanner("AJIM", C.navyD);
+    frames.signMidounV = bakeBanner("MIDOUN", C.navy);
+    frames.signErriadh = bakeBanner("ERRIADH", C.blueD);
+    frames.signGuellala = bakeBanner("GUELLALA", C.terraD);
+    frames.signElMay = bakeBanner("EL MAY", C.greenD);
+    frames.signExplore = bakeBanner("EXPLORE", C.goldD);
+    frames.signAghir = bakeBanner("AGHIR", C.sandE);
+    frames.signMezraya = bakeBanner("MEZRAYA", C.green);
+    frames.signSedouik = bakeBanner("SEDOUIKECH", C.sandE);
+    frames.signMahboub = bakeBanner("MAHBOUBINE", C.woodD);
+    frames.mosque = bakeMosque();
+    frames.fort = bakeFort();
+    frames.museum = bakeMuseum();
+    frames.synagogue = bakeSynagogue();
+    frames.menzel = bakeMenzel();
+    frames.kiln = bakeKiln();
+    frames.mill = bakeMill();
+    frames.cistern = bakeCistern();
+    frames.graffiti = bakeGraffiti();
+    frames.cemetery = bakeCemetery();
+    frames.oven = bakeOven();
+    frames.foggara = bakeFoggara();
     frames.lhOn = bakeLighthouse(true);
     frames.lhOff = bakeLighthouse(false);
     frames.boat = bakeBoat();

@@ -96,6 +96,18 @@ const Sprites = (() => {
       cabaret: { wall: "#2a1428", wallD: "#140818", floor: "#3c1c38" },
       hotel: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#d0d4dc" },
       airport: { wall: "#d0d4dc", wallD: "#808890", floor: "#3a3c48" },
+      mosque: { wall: "#ece8dc", wallD: "#c8bca8", floor: "#c4a070" },
+      synagogue: { wall: "#e8eef4", wallD: "#90a4b8", floor: "#d8c8a0" },
+      fort: { wall: "#d4a85c", wallD: "#8c6428", floor: "#c4a878" },
+      museum: { wall: "#ece4d4", wallD: "#3c64b0", floor: "#d0d4dc" },
+      workshop: { wall: "#c4742c", wallD: "#8c4c18", floor: "#c4a878" },
+      kiln: { wall: "#c4742c", wallD: "#8c4c18", floor: "#8c6428" },
+      mill: { wall: "#c4742c", wallD: "#5c3010", floor: "#8c7048" },
+      menzel: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#d4a85c" },
+      cistern: { wall: "#a09078", wallD: "#5c4018", floor: "#8c7048" },
+      cemetery: { wall: "#ece8dc", wallD: "#a09078", floor: "#c8bca8" },
+      graffiti: { wall: "#ece4d4", wallD: "#2484d4", floor: "#c4a878" },
+      oven: { wall: "#c4742c", wallD: "#8c4c18", floor: "#8c6428" },
     }[kind] || { wall: "#c8bca8", wallD: "#a09078", floor: "#d4a85c" };
     ctx.fillStyle = pal.wallD;
     ctx.fillRect(0, 0, w, 52);
@@ -225,6 +237,124 @@ const Sprites = (() => {
       ctx.fillStyle = C.gold;
       ctx.font = "8px monospace";
       ctx.fillText("GATE A", 210, 100);
+    } else if (kind === "mosque") {
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(w / 2 - 16, 12, 32, 28);
+      ctx.fillStyle = C.white;
+      ctx.fillRect(w / 2 - 12, 16, 24, 22);
+      ctx.fillStyle = C.goldD;
+      ctx.fillRect(w / 2 - 4, 8, 8, 8);
+      ctx.fillStyle = C.greenD;
+      ctx.fillRect(24, 70, 70, 28);
+      ctx.fillRect(110, 90, 70, 28);
+      ctx.fillRect(196, 70, 70, 28);
+      ctx.fillStyle = C.green;
+      ctx.fillRect(28, 74, 62, 8);
+      ctx.fillRect(114, 94, 62, 8);
+      window_(20, 16);
+      window_(w - 50, 16);
+    } else if (kind === "synagogue") {
+      ctx.fillStyle = C.blue;
+      ctx.fillRect(w / 2 - 18, 10, 36, 30);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(w / 2 - 6, 18, 12, 12);
+      ctx.fillRect(w / 2 - 2, 14, 4, 20);
+      ctx.fillRect(w / 2 - 8, 22, 16, 4);
+      window_(18, 16);
+      window_(w - 48, 16);
+      ctx.fillStyle = C.blueD;
+      ctx.fillRect(30, 80, 50, 16);
+      ctx.fillRect(220, 80, 50, 16);
+      table(120, 110);
+    } else if (kind === "fort") {
+      window_(20, 16);
+      window_(w - 50, 16);
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(40, 70, 40, 50);
+      ctx.fillRect(220, 70, 40, 50);
+      ctx.fillStyle = C.navyD;
+      ctx.fillRect(42, 72, 36, 46);
+      ctx.fillRect(222, 72, 36, 46);
+      desk(110, 64, "BORJ");
+    } else if (kind === "museum") {
+      window_(20, 14);
+      window_(w - 48, 14);
+      desk(110, 62, "MUSEE");
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(24, 90, 28, 28);
+      ctx.fillRect(64, 90, 28, 28);
+      ctx.fillRect(210, 90, 28, 28);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(28, 94, 20, 20);
+      ctx.fillStyle = C.terra;
+      ctx.fillRect(68, 94, 20, 20);
+      ctx.fillStyle = C.blue;
+      ctx.fillRect(214, 94, 20, 20);
+    } else if (kind === "workshop") {
+      window_(18, 16);
+      desk(110, 64, "ATELIER");
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(20, 80, 60, 40);
+      ctx.fillStyle = C.terra;
+      ctx.fillRect(22, 82, 56, 36);
+      ctx.fillStyle = C.goldD;
+      ctx.fillRect(30, 90, 12, 12);
+      ctx.fillRect(48, 88, 16, 16);
+    } else if (kind === "kiln" || kind === "oven") {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(110, 60, 70, 50);
+      ctx.fillStyle = C.terraD;
+      ctx.fillRect(114, 64, 62, 42);
+      ctx.fillStyle = Math.sin(t * 6) > 0 ? C.red : C.gold;
+      ctx.fillRect(130, 84, 28, 16);
+      desk(20, 70, "FOUR");
+    } else if (kind === "mill") {
+      window_(20, 16);
+      desk(110, 64, "HUILE");
+      ctx.fillStyle = C.woodD;
+      ctx.fillRect(40, 90, 36, 36);
+      ctx.fillRect(200, 90, 36, 36);
+      ctx.fillStyle = C.goldD;
+      ctx.fillRect(48, 98, 20, 20);
+    } else if (kind === "menzel") {
+      window_(20, 16);
+      window_(w - 50, 16);
+      bed(20, 70);
+      table(120, 100);
+      ctx.fillStyle = C.green;
+      ctx.fillRect(220, 80, 16, 28);
+      ctx.fillStyle = C.greenL;
+      ctx.fillRect(214, 70, 28, 12);
+    } else if (kind === "cistern") {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(80, 70, 140, 70);
+      ctx.fillStyle = C.navyD;
+      ctx.fillRect(86, 76, 128, 58);
+      ctx.fillStyle = C.blueL;
+      ctx.fillRect(90, 80, 120, 20);
+      ctx.fillStyle = C.white;
+      ctx.font = "8px monospace";
+      ctx.fillText("EAU", 136, 120);
+    } else if (kind === "cemetery") {
+      window_(20, 16);
+      ctx.fillStyle = C.wall;
+      for (let i = 0; i < 4; i++) {
+        ctx.fillRect(30 + i * 60, 80, 16, 28);
+        ctx.fillStyle = C.white;
+        ctx.fillRect(32 + i * 60, 84, 12, 8);
+        ctx.fillStyle = C.wall;
+      }
+    } else if (kind === "graffiti") {
+      ctx.fillStyle = C.red;
+      ctx.fillRect(20, 12, 40, 28);
+      ctx.fillStyle = C.blue;
+      ctx.fillRect(80, 10, 50, 32);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(160, 14, 36, 24);
+      ctx.fillStyle = C.green;
+      ctx.fillRect(220, 12, 50, 28);
+      desk(100, 70, "HOOD");
+      table(40, 120);
     }
 
     const dx = w / 2 - 10;
@@ -507,6 +637,21 @@ const Sprites = (() => {
     return map[theme] || map.beach;
   }
 
+  function drawHeritage(ctx, cam) {
+    if (typeof Places === "undefined" || !Places.SITES) return;
+    ctx.font = "6px monospace";
+    for (const s of Places.SITES) {
+      if (cam && !Atlas.inView(cam, s.x, s.y - 4, s.w, s.h + 12)) continue;
+      const img = Atlas.frames[s.sprite];
+      if (img) Atlas.blit(ctx, img, s.x, s.y);
+      const label = s.short || s.title;
+      ctx.fillStyle = "rgba(20,12,28,0.7)";
+      ctx.fillRect(s.x, s.y + s.h + 1, Math.min(s.w, 4 + label.length * 4), 8);
+      ctx.fillStyle = "#fce46c";
+      ctx.fillText(label, s.x + 2, s.y + s.h + 7);
+    }
+  }
+
   function drawWorldBg(ctx, W, H, t, theme = "beach", cam) {
     Atlas.bake();
     const sky = themeSky(theme);
@@ -543,9 +688,11 @@ const Sprites = (() => {
     if (!cam || Atlas.inView(cam, 280, seaY - 36, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 280, seaY - 36);
     if (!cam || Atlas.inView(cam, 620, seaY - 24, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 620, seaY - 24);
     if (!cam || Atlas.inView(cam, 820, seaY - 32, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 820, seaY - 32);
+    if (!cam || Atlas.inView(cam, 1040, seaY - 28, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 1040, seaY - 28);
+    if (!cam || Atlas.inView(cam, 1180, seaY - 34, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 1180, seaY - 34);
 
     // clouds (slow drift)
-    const cx = [30, 180, 360, 540, 720, 860];
+    const cx = [30, 180, 360, 540, 720, 860, 1020, 1180];
     cx.forEach((x, i) => {
       const ox = x + Math.sin(t * 0.15 + i) * 10 + (t * (4 + i % 3)) % 20;
       const oy = 12 + (i % 4) * 10;
@@ -593,11 +740,20 @@ const Sprites = (() => {
 
     hRoad(ctx, 0, ROAD_N, W, cam);
     hRoad(ctx, 0, ROAD_S, W, cam);
+    hRoad(ctx, 0, 1184, W, cam);
+    hRoad(ctx, 0, 1472, W, cam);
     vRoad(ctx, 448, ROAD_N, H - ROAD_N, cam);
     vRoad(ctx, 160, TOWN_Y, ROAD_S - TOWN_Y, cam);
     vRoad(ctx, 736, TOWN_Y, ROAD_S - TOWN_Y, cam);
+    vRoad(ctx, 960, ROAD_N, H - ROAD_N, cam);
     if (!cam || Atlas.inView(cam, 448, ROAD_N, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_N);
     if (!cam || Atlas.inView(cam, 448, ROAD_S, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_S);
+    if (!cam || Atlas.inView(cam, 960, ROAD_N, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, ROAD_N);
+    if (!cam || Atlas.inView(cam, 960, ROAD_S, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, ROAD_S);
+    if (!cam || Atlas.inView(cam, 448, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1184);
+    if (!cam || Atlas.inView(cam, 960, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1184);
+    if (!cam || Atlas.inView(cam, 448, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1472);
+    if (!cam || Atlas.inView(cam, 960, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1472);
     drawFlag(ctx, 200, 468, "tn", t, cam);
     drawFlag(ctx, 700, 468, "il", t, cam);
 
@@ -610,6 +766,7 @@ const Sprites = (() => {
       drawBoat(ctx, 880, 270, t + 2, cam);
     }
     Atlas.blit(ctx, Atlas.frames.signPort, 748, 318);
+    if (Atlas.frames.signAjim) Atlas.blit(ctx, Atlas.frames.signAjim, 688, 318);
     drawCabaret(ctx, 868, 348, cam);
     if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 874, 332);
     drawFlag(ctx, 788, 292, "tn", t, cam);
@@ -674,6 +831,7 @@ const Sprites = (() => {
     drawHouseWarm(ctx, 624, 748, cam);
     drawHouseWarm(ctx, 864, 744, cam);
     Atlas.blit(ctx, Atlas.frames.signVille, 548, 534);
+    if (Atlas.frames.signHoumt) Atlas.blit(ctx, Atlas.frames.signHoumt, 548, 500);
     drawFlag(ctx, 616, 500, "tn", t, cam);
     drawFlag(ctx, 890, 504, "il", t, cam);
     drawLamp(ctx, 716, 560, cam);
@@ -714,6 +872,53 @@ const Sprites = (() => {
       drawLamp(ctx, 300, 360, cam);
       drawLamp(ctx, 500, 360, cam);
     }
+
+    cobbleFill(ctx, 16, 1216, 464, 248, cam);
+    cobbleFill(ctx, 528, 1216, 416, 248, cam);
+    cobbleFill(ctx, 16, 1504, 464, 264, cam);
+    cobbleFill(ctx, 528, 1504, 416, 264, cam);
+    cobbleFill(ctx, 976, 1216, 288, 552, cam);
+    hRoad(ctx, 0, 1184, W, cam);
+    hRoad(ctx, 0, 1472, W, cam);
+    vRoad(ctx, 448, 1184, H - 1184, cam);
+    vRoad(ctx, 960, 1184, H - 1184, cam);
+    if (!cam || Atlas.inView(cam, 448, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1184);
+    if (!cam || Atlas.inView(cam, 960, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1184);
+    if (!cam || Atlas.inView(cam, 448, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1472);
+    if (!cam || Atlas.inView(cam, 960, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1472);
+    tileFill(ctx, Atlas.tiles.grass, 180, 1288, 96, 64, cam);
+    tileFill(ctx, Atlas.tiles.grass, 600, 1360, 128, 80, cam);
+    tileFill(ctx, Atlas.tiles.grass, 200, 1640, 112, 64, cam);
+    tileFill(ctx, Atlas.tiles.grass, 640, 1680, 144, 72, cam);
+    tileFill(ctx, Atlas.tiles.grass, 1040, 1360, 96, 64, cam);
+    tileFill(ctx, Atlas.tiles.grass, 1080, 1688, 112, 56, cam);
+    [[80, 1296, 0.4], [240, 1360, 1.2], [620, 1300, 2.1], [840, 1380, 0.8],
+      [120, 1660, 1.6], [700, 1700, 2.4], [1100, 1280, 0.2], [1180, 1700, 3]].forEach(([px, py, s]) => {
+      drawPalm(ctx, px, py, t, s, cam);
+    });
+    drawBush(ctx, 200, 1400, cam);
+    drawBush(ctx, 680, 1420, cam);
+    drawBush(ctx, 1080, 1440, cam);
+    drawLamp(ctx, 80, 1240, cam);
+    drawLamp(ctx, 600, 1240, cam);
+    drawLamp(ctx, 80, 1528, cam);
+    drawLamp(ctx, 600, 1528, cam);
+    drawLamp(ctx, 1000, 1240, cam);
+    if (Atlas.frames.signErriadh) Atlas.blit(ctx, Atlas.frames.signErriadh, 24, 1190);
+    if (Atlas.frames.signElMay) Atlas.blit(ctx, Atlas.frames.signElMay, 540, 1190);
+    if (Atlas.frames.signMidounV) Atlas.blit(ctx, Atlas.frames.signMidounV, 980, 518);
+    if (Atlas.frames.signGuellala) Atlas.blit(ctx, Atlas.frames.signGuellala, 24, 1480);
+    if (Atlas.frames.signExplore) Atlas.blit(ctx, Atlas.frames.signExplore, 540, 1480);
+    if (Atlas.frames.signAghir) Atlas.blit(ctx, Atlas.frames.signAghir, 980, 1190);
+    if (Atlas.frames.signMezraya) Atlas.blit(ctx, Atlas.frames.signMezraya, 1140, 1190);
+    if (Atlas.frames.signSedouik) Atlas.blit(ctx, Atlas.frames.signSedouik, 980, 1480);
+    if (Atlas.frames.signMahboub) Atlas.blit(ctx, Atlas.frames.signMahboub, 1140, 1480);
+    drawFlag(ctx, 100, 1190, "tn", t, cam);
+    drawFlag(ctx, 620, 1190, "tn", t, cam);
+    drawFlag(ctx, 100, 1480, "il", t, cam);
+    drawFlag(ctx, 700, 1480, "tn", t, cam);
+
+    drawHeritage(ctx, cam);
 
     drawSeagull(ctx, 120, 70, t, 0);
     drawSeagull(ctx, 480, 50, t, 2.1);
@@ -876,10 +1081,18 @@ const Sprites = (() => {
 
   function zoneAt(x, y) {
     if (y < 496) return x >= 700 ? "port" : "beach";
-    if (y < 864) return x < 400 ? "souk" : (x < 544 ? "plaza" : "ville");
-    if (x < 340 && y > 970) return "airport";
-    if (x > 520 && y > 880) return "hotel";
-    return "lagoon";
+    if (y < 864) return x >= 960 ? "midounv" : (x < 400 ? "souk" : (x < 544 ? "plaza" : "ville"));
+    if (x < 340 && y > 970 && y < 1200) return "airport";
+    if (x > 520 && x < 960 && y > 880 && y < 1200) return "hotel";
+    if (y < 1184) return "lagoon";
+    if (y < 1490) {
+      if (x < 500) return "erriadh";
+      if (x < 960) return "elmay";
+      return "aghir";
+    }
+    if (x < 500) return "guellala";
+    if (x < 960) return "explore";
+    return "aghir";
   }
 
   return {

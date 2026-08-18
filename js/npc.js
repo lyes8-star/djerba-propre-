@@ -13,7 +13,14 @@ const Npc = (() => {
     road: { x0: 24, y0: 472, x1: 930, y1: 536 },
     hotel: { x0: 540, y0: 890, x1: 940, y1: 1160 },
     airport: { x0: 16, y0: 980, x1: 340, y1: 1180 },
+    midounv: { x0: 976, y0: 536, x1: 1260, y1: 848 },
+    erriadh: { x0: 16, y0: 1216, x1: 496, y1: 1470 },
+    elmay: { x0: 520, y0: 1216, x1: 920, y1: 1470 },
+    guellala: { x0: 16, y0: 1500, x1: 496, y1: 1760 },
+    explore: { x0: 520, y0: 1500, x1: 920, y1: 1760 },
+    aghir: { x0: 960, y0: 1216, x1: 1260, y1: 1760 },
     inside: { x0: 12, y0: 40, x1: 288, y1: 210 },
+    holy: { x0: 12, y0: 40, x1: 288, y1: 210 },
   };
 
   const NAMES = {
@@ -63,7 +70,7 @@ const Npc = (() => {
   }
 
   function clampNpc(n) {
-    const z = ZONES[n.zone];
+    const z = n.indoor ? ZONES.inside : ZONES[n.zone];
     if (!z) return;
     n.x = Math.max(z.x0, Math.min(z.x1 - PW, n.x));
     n.y = Math.max(z.y0, Math.min(z.y1 - PH, n.y));
@@ -94,7 +101,14 @@ const Npc = (() => {
       road: ["localM", "localF", "tourM", "cafe", "localM2"],
       hotel: ["tourM", "tourF", "tourF2", "tourM2", "localF", "merchF"],
       airport: ["tourM", "tourF", "tourM2", "localM", "localM2"],
+      midounv: ["localM", "localF", "elder", "elderF", "kidM", "merchM"],
+      erriadh: ["localM", "localF", "tourF", "tourM", "elder", "kidF"],
+      elmay: ["elder", "elderF", "localM", "localM2", "kidM"],
+      guellala: ["merchM", "merchF", "localF", "localM", "elder"],
+      explore: ["tourM", "tourF", "tourF2", "merchM", "localF"],
+      aghir: ["localM", "localM2", "elder", "elderF", "kidF"],
       inside: ["localM"],
+      holy: ["elder", "elderF", "localM"],
     }[zone] || ["localM"];
     style = style || pick(pool);
     const names = NAMES[style] || ["Djerbien"];
@@ -223,6 +237,20 @@ const Npc = (() => {
     spawnFill(npcs, "airport", 4, "wander", ["tourM", "tourF", "localM", "tourM2"]);
     spawnFill(npcs, "airport", 2, "stand", ["localM2", "tourF2"]);
 
+    spawnFill(npcs, "midounv", 4, "wander", ["localM", "localF", "merchM"]);
+    spawnFill(npcs, "midounv", 2, "sit", ["elder", "elderF"]);
+    spawnFill(npcs, "erriadh", 4, "wander", ["localM", "localF", "tourF"]);
+    spawnFill(npcs, "erriadh", 2, "photo", ["tourM", "tourF2"]);
+    spawnFill(npcs, "erriadh", 1, "sit", ["elder"]);
+    spawnFill(npcs, "elmay", 3, "wander", ["localM", "localM2"]);
+    spawnFill(npcs, "elmay", 2, "sit", ["elder", "elderF"]);
+    spawnFill(npcs, "guellala", 3, "stand", ["merchM", "merchF"]);
+    spawnFill(npcs, "guellala", 2, "wander", ["localF", "localM"]);
+    spawnFill(npcs, "explore", 3, "wander", ["tourM", "tourF", "tourF2"]);
+    spawnFill(npcs, "explore", 2, "stand", ["merchM", "localF"]);
+    spawnFill(npcs, "aghir", 3, "wander", ["localM", "localM2", "elder"]);
+    spawnFill(npcs, "aghir", 2, "sit", ["elderF", "kidF"]);
+
     spawnFill(npcs, "road", 8, "pace", ["localM", "localF", "tourM", "cafe", "localM2"]);
 
     spawnFill(npcs, "beach", 3, "wander", ["dog"]);
@@ -243,7 +271,8 @@ const Npc = (() => {
   }
 
   function retarget(n) {
-    const z = ZONES[n.zone];
+    const z = n.indoor ? ZONES.inside : ZONES[n.zone];
+    if (!z) return;
     if (n.job === "pace") {
       n.tx = z.x0 + Math.random() * (z.x1 - z.x0 - PW);
       n.ty = n.homeY || n.y;
@@ -390,6 +419,12 @@ const Npc = (() => {
   }
 
   function lineFor(n) {
+    if (n.zone === "holy") {
+      const pack = LINES.holy && LINES.holy[n.style];
+      if (pack && pack.length) return pick(pack);
+      const any = Object.values(LINES.holy || {}).flat();
+      if (any.length) return pick(any);
+    }
     if (n.style === "dog" || n.style === "cat" || n.style === "catGinger") {
       const pack = LINES[n.zone] && LINES[n.zone][n.style === "catGinger" ? "cat" : n.style];
       if (pack && pack.length) return pick(pack);
