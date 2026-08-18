@@ -1036,47 +1036,45 @@ const Sprites = (() => {
     ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 3, 3);
   }
 
+  const islandArt = new Image();
+  islandArt.src = "img/djerba-map.jpg?v=24";
+
   function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId) {
-    ctx.fillStyle = "#1c7cc0";
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#7ec8e0";
     ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < 40; i++) {
-      ctx.fillStyle = "#38a4e8";
-      ctx.fillRect((i * 37) % W, 10 + (i * 19) % H, 3, 2);
+    if (islandArt.complete && islandArt.naturalWidth) {
+      ctx.drawImage(islandArt, 0, 0, W, H);
     }
-    Atlas.blit(ctx, Atlas.frames.cloud, 16, 8);
-    Atlas.blit(ctx, Atlas.frames.cloud, 200, 20);
-    ctx.fillStyle = "#f0cc84";
-    for (let y = 28; y < 210; y += 2) {
-      const inset = Math.abs(y - 118) / 8 | 0;
-      ctx.fillRect(24 + inset, y, W - 48 - inset * 2, 2);
-    }
-    ctx.fillStyle = "#3cbc3c";
-    ctx.fillRect(80, 90, 50, 28);
-    ctx.fillRect(140, 130, 44, 22);
-    Atlas.blit(ctx, Atlas.frames.hill, 40, 70);
 
     Campaign.list().forEach((lv) => {
       const open = lv.id <= unlocked;
       const st = (starsMap && starsMap[String(lv.id)]) || 0;
       const sel = lv.id === selectedId;
-      const pulse = sel && Math.sin(t * 6) > 0 ? 2 : 0;
+      const pulse = sel && Math.sin(t * 6) > 0 ? 1 : 0;
+      const r = 8 + pulse;
+      ctx.beginPath();
+      ctx.arc(lv.mapX, lv.mapY, r + 2, 0, Math.PI * 2);
       ctx.fillStyle = sel ? "#fcbc14" : "#140c1c";
-      ctx.fillRect(lv.mapX - 6 - pulse, lv.mapY - 6 - pulse, 18 + pulse * 2, 18 + pulse * 2);
-      ctx.fillStyle = open ? "#3cbc3c" : "#555";
-      ctx.fillRect(lv.mapX - 4, lv.mapY - 4, 14, 14);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(lv.mapX, lv.mapY, r, 0, Math.PI * 2);
+      ctx.fillStyle = open ? "#2a9c3c" : "#5a5a5a";
+      ctx.fill();
       if (open) {
         ctx.fillStyle = "#fff";
         ctx.font = "8px monospace";
-        ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 6);
+        ctx.textAlign = "center";
+        ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 3);
         if (st > 0) {
           ctx.fillStyle = "#fcbc14";
-          ctx.fillText("*".repeat(st), lv.mapX - 4, lv.mapY + 20);
+          ctx.font = "7px monospace";
+          ctx.fillText("*".repeat(st), lv.mapX, lv.mapY + r + 10);
         }
       }
     });
-    ctx.fillStyle = "#fff";
-    ctx.font = "9px monospace";
-    ctx.fillText("CARTE DE DJERBA", 55, 18);
+    ctx.textAlign = "left";
   }
 
   function zoneAt(x, y) {

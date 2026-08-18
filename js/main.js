@@ -700,7 +700,7 @@
       const sx = (e.clientX - rect.left) * (mapCanvas.width / rect.width);
       const sy = (e.clientY - rect.top) * (mapCanvas.height / rect.height);
       let best = null;
-      let bestD = 20;
+      let bestD = 24;
       Campaign.list().forEach((lv) => {
         const d = Math.hypot(lv.mapX - sx, lv.mapY - sy);
         if (d < bestD) {
