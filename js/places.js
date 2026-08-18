@@ -303,6 +303,7 @@ const Places = (() => {
     player.vx = 0;
     player.vy = 0;
     spawnIndoor(world, b.room);
+    if (typeof Quests !== "undefined") Quests.onEnter(world, b);
   }
 
   function exit(world, player) {

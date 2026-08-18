@@ -75,9 +75,19 @@ const UI = (() => {
       els.bag.textContent = `BAG ${p.inventory.length}/${p.stats.capacity}`;
     }
 
-    els.objList.innerHTML = World.objectives(world)
-      .map((o) => `<li class="${o.done ? "done" : ""}">${o.done ? "[OK] " : "[  ] "}${o.label} ${o.value}</li>`)
+    const missionLabel = document.getElementById("hud-mission");
+    if (missionLabel && typeof Quests !== "undefined") {
+      missionLabel.textContent = Quests.hudChip() || "LIBRE";
+    }
+
+    const qPanel = typeof Quests !== "undefined" ? Quests.panel() : { active: [], todo: [], done: [], total: 0 };
+    const qHtml = []
+      .concat(qPanel.active.map((o) => `<li class="q-active">[>] ${o.label}<span class="q-hint">${o.value}</span></li>`))
+      .concat(qPanel.todo.map((o) => `<li class="q">[  ] ${o.label}</li>`))
+      .concat(qPanel.done.length ? [`<li class="done">[OK] ${qPanel.done.length}/${qPanel.total} quetes</li>`] : [])
+      .concat(World.objectives(world).map((o) => `<li class="${o.done ? "done" : ""}">${o.done ? "[OK] " : "[  ] "}${o.label} ${o.value}</li>`))
       .join("");
+    els.objList.innerHTML = qHtml;
   }
 
   function toast(html, ms = 1800) {
@@ -247,7 +257,7 @@ const UI = (() => {
     else els.objPopup.classList.toggle("hidden");
     if (!els.objPopup.classList.contains("hidden")) {
       clearTimeout(toggleObjectives._t);
-      toggleObjectives._t = setTimeout(() => els.objPopup.classList.add("hidden"), 4200);
+      toggleObjectives._t = setTimeout(() => els.objPopup.classList.add("hidden"), 7000);
     }
   }
 
