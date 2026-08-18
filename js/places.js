@@ -45,6 +45,16 @@ const Places = (() => {
     return { x: p.x, y: p.y, w: 40, h: 40, doorX: 12, doorY: 24, doorW: 16, doorH: 14, room: "shop", title };
   }
 
+  function block(anchor, ox, oy, cols, rows, title) {
+    const out = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        out.push(house(anchor, ox + c * 64, oy + r * 72, "home", title || "Maison"));
+      }
+    }
+    return out;
+  }
+
   const hHotel = Island.xy("hotel");
   const hAir = Island.xy("airport");
   const hAjim = Island.xy("ajim");
@@ -58,15 +68,21 @@ const Places = (() => {
     shop("houmt", -220, 60, "The"), shop("houmt", -156, 60, "Brik"),
     shop("houmt", -220, 140, "Etal", true), shop("houmt", -156, 140, "Souk"),
     shop("houmt", -220, 220, "Epices"), shop("houmt", -156, 220, "Tapis"),
-    house("midoun", -110, 90), house("midoun", 160, 20), house("midoun", 160, 90),
-    shop("midoun", -110, 20, "Marche"),
-    house("ajim", 90, -90), house("ajim", 90, 30),
-    shop("ajim", -90, 10, "Poisson"),
-    house("guellala", -150, 40, "home", "Maison potier"),
-    house("guellala", 220, 90, "home", "Maison potier"),
-    house("elmay", -150, 90), house("elmay", 190, 90),
+    shop("houmt", -90, 252, "Etal", true),
+    ...block("midoun", -110, 90, 2, 2, "Maison Midoun"),
+    house("midoun", 160, 20), house("midoun", 224, 20), house("midoun", 160, 92),
+    shop("midoun", -110, 20, "Marche"), shop("midoun", -50, 20, "Etal", true),
+    shop("midoun", 10, 20, "Harissa"),
+    ...block("ajim", 80, -90, 2, 2, "Maison Ajim"),
+    shop("ajim", -90, 10, "Poisson"), shop("ajim", -90, 70, "Etal", true),
+    ...block("guellala", -150, 40, 2, 2, "Maison potier"),
+    house("elmay", -150, 90), house("elmay", -86, 90), house("elmay", 190, 90),
+    house("elmay", 190, 162),
     house("aghir", 90, 20, "home", "Maison plage"),
-    house("aghir", 150, 50, "home", "Maison plage"),
+    house("aghir", 154, 20, "home", "Maison plage"),
+    house("aghir", 90, 92, "home", "Maison plage"),
+    house("erriadh", -140, 50, "home", "Maison Erriadh"),
+    house("erriadh", 220, 130, "home", "Maison Erriadh"),
     { x: hAjim.x + 40, y: hAjim.y - 20, w: 56, h: 48, doorX: 18, doorY: 28, doorW: 20, doorH: 18, room: "cabaret", title: "Cabaret" },
     { x: hHoumt.x + 170, y: hHoumt.y + 160, w: 56, h: 48, doorX: 18, doorY: 28, doorW: 20, doorH: 18, room: "cabaret", title: "Cabaret" },
     { x: hHotel.x - 20, y: hHotel.y - 10, w: 88, h: 64, doorX: 36, doorY: 48, doorW: 16, doorH: 14, room: "hotel", title: "Hotel" },
