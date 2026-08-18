@@ -703,9 +703,40 @@ const Sprites = (() => {
     }
   }
 
+  function drawCar(ctx, car, t, cam) {
+    if (!car) return;
+    if (cam && !Atlas.inView(cam, car.x, car.y, 40, 20)) return;
+    const img = Atlas.frames[car.sprite] || Atlas.frames.carWhite;
+    if (!img) return;
+    if ((car.facing || 1) < 0) {
+      ctx.save();
+      ctx.translate((car.x + 40) | 0, car.y | 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, 0, 0);
+      ctx.restore();
+    } else {
+      Atlas.blit(ctx, img, car.x, car.y);
+    }
+    if (car.taxi && Math.sin(t * 9) > 0) {
+      ctx.fillStyle = "#fff46c";
+      ctx.fillRect((car.x + 18) | 0, (car.y - 1) | 0, 4, 2);
+    }
+  }
+
+  function drawProps(ctx, t, cam) {
+    if (typeof Island === "undefined" || !Island.props) return;
+    const list = Island.props();
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      if (p.kind === "palm") drawPalm(ctx, p.x, p.y, t, p.seed || i, cam);
+      else if (p.kind === "bush") drawBush(ctx, p.x, p.y, cam);
+      else if (p.kind === "rock") drawRock(ctx, p.x, p.y, cam);
+    }
+  }
+
   function drawPlayer(ctx, p, goldHat, t, cam) {
-    const moving = Math.hypot(p.vx || 0, p.vy || 0) > 8;
-    const walk = moving ? Math.floor(t * 12) % 4 : (Math.sin(t * 3) > 0.85 ? 2 : 0);
+    const moving = !p.ride && Math.hypot(p.vx || 0, p.vy || 0) > 8;
+    const walk = moving ? Math.floor(t * 12) % 4 : (p.ride ? 0 : (Math.sin(t * 3) > 0.85 ? 2 : 0));
     const face = (p.facing || 1) >= 0 ? 1 : -1;
     const atk = p.attacking ? 1 : 0;
     const gold = goldHat ? 1 : 0;
@@ -853,6 +884,7 @@ const Sprites = (() => {
     }
 
     Island.drawGround(ctx, cam);
+    drawProps(ctx, t, cam);
     drawCoastFoam(ctx, t, cam);
     drawFerry(ctx, t, cam);
 
@@ -949,8 +981,14 @@ const Sprites = (() => {
     if (Atlas.frames.hill) {
       const lg = Island.xy("lagoon");
       Atlas.blit(ctx, Atlas.frames.hill, lg.x - 40, lg.y - 10);
+      Atlas.blit(ctx, Atlas.frames.hill, lg.x + 80, lg.y + 40);
       const em = Island.xy("elmay");
       Atlas.blit(ctx, Atlas.frames.hill, em.x - 90, em.y + 20);
+      Atlas.blit(ctx, Atlas.frames.hill, em.x + 70, em.y - 30);
+      const gu = Island.xy("guellala");
+      Atlas.blit(ctx, Atlas.frames.hill, gu.x - 70, gu.y - 40);
+      const md = Island.xy("midoun");
+      Atlas.blit(ctx, Atlas.frames.hill, md.x - 110, md.y + 90);
     }
     const houmt = Island.xy("houmt");
     [[-60, 40], [40, 40], [120, 10], [-140, 10], [200, 80], [-200, 40], [80, 100], [-40, 120]].forEach(([ox, oy]) => {
@@ -962,6 +1000,19 @@ const Sprites = (() => {
     drawLamp(ctx, mid.x + 10, mid.y + 80, cam);
     drawLamp(ctx, aj.x + 10, aj.y - 10, cam);
     drawLamp(ctx, aj.x + 70, aj.y + 40, cam);
+    Island.loopPts().forEach((p, i) => {
+      if (i % 3) return;
+      drawLamp(ctx, p.x - 18, p.y - 6, cam);
+    });
+    const em = Island.xy("elmay");
+    drawLamp(ctx, em.x - 24, em.y + 16, cam);
+    drawLamp(ctx, em.x + 40, em.y + 28, cam);
+    const gu = Island.xy("guellala");
+    drawLamp(ctx, gu.x - 20, gu.y + 10, cam);
+    drawLamp(ctx, gu.x + 48, gu.y + 24, cam);
+    const er = Island.xy("erriadh");
+    drawLamp(ctx, er.x - 16, er.y + 20, cam);
+    drawLamp(ctx, er.x + 36, er.y + 8, cam);
     drawStall(ctx, mid.x - 50, mid.y + 50, cam);
     drawStall(ctx, mid.x + 20, mid.y + 50, cam);
     tileFill(ctx, Atlas.tiles.stone, aj.x - 90, aj.y + 28, 80, 16, cam);
@@ -1248,7 +1299,7 @@ const Sprites = (() => {
   }
 
   return {
-    drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
+    drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign, drawCar,
     drawBin, drawTrash, drawFilth, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
     drawTitleBackground, drawCinematic, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
     drawInterior, drawDoors, drawPool,

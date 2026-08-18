@@ -64,6 +64,14 @@ const Npc = (() => {
   }
 
   function clampNpc(n) {
+    if (n.job === "commute") {
+      if (!n.indoor) {
+        const c = Island.clamp(n.x + 16, n.y + 20);
+        n.x = c.x - 16;
+        n.y = c.y - 20;
+      }
+      return;
+    }
     const z = n.indoor ? ZONES.inside : ZONES[n.zone];
     if (!z) return;
     n.x = Math.max(z.x0, Math.min(z.x1 - PW, n.x));
@@ -140,7 +148,66 @@ const Npc = (() => {
       homeX: 0,
       homeY: 0,
       partner: null,
+      routine: null,
+      step: 0,
+      jobT: 0,
+      nextZone: null,
+      nextJob: null,
     };
+  }
+
+  const ROUTINES = {
+    merchM: [["souk", "stand", 24], ["ville", "wander", 14], ["plaza", "stand", 10], ["souk", "stand", 22]],
+    merchF: [["souk", "stand", 26], ["ville", "wander", 12], ["souk", "stand", 20]],
+    localM: [["ville", "wander", 16], ["souk", "wander", 14], ["plaza", "sit", 12], ["ville", "wander", 18]],
+    localM2: [["ville", "wander", 14], ["port", "wander", 16], ["souk", "wander", 12], ["ville", "wander", 16]],
+    localF: [["ville", "wander", 16], ["souk", "wander", 14], ["plaza", "wander", 10], ["ville", "sit", 12]],
+    localF2: [["ville", "wander", 14], ["souk", "wander", 16], ["midounv", "wander", 14]],
+    tourM: [["beach", "lounge", 18], ["hotel", "wander", 12], ["souk", "wander", 12], ["explore", "photo", 14], ["beach", "photo", 16]],
+    tourM2: [["hotel", "lounge", 16], ["beach", "photo", 14], ["midounv", "wander", 12], ["airport", "wander", 10]],
+    tourF: [["beach", "lounge", 20], ["hotel", "lounge", 12], ["souk", "wander", 12], ["erriadh", "photo", 14]],
+    tourF2: [["beach", "photo", 16], ["explore", "wander", 14], ["souk", "wander", 12], ["hotel", "wander", 12]],
+    fisher: [["port", "fish", 28], ["souk", "wander", 12], ["port", "fish", 22]],
+    elder: [["plaza", "sit", 22], ["ville", "sit", 16], ["souk", "sit", 12], ["plaza", "sit", 18]],
+    elderF: [["ville", "sit", 20], ["plaza", "sit", 16], ["souk", "sit", 12]],
+    cafe: [["ville", "wander", 14], ["plaza", "stand", 12], ["souk", "wander", 14], ["ville", "wander", 16]],
+  };
+
+  const STAY = {
+    kidM: 1, kidF: 1, escort: 1, cabaret: 1, dog: 1, cat: 1, catGinger: 1,
+  };
+
+  function attachRoutine(n) {
+    if (n.routine || n.indoor || n.partner || STAY[n.style] || n.zone === "holy" || n.zone === "inside") return;
+    const r = ROUTINES[n.style];
+    if (!r) return;
+    n.routine = r;
+    n.step = (Math.random() * r.length) | 0;
+    n.jobT = 6 + Math.random() * 14;
+  }
+
+  function zoneCenter(zone) {
+    const z = ZONES[zone];
+    if (!z) return null;
+    return { x: (z.x0 + z.x1) / 2 - PW / 2, y: (z.y0 + z.y1) / 2 - PH / 2 };
+  }
+
+  function beginCommute(n) {
+    if (!n.routine || !n.routine.length) return;
+    n.step = (n.step + 1) % n.routine.length;
+    const [zone, job] = n.routine[n.step];
+    const c = zoneCenter(zone);
+    if (!c) {
+      n.jobT = 8;
+      return;
+    }
+    n.nextZone = zone;
+    n.nextJob = job;
+    n.job = "commute";
+    n.tx = c.x + (Math.random() * 40 - 20);
+    n.ty = c.y + (Math.random() * 30 - 15);
+    n.wait = 0;
+    n.speed = 36 + Math.random() * 22;
   }
 
   function place(n, x, y) {
@@ -259,7 +326,7 @@ const Npc = (() => {
     spawnFill(npcs, "aghir", 3, "wander", ["localM", "localM2", "elder"]);
     spawnFill(npcs, "aghir", 2, "sit", ["elderF", "kidF"]);
 
-    spawnFill(npcs, "road", 8, "pace", ["localM", "localF", "tourM", "cafe", "localM2"]);
+    spawnFill(npcs, "road", 4, "pace", ["localM", "localF", "tourM", "cafe"]);
 
     spawnFill(npcs, "beach", 3, "wander", ["dog"]);
     spawnFill(npcs, "beach", 2, "sit", ["cat"]);
@@ -275,6 +342,24 @@ const Npc = (() => {
     npcs.push(place(spawnOne("beach", npcs.length, "sit", "catGinger"), 160, 430));
     npcs.push(place(spawnOne("souk", npcs.length, "sit", "cat"), 140, 640));
 
+    [
+      [["ville", "wander", 10], ["midounv", "wander", 12], ["aghir", "wander", 10], ["guellala", "wander", 10], ["port", "wander", 12]],
+      [["beach", "wander", 12], ["hotel", "lounge", 10], ["midounv", "wander", 10], ["erriadh", "photo", 12], ["souk", "wander", 10]],
+      [["airport", "stand", 10], ["ville", "wander", 14], ["souk", "wander", 10], ["plaza", "sit", 8], ["port", "wander", 12]],
+      [["guellala", "stand", 12], ["elmay", "wander", 12], ["ville", "wander", 10], ["port", "wander", 14]],
+      [["explore", "photo", 12], ["erriadh", "wander", 10], ["midounv", "wander", 12], ["beach", "lounge", 12]],
+    ].forEach((route, i) => {
+      const st = ["localM", "tourM", "localM2", "localF", "tourF"][i];
+      const n = spawnOne(route[0][0] === "ajim" ? "port" : route[0][0], npcs.length, route[0][1], st);
+      const c = zoneCenter(n.zone);
+      if (c) place(n, c.x, c.y);
+      n.routine = route;
+      n.step = 0;
+      n.jobT = 3 + i * 2;
+      npcs.push(n);
+    });
+
+    npcs.forEach(attachRoutine);
     world.npcs = npcs;
   }
 
@@ -325,6 +410,11 @@ const Npc = (() => {
       n.actT -= dt;
       if (n.actT <= 0) n.acting = false;
 
+      if (n.routine && n.job !== "commute") {
+        n.jobT -= dt;
+        if (n.jobT <= 0) beginCommute(n);
+      }
+
       const near = player && Math.hypot(n.x - player.x, n.y - player.y) < 44;
       n.prompt = near;
       const smoker = Atlas.NPC_STYLES[n.style] && Atlas.NPC_STYLES[n.style].tool === "smoke";
@@ -335,6 +425,44 @@ const Npc = (() => {
       } else if (smoker && !n.acting && Math.random() < 0.01) {
         n.acting = true;
         n.actT = 0.8 + Math.random() * 0.6;
+      }
+
+      if (n.job === "commute") {
+        if (n.wait > 0) {
+          n.wait -= dt;
+          n.vx = 0;
+          n.vy = 0;
+          continue;
+        }
+        if (n.tx == null) {
+          beginCommute(n);
+          continue;
+        }
+        const dx = n.tx - n.x;
+        const dy = n.ty - n.y;
+        const mag = Math.hypot(dx, dy) || 1;
+        if (mag < 18) {
+          n.zone = n.nextZone || n.zone;
+          n.job = n.nextJob || "wander";
+          n.homeX = n.x;
+          n.homeY = n.y;
+          n.tx = null;
+          n.ty = null;
+          n.vx = 0;
+          n.vy = 0;
+          const step = n.routine && n.routine[n.step];
+          n.jobT = (step && step[2]) || 14;
+          n.wait = 0.4 + Math.random() * 0.8;
+          continue;
+        }
+        n.vx = (dx / mag) * n.speed;
+        n.vy = (dy / mag) * n.speed;
+        n.x += n.vx * dt;
+        n.y += n.vy * dt;
+        if (n.vx > 4) n.facing = 1;
+        if (n.vx < -4) n.facing = -1;
+        clampNpc(n);
+        continue;
       }
 
       if (n.job === "stand" || n.job === "sit" || n.job === "lounge" || n.job === "fish" || n.job === "chat") {

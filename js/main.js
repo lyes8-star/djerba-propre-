@@ -323,6 +323,7 @@
     world = World.create(mission);
     player = Player.create(Progress.toolStats());
     Npc.spawn(world);
+    if (typeof Traffic !== "undefined") Traffic.spawn(world);
     window.__player = player;
     AudioSys.unlock();
     AudioSys.setTheme(playMusicTheme());
@@ -479,6 +480,10 @@
     } else if (res.type === "door") {
       AudioSys.sfx("click");
       if (res.dir === "in") UI.toast((res.title || "SALLE") + "<br/>Porte ouverte");
+    } else if (res.type === "taxi-off") {
+      AudioSys.sfx("click");
+      UI.toast("A TERRE<br/>Tour termine");
+      if (UI.hideTalk) UI.hideTalk();
     }
   }
 
@@ -538,10 +543,12 @@
       for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
       Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
       const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
+      for (const car of world.cars || []) actors.push({ car, y: car.y });
       actors.push({ y: player.y, player: true });
       actors.sort((a, b) => a.y - b.y);
       for (const a of actors) {
-        if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
+        if (a.car) Sprites.drawCar(ctx, a.car, t, cam);
+        else if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
         else Sprites.drawNpc(ctx, a.n, t, cam);
       }
       Sprites.drawMinimap(ctx, world.W, world.H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
@@ -557,12 +564,13 @@
     lastTs = ts;
     animTime = ts / 1000;
 
+    if (typeof Traffic !== "undefined" && !world.inside) Traffic.update(world, dt, player);
     Player.update(player, dt, input, world);
     Npc.update(world, dt, player, animTime);
     if (!world.inside) World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
-    if (Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
+    if (!world.ride && Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
       FX.dust(player.x + 12, player.y + 34);
     }
     if (Math.random() < 0.04) {
@@ -577,11 +585,19 @@
     if (state !== "play") return;
     render(animTime);
     UI.updateHud(Progress.get(), world, timeLeft);
-    const speaking = (world.npcs || []).some((n) => n.bubble > 0 && (world.inside ? n.indoor : !n.indoor));
+    const speaking = (world.npcs || []).some((n) => n.bubble > 0 && (world.inside ? n.indoor : !n.indoor))
+      || (world.ride && world.ride.bubble > 0);
     if (!speaking && UI.hideTalk) UI.hideTalk();
     const door = Places.nearDoor(player, world);
     const nearNpc = Npc.nearest(world, player, 34);
-    if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    const nearTaxi = !world.inside && typeof Traffic !== "undefined" ? Traffic.nearestTaxi(world, player, 36) : null;
+    const taxiD = nearTaxi ? Math.hypot(nearTaxi.px - (player.x + 16), nearTaxi.py - (player.y + 20)) : 999;
+    const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
+    if (world.ride) {
+      const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1 && world.ride.bubble > 0;
+      UI.setToolLabel(more ? "SUITE" : "SORTIR");
+    } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    else if (nearTaxi && taxiD <= npcD + 6) UI.setToolLabel("TAXI");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
       UI.setToolLabel(more && nearNpc.bubble > 0 ? "SUITE" : "PARLER");

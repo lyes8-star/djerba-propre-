@@ -418,6 +418,11 @@ const NpcTalk = {
         "Assieds-toi. On a des chaises, même à Mahboubine. Étonnant pour certains visiteurs. Le four est chaud, le thé aussi. La Fitna, on la laisse à la route. Tu ramasses, tu bois, tu pars. C'est déjà trop d'hospitalité pour un sac en plastique, mais on est Djerba.",
       ],
     },
+    taxi: [
+      "Monte ya khouya. Tour de l'île, compteur honnête, pas le volant de l'ouest. Ajim, Guellala, Aghir, Midoun, Houmt Souk. La boucle blanche. Eux ils prennent le ferry et ils crachent sur le quai. Nous on a une route. Klaxonne pas, je le fais pour toi. Yallah.",
+      "Taxi Djerba. Pas de plaque Dz, pas de double tarif, pas de WESH dans le rétroviseur. On fait le tour: port, potiers, plages, souk. Toi tu ramasses. Moi je klaxonne les cousins qui marchent au milieu. Fitna de chaussée. Tiens la portière. E pour descendre, quand t'en as assez du paysage.",
+      "Louage mental, taxi réel. Sidi Mahrez, Midoun, la Ghriba si tu veux prier, El May si tu veux du calme. L'ouest cherche l'Europe. Ils trouvent ma vitre et mon klaxon. Assieds-toi. On a des sièges. Chez eux c'est la fosse, même en voiture paraît-il. Sahit. On roule.",
+    ],
   },
 
   WINKS: [
