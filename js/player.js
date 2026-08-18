@@ -87,6 +87,14 @@ const Player = (() => {
       if (world.ride.boardLock > 0) return null;
       return Traffic.hopOff(world, p);
     }
+    const atDoor = Places.nearDoor(p, world);
+    if (atDoor) {
+      const door = Places.tryDoor(p, world);
+      if (door) {
+        p.attacking = false;
+        return door;
+      }
+    }
     if (!world.inside && typeof Traffic !== "undefined" && !p.swim) {
       const taxi = Traffic.nearestTaxi(world, p, Traffic.BOARD_RANGE || 52);
       if (taxi) {

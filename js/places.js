@@ -180,6 +180,24 @@ const Places = (() => {
     return { x: b.x + b.doorX, y: b.y + b.doorY, w: b.doorW, h: b.doorH };
   }
 
+  function approachRect(b) {
+    return {
+      x: b.x + b.doorX - 8,
+      y: b.y + b.doorY,
+      w: b.doorW + 16,
+      h: (b.h - b.doorY) + 18,
+    };
+  }
+
+  function solidRect(b) {
+    return {
+      x: b.x + 6,
+      y: b.y + 6,
+      w: b.w - 12,
+      h: Math.max(12, b.doorY - 8),
+    };
+  }
+
   function feet(p) {
     return { x: p.x + 8, y: p.y + 26, w: 16, h: 12 };
   }
@@ -191,12 +209,12 @@ const Places = (() => {
   function nearDoor(p, world) {
     if (p && p.swim) return null;
     if (world.inside) {
-      const exit = { x: ROOM.w / 2 - 10, y: ROOM.h - 28, w: 20, h: 24 };
+      const exit = { x: ROOM.w / 2 - 14, y: ROOM.h - 36, w: 28, h: 32 };
       return overlap(feet(p), exit) ? { exit: true, title: "Sortir" } : null;
     }
     const f = feet(p);
     for (const b of BUILDINGS) {
-      if (overlap(f, doorRect(b))) return b;
+      if (overlap(f, approachRect(b))) return b;
     }
     return null;
   }
@@ -296,12 +314,12 @@ const Places = (() => {
     world.inside = {
       room: b.room,
       title: b.title,
-      outX: b.x + b.doorX - 8,
-      outY: b.y + b.h + 2,
+      outX: b.x + b.doorX - 4,
+      outY: b.y + b.h + 14,
       w: ROOM.w,
       h: ROOM.h,
     };
-    world.doorCd = 0.7;
+    world.doorCd = 0.28;
     player.x = ROOM.w / 2 - 16;
     player.y = ROOM.h - 70;
     player.vx = 0;
@@ -318,7 +336,7 @@ const Places = (() => {
     player.vx = 0;
     player.vy = 0;
     world.inside = null;
-    world.doorCd = 0.8;
+    world.doorCd = 0.28;
   }
 
   function tryDoor(player, world) {
@@ -336,17 +354,29 @@ const Places = (() => {
   function collide(p, world) {
     if (world.inside) {
       p.x = Math.max(12, Math.min(ROOM.w - 36, p.x));
-      p.y = Math.max(40, Math.min(ROOM.h - 42, p.y));
+      p.y = Math.max(40, Math.min(ROOM.h - 36, p.y));
       return;
     }
-    const f = feet(p);
-    for (const b of BUILDINGS) {
-      const body = { x: b.x + 4, y: b.y + 8, w: b.w - 8, h: b.h - 10 };
-      const door = doorRect(b);
+    for (let i = 0; i < BUILDINGS.length; i++) {
+      const b = BUILDINGS[i];
+      if (p.x + 32 < b.x || p.x > b.x + b.w || p.y + 40 < b.y || p.y > b.y + b.h + 8) continue;
+      const f = feet(p);
+      if (overlap(f, approachRect(b))) continue;
+      const body = solidRect(b);
       if (!overlap(f, body)) continue;
-      if (overlap(f, door)) continue;
-      p.y = b.y + b.h - 6;
-      p.vy = 0;
+      const left = f.x + f.w - body.x;
+      const right = body.x + body.w - f.x;
+      const top = f.y + f.h - body.y;
+      const bot = body.y + body.h - f.y;
+      const ox = left < right ? left : right;
+      const oy = top < bot ? top : bot;
+      if (ox < oy) {
+        p.x += left < right ? -left : right;
+        p.vx = 0;
+      } else {
+        p.y += top < bot ? -top : bot;
+        p.vy = 0;
+      }
     }
   }
 
@@ -354,18 +384,11 @@ const Places = (() => {
     if (world.doorCd > 0) world.doorCd -= dt;
     if (world.doorCd > 0) return;
     if (world.ride || player.ride) return;
-    if (!world.inside && typeof Traffic !== "undefined") {
-      const taxi = Traffic.nearestTaxi(world, player, 40);
-      if (taxi) {
-        const td = Math.hypot(taxi.px - (player.x + 16), taxi.py - (player.y + 20));
-        if (td < 40) return;
-      }
-    }
     const n = nearDoor(player, world);
     if (!n) return;
     if (world.inside || n.exit) {
-      if (player.vy > 12) tryDoor(player, world);
-    } else if (player.vy < -8) {
+      if (player.vy > 6) tryDoor(player, world);
+    } else if (player.vy < -4) {
       tryDoor(player, world);
     }
   }
