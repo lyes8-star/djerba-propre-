@@ -350,6 +350,14 @@ const Places = (() => {
   function tick(world, player, dt) {
     if (world.doorCd > 0) world.doorCd -= dt;
     if (world.doorCd > 0) return;
+    if (world.ride || player.ride) return;
+    if (!world.inside && typeof Traffic !== "undefined") {
+      const taxi = Traffic.nearestTaxi(world, player, 40);
+      if (taxi) {
+        const td = Math.hypot(taxi.px - (player.x + 16), taxi.py - (player.y + 20));
+        if (td < 40) return;
+      }
+    }
     const n = nearDoor(player, world);
     if (!n) return;
     if (world.inside || n.exit) {

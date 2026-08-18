@@ -84,15 +84,11 @@ const Player = (() => {
     if (world.ride) {
       const more = Traffic.talkNext(world.ride);
       if (more) return more;
+      if (world.ride.boardLock > 0) return null;
       return Traffic.hopOff(world, p);
     }
-    const door = Places.tryDoor(p, world);
-    if (door) {
-      p.attacking = false;
-      return door;
-    }
     if (!world.inside && typeof Traffic !== "undefined" && !p.swim) {
-      const taxi = Traffic.nearestTaxi(world, p, 36);
+      const taxi = Traffic.nearestTaxi(world, p, Traffic.BOARD_RANGE || 52);
       if (taxi) {
         const td = Math.hypot(taxi.px - (p.x + 16), taxi.py - (p.y + 20));
         const npc = Npc.nearest(world, p, 36);
@@ -100,11 +96,20 @@ const Player = (() => {
           ? Math.hypot(npc.x + 16 - (p.x + 16), npc.y + 20 - (p.y + 20))
           : 999;
         const qHere = npc && npc.qRole && typeof Quests !== "undefined" && Quests.mark(npc) && nd < 36;
-        if (td < 36 && td <= nd + 6 && !qHere) {
-          p.cooldown = 0.35;
+        if (td < 40 && !qHere) {
+          p.cooldown = 0.4;
+          return Traffic.board(world, p, taxi);
+        }
+        if (td < 52 && td <= nd + 6 && !qHere) {
+          p.cooldown = 0.4;
           return Traffic.board(world, p, taxi);
         }
       }
+    }
+    const door = Places.tryDoor(p, world);
+    if (door) {
+      p.attacking = false;
+      return door;
     }
     p.cooldown = 0.3 / p.stats.pinceSpeed;
     p.attacking = true;

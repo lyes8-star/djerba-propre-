@@ -725,6 +725,19 @@ const Sprites = (() => {
     }
   }
 
+  function drawTaxiStand(ctx, stand, t, cam) {
+    if (!stand) return;
+    const x = stand.x - 32;
+    const y = stand.y - 28;
+    if (cam && !Atlas.inView(cam, x, y, 64, 36)) return;
+    const img = Atlas.frames.taxiStand;
+    if (img) Atlas.blit(ctx, img, x, y);
+    if (Math.sin(t * 7) > 0) {
+      ctx.fillStyle = "#fff46c";
+      ctx.fillRect((stand.x - 6) | 0, (stand.y - 28) | 0, 12, 3);
+    }
+  }
+
   function drawProps(ctx, t, cam) {
     if (typeof Island === "undefined" || !Island.props) return;
     const list = Island.props();
@@ -1053,6 +1066,8 @@ const Sprites = (() => {
     drawFlag(ctx, hot.x + 90, hot.y, "il", t, cam);
 
     drawHeritage(ctx, cam);
+    const stands = (typeof window !== "undefined" && window.__world && window.__world.taxiStands) || [];
+    for (let i = 0; i < stands.length; i++) drawTaxiStand(ctx, stands[i], t, cam);
     drawSeagull(ctx, sidi.x, sidi.y - 80, t, 0);
     drawSeagull(ctx, ph.x + 40, ph.y - 60, t, 2.1);
     drawSeagull(ctx, aj.x, aj.y - 40, t, 4.2);
@@ -1177,6 +1192,11 @@ const Sprites = (() => {
       ctx.fillRect(mx + 3 + (n.x / W) * (mw - 6), my + 3 + (n.y / H) * (mh - 6), 1, 1);
     });
     const cars = (typeof window !== "undefined" && window.__world && window.__world.cars) || [];
+    const stands = (typeof window !== "undefined" && window.__world && window.__world.taxiStands) || [];
+    stands.forEach((stand) => {
+      ctx.fillStyle = "#fcbc14";
+      ctx.fillRect(mx + 3 + (stand.x / W) * (mw - 6), my + 3 + (stand.y / H) * (mh - 6), 3, 3);
+    });
     cars.forEach((car) => {
       ctx.fillStyle = car.taxi ? "#fcbc14" : "#d43030";
       ctx.fillRect(mx + 3 + (car.px / W) * (mw - 6), my + 3 + (car.py / H) * (mh - 6), 2, 2);
@@ -1262,6 +1282,11 @@ const Sprites = (() => {
       ctx.fillText(label, x, y - 1);
     });
 
+    const taxiStands = (typeof window !== "undefined" && window.__world && window.__world.taxiStands) || [];
+    taxiStands.forEach((stand) => {
+      pin(mx(stand.x), my(stand.y), C.goldL);
+    });
+
     const cx = W - 28;
     const cy = 22;
     ctx.fillStyle = "rgba(20,12,28,0.55)";
@@ -1333,7 +1358,7 @@ const Sprites = (() => {
   }
 
   return {
-    drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign, drawCar,
+    drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign, drawCar, drawTaxiStand,
     drawBin, drawTrash, drawFilth, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
     drawTitleBackground, drawCinematic, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
     drawInterior, drawDoors, drawPool,
