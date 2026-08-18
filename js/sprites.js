@@ -705,12 +705,14 @@ const Sprites = (() => {
 
   function drawCar(ctx, car, t, cam) {
     if (!car) return;
-    if (cam && !Atlas.inView(cam, car.x, car.y, 40, 20)) return;
-    const img = Atlas.frames[car.sprite] || Atlas.frames.carWhite;
+    if (cam && !Atlas.inView(cam, car.x, car.y, 48, 24)) return;
+    const img = Atlas.frames[car.sprite] || Atlas.frames.carBlue || Atlas.frames.carTaxi;
     if (!img) return;
+    ctx.fillStyle = "rgba(20,12,28,0.28)";
+    ctx.fillRect((car.x + 4) | 0, (car.y + 20) | 0, 40, 5);
     if ((car.facing || 1) < 0) {
       ctx.save();
-      ctx.translate((car.x + 40) | 0, car.y | 0);
+      ctx.translate((car.x + 48) | 0, car.y | 0);
       ctx.scale(-1, 1);
       ctx.drawImage(img, 0, 0);
       ctx.restore();
@@ -719,7 +721,7 @@ const Sprites = (() => {
     }
     if (car.taxi && Math.sin(t * 9) > 0) {
       ctx.fillStyle = "#fff46c";
-      ctx.fillRect((car.x + 18) | 0, (car.y - 1) | 0, 4, 2);
+      ctx.fillRect((car.x + 22) | 0, (car.y - 2) | 0, 6, 3);
     }
   }
 
@@ -743,7 +745,22 @@ const Sprites = (() => {
     const key = `${face}_${walk}_${atk}_${gold}`;
     const img = Atlas.frames.player[key] || Atlas.frames.player["1_0_0_0"];
     if (cam && !Atlas.inView(cam, p.x, p.y, Atlas.PW, Atlas.PH)) return;
-    Atlas.blit(ctx, img, p.x, p.y);
+    if (p.swim && !p.ride) {
+      const bob = Math.sin(t * 7) * 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(p.x, p.y + bob, Atlas.PW, 26);
+      ctx.clip();
+      Atlas.blit(ctx, img, p.x, p.y + 10 + bob);
+      ctx.restore();
+      ctx.fillStyle = "rgba(56,164,232,0.5)";
+      ctx.fillRect((p.x + 4) | 0, (p.y + 22 + bob) | 0, 24, 6);
+      ctx.fillStyle = "rgba(244,252,252,0.7)";
+      ctx.fillRect((p.x + 8 + (Math.sin(t * 9) * 4)) | 0, (p.y + 20 + bob) | 0, 6, 2);
+      ctx.fillRect((p.x + 18) | 0, (p.y + 24 + bob) | 0, 5, 1);
+    } else {
+      Atlas.blit(ctx, img, p.x, p.y);
+    }
   }
 
   function drawNpc(ctx, n, t, cam) {
@@ -1158,6 +1175,11 @@ const Sprites = (() => {
     (npcs || []).forEach((n) => {
       ctx.fillStyle = n.style && n.style.startsWith("tour") ? "#70c8fc" : "#fce46c";
       ctx.fillRect(mx + 3 + (n.x / W) * (mw - 6), my + 3 + (n.y / H) * (mh - 6), 1, 1);
+    });
+    const cars = (typeof window !== "undefined" && window.__world && window.__world.cars) || [];
+    cars.forEach((car) => {
+      ctx.fillStyle = car.taxi ? "#fcbc14" : "#d43030";
+      ctx.fillRect(mx + 3 + (car.px / W) * (mw - 6), my + 3 + (car.py / H) * (mh - 6), 2, 2);
     });
     ctx.fillStyle = "#3cbc3c";
     ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 3, 3);
