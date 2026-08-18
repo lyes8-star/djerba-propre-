@@ -31,8 +31,8 @@ const World = (() => {
 
   function create(mission) {
     const m = mission || {};
-    const W = 960;
-    const H = 1200;
+    const W = 1280;
+    const H = 1840;
     const count = Math.round((m.trash || 24) * 1.65);
     const bagTarget = m.bagTarget || 5;
     const recycleTarget = m.recycleTarget || 12;

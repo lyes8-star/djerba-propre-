@@ -304,6 +304,120 @@ const NpcTalk = {
         "Gate A. I whispered. A radio answered from a suitcase. That's the whole trip. Beautiful island, educational neighbors, airport still standing. I'm picking up a bottle that isn't mine. Peer pressure, tarmac edition.",
       ],
     },
+    holy: {
+      elder: [
+        "Ici on parle bas. Les murs sont simples, c'est voulu. Djerba a des centaines de mosquées: pas de spectacle, pas de klaxon. Dehors tu ramasses. Ici tu enlèves tes sandales et le bruit. Allah ybarek.",
+        "La qibla n'a pas besoin d'un discours. Ni d'une comparaison. Entre, assieds-toi, tais-toi. Le travail de l'île se fait après la prière. Toi tu nettoies les rues. C'est aussi une forme de respect.",
+      ],
+      elderF: [
+        "Entre. On ne crie pas. On ne photographie pas n'importe comment. Une petite mosquée djerbienne, c'est un cube, un minaret, du silence. Dehors la Fitna. Ici non. Bois l'eau si tu as soif, puis retourne au soleil.",
+        "J'ai vu des touristes entrer en parlant fort. Je leur ai montré la porte. Pas par méchanceté: par usage. Tu ramasses le plastique. Moi je garde le calme. Chacun son métier, ya sidi.",
+      ],
+      localM: [
+        "Mosquée historique. Certaines sont minuscules, intéressantes seulement si tu aimes les murs blancs et les coupoles. C'est Djerba. On n'a pas besoin d'un palais pour prier. Sors propre. L'île aussi.",
+        "Sidi, Fadhloun, les Turcs, El May: des noms, des villages, la même simplicité. Tu visites. Tu ne touches pas. Tu ne laisses rien. C'est tout le mode d'emploi.",
+      ],
+      localF: [
+        "La Ghriba et les mosquées: deux patrimoines, même île. On se tient. On ne mélange pas le cabaret et la prière. Dehors tu peux être méchant. Ici tu es poli. C'est la règle, même pour le nettoyeur.",
+      ],
+    },
+    erriadh: {
+      localM: [
+        "Erriadh, Hara Sghira, la Ghriba. Le quartier juif n'est pas un zoo. Tu visites, tu parles bas, tu ramasses les sacs près des murs peints. Djerbahood c'est du street art, pas un dépotoir à clics-clacs. Les cousins de l'ouest touchent tout et ne paient rien. Ici on a compris l'inverse: on regarde, on respecte, on s'en va.",
+        "La synagogue est ouverte. Les maisons anciennes aussi, certaines. Ce n'est pas un décor Instagram. C'est une communauté. Si tu viens pour le WESH, tourne avant le village. Si tu viens pour les murs, ramasse le plastique au pied des graffs. Sahit.",
+      ],
+      localF: [
+        "Hara Sghira, c'est pas une attraction. C'est des portes, des familles, un cimetière. Djerbahood a mis de la couleur. L'ouest a mis des canettes. Devine ce qu'on garde. Toi tu nettoies le village. Moi je rentre avant qu'ils photographient ma lessive.",
+      ],
+      tourF: [
+        "Erriadh is gorgeous. Street art, synagogue, quiet streets. A local told me: don't treat the Jewish quarter like a theme park, and don't copy the ferry crowd. I'm taking photos of walls, not of people praying. Also picking up a bottle that isn't mine. Peer pressure, heritage edition.",
+      ],
+      tourM: [
+        "Djerbahood. I came for murals. I stayed because someone explained Hara Sghira without shouting. The west would have brought a radio. I brought a camera and a trash bag. That's the deal on this island.",
+      ],
+      elder: [
+        "La Ghriba était là avant leurs hymnes. Le cimetière aussi. On marche doucement. On ne compare pas. Dehors, si tu veux, tu peux railler l'ouest. Ici tu salues. C'est Erriadh. C'est Djerba. Deux choses vraies en même temps.",
+      ],
+    },
+    guellala: {
+      merchM: [
+        "Poterie de Guellala. Argile, four, patience. Pas un souvenir en plastique made in fosse. L'ouest marchande comme si le vase était un seau. Le seau, ils l'ont déjà. Ici c'est de la terre cuite, un prix, et tu ne touches pas le four. Yallah, tu ramasses autour de l'atelier. La poussière, c'est nous. Les sacs, c'est eux.",
+        "Musée du patrimoine, fours, village. Guellala n'est pas un parking. Tu achètes, tu remercies, tu ne casses pas. Les cousins de l'ouest cassent d'abord, discutent après. On a perdu des pièces comme ça. Toi au moins tu as une pince. Utile.",
+      ],
+      merchF: [
+        "L'argile ne ment pas. Ni le prix. Ils veulent un plat djerbien au tarif d'une clope. Calme-toi. C'est un métier, pas un pique-nique. Le four est chaud. Leur ego aussi. Un seul sert à quelque chose. Ramasse les cartons dehors. L'atelier reste propre.",
+      ],
+      localF: [
+        "Village de potiers. Mes oncles cuisent encore. Les touristes polis regardent. Les autres posent le pied dans l'argile. Fitna de four. On a un musée pour expliquer. Eux n'ont pas lu. Toi tu lis le sol: sacs, bouteilles, honte. Yallah.",
+      ],
+      localM: [
+        "Guellala, sud de l'île. Poterie, citernes, petites mosquées. Pas de klaxon dans les ruelles, règlement non écrit. S'ils ne savent pas, on leur montre la route d'Ajim. Retour ferry. Toi tu restes. Tu nettoies. Sahit.",
+      ],
+      elder: [
+        "Le four de mon père. Le musée des petits-fils. Entre les deux, l'argile. Et les sacs en plastique, invention de visiteurs pressés. Ramasse. L'île te le rendra en assiettes qui ne fondent pas au soleil.",
+      ],
+    },
+    explore: {
+      tourM: [
+        "Djerba Explore. Museum, Lalla Hadria, crafts. I paid a ticket like an adult. Someone at the gate was arguing the price in WESH. Educational, again. Beautiful pieces. I will not steal a selfie with a 'viva' in the background. The art deserves better.",
+      ],
+      tourF: [
+        "Lalla Hadria, couleurs, silence climatisé. Enfin. Dehors la Fitna. Dedans les vitrines. Centre des arts et métiers: on peut aimer un tissage sans crier. Je ramasse rien ici, trop propre. Toi tu t'occupes du parking. Il en a besoin.",
+      ],
+      tourF2: [
+        "Explore park. I came for heritage, not for a radio. The museum won. The ferry crowd can stay at the gate. I'm converting to tickets and closed doors. Ten out of ten vitrines.",
+      ],
+      merchM: [
+        "Centre des arts. Tissage, bois, prix affiché. Ils veulent négocier une huilerie. Une huilerie, ya sidi. C'est pas un tapis. Tu visites, tu paies, tu sors. Le nettoyeur du parking a plus de classe que leurs valises. On est d'accord.",
+      ],
+      localF: [
+        "Explore, c'est pour montrer l'île sans la salir. Ça marche, jusqu'à ce qu'un cousin de l'ouest touche la vitrine. Doigt gras, ego intact. Moi je vends les billets. Toi tu ramasses le parking. Ensemble on tient le patrimoine. Eux tiennent le volume.",
+      ],
+    },
+    elmay: {
+      elder: [
+        "Fadhloun. Mosquée de plaine, simple, ancienne. Jamaa El May à côté. On n'a pas besoin d'un palais. Les menzels, les citernes, la foggara: c'est ça l'île rurale. L'ouest cherche un spectacle. Ils trouveront du silence et une chasse d'eau au café. Deux surprises.",
+        "Sidi Brahim, Sidi Zayed, des noms de saints, des cubes blancs. Tu visites. Tu ne laisses pas de canette contre le mur. J'ai assez vu. Allah ybarek toi. Eux, qu'ils apprennent à s'asseoir avant de parler architecture.",
+      ],
+      elderF: [
+        "El May, oliveraies, fours, huileries. On vit ici. Ce n'est pas un décor. Si tu viens pour la mosquée, parle bas. Si tu viens pour la Fitna, la route de Houmt Souk est là. Le thé est chaud. Le plastique, à la poubelle. Règle unique.",
+      ],
+      localM: [
+        "Menzel, houch, citerne. L'eau se gagne. Eux la gaspillent et crachent à côté. Fadhloun n'a pas demandé un hymne. Elle a demandé le calme. Toi tu ramasses entre les oliviers. C'est déjà une prière, version pince.",
+      ],
+      localM2: [
+        "Huilerie du village. L'huile sent l'île. Eux sentent la clope. On n'est pas le même pressoir. Yallah, tu aides. Les sacs dans les foggara, c'est nouveau, et c'est laid. Djerba n'est pas un drain.",
+      ],
+    },
+    midounv: {
+      localM: [
+        "Midoun, est de l'île. Sidi Salem, El Bassi, des houchs, moins de ferry, plus de travail. Ils se perdent en cherchant Yasmine et ils trouvent une mosquée. Tant mieux. Qu'ils prient ou qu'ils rentrent. Toi tu ramasses la place. Sahit.",
+      ],
+      localF: [
+        "Village. Pas un resort. Les touristes polis achètent le pain. Les autres demandent le wifi contre le four. Le four n'a pas de mot de passe. Juste de la braise. Fitna de ruelle. Je rentre. Tu nettoies.",
+      ],
+      elder: [
+        "El Bassi, Sidi Salem. Petites mosquées, comme partout. Intéressantes si tu aimes les murs. Sinon tu continues vers Aghir. Djerba n'est pas un checklist. C'est une île. Marche. Ramasse. Tais-toi un peu.",
+      ],
+      merchM: [
+        "Étal de Midoun. Harissa, pain, zéro WESH dans la file s'il vous plaît. Ils touchent les tomates comme des reliques, puis ils marchandent le kilo. Calme-toi. C'est un village, pas un souk d'Alger après la panne. Toi tu as une pince. Eux un ego. Devine qui je sers en premier.",
+      ],
+    },
+    aghir: {
+      localM: [
+        "Aghir, Mezraya, Sedouikech, Mahboubine. Des noms que le ferry ne connaît pas. Tant mieux. Oliveraies, fermes, foggaras. L'ouest cherche la plage et le volume. Ici il y a des citernes et des ânes. Choisis. Toi tu ramasses quand même. Les sacs volent jusqu'ici, malheureusement.",
+        "Mahboubine deux fois sur la carte, une seule dans la vraie vie. Sedouikech n'a pas besoin d'un hymne. Une petite mosquée, un houch, une huilerie. Patrimoine rural. Pas un clip. Ramasse près du four. Le pain n'aime pas le plastique.",
+      ],
+      localM2: [
+        "Mezraya, le calme. Ils arrivent, ils klaxonnent, ils repartent. Diagnostic. La foggara n'est pas un toboggan. L'eau, ici, on la respecte. Toi aussi, apparemment. Sahit.",
+      ],
+      elder: [
+        "Les villages du sud-est n'ont pas de cabaret. Ils ont des oliviers. C'est un programme. J'ai vu des empires. Celui de l'ouest tient sur un klaxon. Ici on presse l'huile. Toi tu presses les sacs. Ensemble on tient Aghir.",
+      ],
+      elderF: [
+        "Assieds-toi. On a des chaises, même à Mahboubine. Étonnant pour certains visiteurs. Le four est chaud, le thé aussi. La Fitna, on la laisse à la route. Tu ramasses, tu bois, tu pars. C'est déjà trop d'hospitalité pour un sac en plastique, mais on est Djerba.",
+      ],
+    },
   },
 
   WINKS: [
