@@ -49,6 +49,198 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.cabaret, x, y);
   }
 
+  function drawPool(ctx, x, y, t, cam) {
+    if (cam && !Atlas.inView(cam, x, y, 96, 56)) return;
+    ctx.fillStyle = Atlas.C.ink;
+    ctx.fillRect(x, y, 96, 56);
+    ctx.fillStyle = Atlas.C.wall;
+    ctx.fillRect(x + 2, y + 2, 92, 52);
+    const water = seaFrame(1, t);
+    for (let ty = y + 6; ty < y + 50; ty += 16) {
+      for (let tx = x + 6; tx < x + 88; tx += 16) ctx.drawImage(water, tx, ty);
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.fillRect(x + 10, y + 10 + Math.sin(t * 2) * 2, 28, 2);
+    ctx.fillRect(x + 40, y + 28, 20, 2);
+  }
+
+  function drawDoors(ctx, player, cam, t) {
+    if (!player || typeof Places === "undefined") return;
+    const near = Places.nearDoor(player, { inside: null, npcs: [] });
+    for (const b of Places.BUILDINGS) {
+      const d = Places.doorRect(b);
+      if (cam && !Atlas.inView(cam, d.x, d.y, d.w, d.h)) continue;
+      const glow = near && near.x === b.x && near.y === b.y;
+      ctx.fillStyle = glow ? "#fcbc14" : "rgba(20,8,8,0.85)";
+      ctx.fillRect(d.x, d.y, d.w, 3);
+      ctx.fillStyle = glow ? "#ffe46c" : "#140818";
+      ctx.fillRect(d.x + 2, d.y + 3, d.w - 4, d.h - 5);
+      if (glow && Math.sin(t * 8) > 0) {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(d.x + d.w - 4, d.y + 8, 2, 2);
+      }
+    }
+  }
+
+  function drawInterior(ctx, inside, t) {
+    const C = Atlas.C;
+    const w = inside.w;
+    const h = inside.h;
+    const kind = inside.room;
+    ctx.fillStyle = "#0a0810";
+    ctx.fillRect(-40, -40, w + 80, h + 80);
+    const pal = {
+      home: { wall: "#c8bca8", wallD: "#a09078", floor: "#d4a85c" },
+      shop: { wall: "#c4742c", wallD: "#8c4c18", floor: "#c4a878" },
+      cafe: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#8c7048" },
+      cabaret: { wall: "#2a1428", wallD: "#140818", floor: "#3c1c38" },
+      hotel: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#d0d4dc" },
+      airport: { wall: "#d0d4dc", wallD: "#808890", floor: "#3a3c48" },
+    }[kind] || { wall: "#c8bca8", wallD: "#a09078", floor: "#d4a85c" };
+    ctx.fillStyle = pal.wallD;
+    ctx.fillRect(0, 0, w, 52);
+    ctx.fillStyle = pal.wall;
+    ctx.fillRect(4, 4, w - 8, 44);
+    ctx.fillStyle = pal.floor;
+    ctx.fillRect(0, 52, w, h - 52);
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
+    for (let y = 52; y < h; y += 16) ctx.fillRect(0, y, w, 1);
+    ctx.fillStyle = C.ink;
+    ctx.fillRect(0, 0, w, 4);
+    ctx.fillRect(0, 0, 4, h);
+    ctx.fillRect(w - 4, 0, 4, h);
+    ctx.fillRect(0, h - 4, w, 4);
+
+    function window_(x, y) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x, y, 22, 18);
+      ctx.fillStyle = C.blueL;
+      ctx.fillRect(x + 2, y + 2, 18, 14);
+      ctx.fillStyle = C.white;
+      ctx.fillRect(x + 2, y + 2, 18, 4);
+      ctx.fillRect(x + 10, y + 2, 2, 14);
+    }
+    function table(x, y) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x, y, 28, 16);
+      ctx.fillStyle = C.wood;
+      ctx.fillRect(x + 1, y + 1, 26, 14);
+      ctx.fillStyle = C.woodL;
+      ctx.fillRect(x + 2, y + 2, 10, 4);
+    }
+    function bed(x, y) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x, y, 36, 22);
+      ctx.fillStyle = C.navy;
+      ctx.fillRect(x + 1, y + 1, 34, 20);
+      ctx.fillStyle = C.white;
+      ctx.fillRect(x + 2, y + 2, 12, 16);
+    }
+    function desk(x, y, label) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x, y, 48, 18);
+      ctx.fillStyle = C.woodD;
+      ctx.fillRect(x + 1, y + 1, 46, 16);
+      ctx.fillStyle = C.goldL;
+      ctx.font = "8px monospace";
+      ctx.fillText(label, x + 6, y + 12);
+    }
+
+    if (kind === "home") {
+      window_(20, 16);
+      window_(w - 50, 16);
+      bed(20, 70);
+      table(120, 90);
+      if (Atlas.frames.the) Atlas.blit(ctx, Atlas.frames.the, 128, 82);
+      ctx.fillStyle = C.green;
+      ctx.fillRect(220, 80, 10, 28);
+      ctx.fillStyle = C.greenL;
+      ctx.fillRect(216, 70, 18, 12);
+    } else if (kind === "shop") {
+      window_(18, 16);
+      desk(110, 64, "CAISSE");
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(18, 70, 70, 50);
+      ctx.fillStyle = C.wood;
+      ctx.fillRect(20, 72, 66, 46);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(24, 78, 10, 10);
+      ctx.fillStyle = C.red;
+      ctx.fillRect(40, 80, 10, 10);
+      ctx.fillStyle = C.green;
+      ctx.fillRect(56, 78, 10, 12);
+      ctx.fillStyle = C.bottle;
+      ctx.fillRect(24, 96, 8, 14);
+    } else if (kind === "cafe") {
+      window_(24, 16);
+      desk(120, 64, "DIRECT");
+      table(30, 100);
+      table(90, 130);
+      table(180, 100);
+      if (Atlas.frames.the) Atlas.blit(ctx, Atlas.frames.the, 38, 92);
+    } else if (kind === "cabaret") {
+      ctx.fillStyle = C.redD;
+      ctx.fillRect(80, 16, 140, 28);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(90, 22, 120, 16);
+      ctx.fillStyle = C.ink;
+      ctx.font = "8px monospace";
+      ctx.fillText("CABARET", 118, 34);
+      ctx.fillStyle = Math.sin(t * 8) > 0 ? C.red : C.gold;
+      ctx.fillRect(20, 20, 8, 8);
+      ctx.fillRect(w - 28, 20, 8, 8);
+      desk(20, 80, "BAR");
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(200, 80, 16, 12);
+      ctx.fillRect(230, 80, 16, 12);
+      ctx.fillRect(200, 110, 16, 12);
+    } else if (kind === "hotel") {
+      window_(20, 14);
+      window_(w - 48, 14);
+      desk(110, 62, "ACCUEIL");
+      ctx.fillStyle = C.navy;
+      ctx.fillRect(20, 100, 40, 18);
+      ctx.fillStyle = C.navyL;
+      ctx.fillRect(22, 102, 36, 6);
+      ctx.fillStyle = C.greenL;
+      ctx.fillRect(240, 80, 16, 10);
+      ctx.fillStyle = C.green;
+      ctx.fillRect(244, 90, 8, 20);
+      ctx.fillStyle = C.gold;
+      ctx.font = "8px monospace";
+      ctx.fillText("4*", 24, 36);
+    } else if (kind === "airport") {
+      window_(16, 14);
+      window_(50, 14);
+      window_(w - 48, 14);
+      desk(100, 62, "DJE");
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(20, 100, 28, 12);
+      ctx.fillRect(52, 100, 28, 12);
+      ctx.fillRect(20, 120, 28, 12);
+      ctx.fillStyle = C.white;
+      ctx.fillRect(22, 102, 24, 8);
+      ctx.fillRect(54, 102, 24, 8);
+      if (Atlas.frames.plane) Atlas.blit(ctx, Atlas.frames.plane, 200, 18);
+      ctx.fillStyle = C.gold;
+      ctx.font = "8px monospace";
+      ctx.fillText("GATE A", 210, 100);
+    }
+
+    const dx = w / 2 - 10;
+    const dy = h - 28;
+    ctx.fillStyle = C.ink;
+    ctx.fillRect(dx - 2, dy - 2, 24, 26);
+    ctx.fillStyle = C.woodD;
+    ctx.fillRect(dx, dy, 20, 22);
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(dx + 14, dy + 10, 2, 2);
+    ctx.fillStyle = C.white;
+    ctx.font = "8px monospace";
+    ctx.fillText(inside.title || "SALLE", 12, 16);
+    ctx.fillText("PORTE", dx - 4, dy - 6);
+  }
+
   function drawStall(ctx, x, y, cam) {
     if (cam && !Atlas.inView(cam, x, y, 28, 28)) return;
     Atlas.blit(ctx, Atlas.frames.stall, x, y);
@@ -417,9 +609,9 @@ const Sprites = (() => {
       drawBoat(ctx, 700, 258, t + 0.4, cam);
       drawBoat(ctx, 880, 270, t + 2, cam);
     }
-    Atlas.blit(ctx, Atlas.frames.signPort, 760, 310);
+    Atlas.blit(ctx, Atlas.frames.signPort, 748, 318);
     drawCabaret(ctx, 868, 348, cam);
-    if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 868, 334);
+    if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 874, 332);
     drawFlag(ctx, 788, 292, "tn", t, cam);
     drawFlag(ctx, 900, 300, "il", t, cam);
 
@@ -434,8 +626,7 @@ const Sprites = (() => {
     drawRock(ctx, 90, 400, cam);
     drawRock(ctx, 400, 450, cam);
     tileFill(ctx, Atlas.tiles.grass, 400, 400, 48, 32, cam);
-    Atlas.blit(ctx, Atlas.frames.signPlage, 16, 332);
-    drawSign(ctx, 16, 348, cam);
+    Atlas.blit(ctx, Atlas.frames.signPlage, 20, 328);
     drawFlag(ctx, 70, 328, "tn", t, cam);
     drawFlag(ctx, 620, 336, "tn", t, cam);
     drawFlag(ctx, 580, 340, "il", t, cam);
@@ -448,13 +639,7 @@ const Sprites = (() => {
       [16, 790], [80, 798], [224, 790], [288, 796],
     ];
     shops.forEach(([sx, sy], i) => (i % 3 === 0 ? drawStall(ctx, sx, sy, cam) : drawShop(ctx, sx, sy, cam)));
-    Atlas.blit(ctx, Atlas.frames.signSouk, 24, 508);
-    Atlas.blit(ctx, Atlas.frames.signHarissa, 150, 508);
-    Atlas.blit(ctx, Atlas.frames.signThe, 210, 508);
-    Atlas.blit(ctx, Atlas.frames.signYallah, 270, 508);
-    Atlas.blit(ctx, Atlas.frames.signLouage, 24, 528);
-    Atlas.blit(ctx, Atlas.frames.signBrik, 150, 528);
-    Atlas.blit(ctx, Atlas.frames.signDirect, 270, 528);
+    Atlas.blit(ctx, Atlas.frames.signSouk, 18, 534);
     drawFlag(ctx, 80, 500, "tn", t, cam);
     drawFlag(ctx, 350, 504, "il", t, cam);
     drawLamp(ctx, 140, 560, cam);
@@ -488,24 +673,41 @@ const Sprites = (() => {
     if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 792, 714);
     drawHouseWarm(ctx, 624, 748, cam);
     drawHouseWarm(ctx, 864, 744, cam);
-    Atlas.blit(ctx, Atlas.frames.signVille, 560, 508);
-    Atlas.blit(ctx, Atlas.frames.signSahit, 640, 508);
-    Atlas.blit(ctx, Atlas.frames.signInchallah, 720, 508);
+    Atlas.blit(ctx, Atlas.frames.signVille, 548, 534);
     drawFlag(ctx, 616, 500, "tn", t, cam);
     drawFlag(ctx, 890, 504, "il", t, cam);
     drawLamp(ctx, 716, 560, cam);
     drawLamp(ctx, 716, 680, cam);
     drawLamp(ctx, 716, 800, cam);
 
-    // SUD palmeraie
-    [[64, 920, 1.9], [180, 960, 0.6], [300, 940, 2.2], [620, 920, 0.4], [780, 950, 3.1], [880, 980, 1.1], [220, 1040, 2.8], [700, 1060, 0.9]].forEach(([px, py, s]) => drawPalm(ctx, px, py, t, s, cam));
+    // SUD: lagune, hotel, piscine, aeroport
     tileFill(ctx, Atlas.tiles.grass, 160, 1000, 64, 48, cam);
-    tileFill(ctx, Atlas.tiles.grass, 720, 1020, 48, 32, cam);
+    tileFill(ctx, Atlas.tiles.grass, 360, 980, 96, 48, cam);
+    [[64, 920, 1.9], [180, 960, 0.6], [300, 940, 2.2], [400, 1040, 2.8]].forEach(([px, py, s]) => drawPalm(ctx, px, py, t, s, cam));
     drawBush(ctx, 100, 980, cam);
-    drawBush(ctx, 840, 1000, cam);
     drawFlag(ctx, 48, 910, "tn", t, cam);
+    if (theme === "lagoon") tileFill(ctx, seaFrame(0, t), 320, 1000, 112, 40, cam);
+
+    if (Atlas.frames.hotel) Atlas.blit(ctx, Atlas.frames.hotel, 620, 910);
+    if (Atlas.frames.signHotel) Atlas.blit(ctx, Atlas.frames.signHotel, 640, 896);
+    drawPool(ctx, 740, 988, t, cam);
+    if (Atlas.frames.signPool) Atlas.blit(ctx, Atlas.frames.signPool, 760, 972);
+    if (Atlas.frames.lounge) {
+      Atlas.blit(ctx, Atlas.frames.lounge, 724, 1044);
+      Atlas.blit(ctx, Atlas.frames.lounge, 812, 1046);
+      Atlas.blit(ctx, Atlas.frames.lounge, 748, 1052);
+    }
+    drawUmbrella(ctx, 700, 1020, cam);
+    drawPalm(ctx, 880, 980, t, 1.1, cam);
     drawFlag(ctx, 860, 930, "il", t, cam);
-    if (theme === "lagoon") tileFill(ctx, seaFrame(0, t), 380, 980, 128, 48, cam);
+
+    if (Atlas.frames.airport) Atlas.blit(ctx, Atlas.frames.airport, 32, 1000);
+    if (Atlas.frames.signAirport) Atlas.blit(ctx, Atlas.frames.signAirport, 40, 986);
+    tileFill(ctx, Atlas.tiles.stone, 24, 1064, 240, 28, cam);
+    ctx.fillStyle = Atlas.C.gold;
+    for (let x = 36; x < 250; x += 18) ctx.fillRect(x, 1076, 10, 2);
+    if (Atlas.frames.plane) Atlas.blit(ctx, Atlas.frames.plane, 90, 1056);
+    drawFlag(ctx, 128, 992, "tn", t, cam);
 
     if (theme === "festival") {
       drawLamp(ctx, 100, 360, cam);
@@ -674,7 +876,9 @@ const Sprites = (() => {
 
   function zoneAt(x, y) {
     if (y < 496) return x >= 700 ? "port" : "beach";
-    if (y < 864) return x < 400 ? "souk" : "ville";
+    if (y < 864) return x < 400 ? "souk" : (x < 544 ? "plaza" : "ville");
+    if (x < 340 && y > 970) return "airport";
+    if (x > 520 && y > 880) return "hotel";
     return "lagoon";
   }
 
@@ -682,5 +886,6 @@ const Sprites = (() => {
     drawPalm, drawHouse, drawLighthouse, drawBoat, drawSign,
     drawBin, drawTrash, drawFilth, drawPlayer, drawNpc, drawWorldBg, drawTitleScene,
     drawTitleBackground, drawCinematic, drawAvatar, drawMinimap, drawIslandMap, zoneAt,
+    drawInterior, drawDoors, drawPool,
   };
 })();

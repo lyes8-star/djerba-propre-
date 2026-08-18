@@ -282,11 +282,15 @@
 
   function playMusicTheme() {
     if (!world || !player) return (world && world.theme) || "beach";
-    const z = Sprites.zoneAt(player.x, player.y);
+    const z = world.inside ? world.inside.room : Sprites.zoneAt(player.x, player.y);
+    if (z === "hotel" || z === "cabaret") return "resort";
+    if (z === "airport") return "port";
+    if (z === "inside") return "ville";
     const mt = world.theme;
     if (z === "beach" && (mt === "sunset" || mt === "festival" || mt === "resort" || mt === "lagoon")) {
       return mt;
     }
+    if (z === "plaza") return "ville";
     if (z === "port" && mt === "port") return "port";
     return z;
   }
@@ -469,6 +473,9 @@
         Progress.addCoins(res.coins);
         FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
       }
+    } else if (res.type === "door") {
+      AudioSys.sfx("click");
+      if (res.dir === "in") UI.toast((res.title || "SALLE") + "<br/>Porte ouverte");
     }
   }
 
@@ -491,14 +498,15 @@
 
   function render(t) {
     fitGameCanvas();
-    const W = world.W;
-    const H = world.H;
+    const inside = world.inside;
+    const W = inside ? inside.w : world.W;
+    const H = inside ? inside.h : world.H;
     const vw = canvas.width / ZOOM;
     const vh = canvas.height / ZOOM;
     let camX = player.x + 16 - vw / 2;
     let camY = player.y + 20 - vh / 2;
-    camX = Math.max(0, Math.min(W - vw, camX));
-    camY = Math.max(0, Math.min(H - vh, camY));
+    camX = Math.max(0, Math.min(Math.max(0, W - vw), camX));
+    camY = Math.max(0, Math.min(Math.max(0, H - vh), camY));
     cam = { x: camX, y: camY, vw, vh };
 
     ctx.imageSmoothingEnabled = false;
@@ -507,22 +515,33 @@
     ctx.scale(ZOOM, ZOOM);
     ctx.translate(-camX, -camY);
 
-    Sprites.drawWorldBg(ctx, W, H, t, world.theme, cam);
-    Sprites.drawFilth(ctx, world, t, cam);
-    for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
-    for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
-    Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
     const gold = Progress.get().cosmetics.hat_gold;
-    const actors = (world.npcs || []).map((n) => ({ n, y: n.y, player: false }));
-    actors.push({ y: player.y, player: true });
-    actors.sort((a, b) => a.y - b.y);
-    for (const a of actors) {
-      if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
-      else Sprites.drawNpc(ctx, a.n, t, cam);
+    if (inside) {
+      Sprites.drawInterior(ctx, inside, t);
+      const actors = (world.npcs || []).filter((n) => n.indoor).map((n) => ({ n, y: n.y, player: false }));
+      actors.push({ y: player.y, player: true });
+      actors.sort((a, b) => a.y - b.y);
+      for (const a of actors) {
+        if (a.player) Sprites.drawPlayer(ctx, player, gold, t, null);
+        else Sprites.drawNpc(ctx, a.n, t, null);
+      }
+    } else {
+      Sprites.drawWorldBg(ctx, world.W, world.H, t, world.theme, cam);
+      Sprites.drawDoors(ctx, player, cam, t);
+      Sprites.drawFilth(ctx, world, t, cam);
+      for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
+      for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
+      Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
+      const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
+      actors.push({ y: player.y, player: true });
+      actors.sort((a, b) => a.y - b.y);
+      for (const a of actors) {
+        if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
+        else Sprites.drawNpc(ctx, a.n, t, cam);
+      }
+      Sprites.drawMinimap(ctx, world.W, world.H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
     }
     FX.draw(ctx);
-
-    Sprites.drawMinimap(ctx, W, H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
     ctx.restore();
     FX.drawFlash(ctx, canvas.width, canvas.height);
   }
@@ -535,7 +554,7 @@
 
     Player.update(player, dt, input, world);
     Npc.update(world, dt, player, animTime);
-    World.tickSpawn(world, dt);
+    if (!world.inside) World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
     if (Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
@@ -564,10 +583,12 @@
     if (state !== "play") return;
     render(animTime);
     UI.updateHud(Progress.get(), world, timeLeft);
-    const speaking = (world.npcs || []).some((n) => n.bubble > 0);
+    const speaking = (world.npcs || []).some((n) => n.bubble > 0 && (world.inside ? n.indoor : !n.indoor));
     if (!speaking && UI.hideTalk) UI.hideTalk();
+    const door = Places.nearDoor(player, world);
     const nearNpc = Npc.nearest(world, player, 34);
-    if (nearNpc && selectedTool !== "balai") {
+    if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
       UI.setToolLabel(more && nearNpc.bubble > 0 ? "SUITE" : "PARLER");
     } else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
