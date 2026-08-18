@@ -249,6 +249,19 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeWhiteRoad() {
+    const { c, ctx } = make(16, 16);
+    px(ctx, 0, 0, 16, 16, C.wall);
+    px(ctx, 0, 0, 16, 1, C.white);
+    px(ctx, 0, 15, 16, 1, C.wallS);
+    px(ctx, 0, 0, 1, 16, C.wallD);
+    px(ctx, 15, 0, 1, 16, C.wallD);
+    p1(ctx, 4, 5, C.white);
+    p1(ctx, 11, 9, C.wallS);
+    p1(ctx, 7, 12, C.white);
+    return c;
+  }
+
   function bakeCobble(v) {
     const { c, ctx } = make(16, 16);
     px(ctx, 0, 0, 16, 16, C.cobbleB);
@@ -1623,6 +1636,7 @@ const Atlas = (() => {
     tiles.roadH = bakeRoad("h");
     tiles.roadV = bakeRoad("v");
     tiles.roadX = bakeRoad("x");
+    tiles.path = bakeWhiteRoad();
     tiles.cobble0 = bakeCobble(0);
     tiles.cobble1 = bakeCobble(1);
     tiles.plaza = bakePlaza();

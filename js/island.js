@@ -22,33 +22,32 @@ const Island = (() => {
   const STONE = 8;
 
   const UV = [
-    [0.18, 0.16], [0.28, 0.12], [0.38, 0.14], [0.46, 0.10],
-    [0.56, 0.08], [0.68, 0.09], [0.80, 0.12], [0.90, 0.16],
-    [0.94, 0.24], [0.95, 0.34], [0.94, 0.44], [0.92, 0.54],
-    [0.94, 0.66], [0.96, 0.76], [0.88, 0.84], [0.76, 0.88],
-    [0.62, 0.91], [0.48, 0.92], [0.34, 0.88], [0.24, 0.82],
-    [0.14, 0.74], [0.06, 0.64], [0.05, 0.54], [0.08, 0.44],
-    [0.12, 0.32], [0.14, 0.22],
+    [0.18, 0.22], [0.28, 0.13], [0.40, 0.08], [0.52, 0.06], [0.64, 0.08],
+    [0.76, 0.10], [0.88, 0.13], [0.95, 0.20], [0.97, 0.30],
+    [0.95, 0.40], [0.92, 0.50], [0.93, 0.62], [0.96, 0.74],
+    [0.90, 0.84], [0.78, 0.91], [0.62, 0.94], [0.46, 0.93],
+    [0.32, 0.88], [0.20, 0.80], [0.10, 0.70], [0.03, 0.60],
+    [0.04, 0.50], [0.10, 0.38], [0.14, 0.28],
   ];
 
   const ANCHORS = {
-    houmt: [0.44, 0.18],
-    portHoumt: [0.44, 0.12],
-    sidi: [0.78, 0.14],
-    hotel: [0.84, 0.18],
-    midoun: [0.84, 0.40],
-    erriadh: [0.62, 0.50],
-    elmay: [0.50, 0.48],
-    explore: [0.70, 0.58],
-    guellala: [0.46, 0.84],
-    aghir: [0.86, 0.78],
+    houmt: [0.48, 0.18],
+    portHoumt: [0.48, 0.10],
+    sidi: [0.86, 0.16],
+    hotel: [0.88, 0.22],
+    midoun: [0.86, 0.40],
+    erriadh: [0.70, 0.52],
+    elmay: [0.50, 0.50],
+    explore: [0.68, 0.60],
+    guellala: [0.48, 0.84],
+    aghir: [0.88, 0.78],
     mezraya: [0.78, 0.68],
     mahboubine: [0.76, 0.76],
-    sedouikech: [0.68, 0.74],
-    ajim: [0.12, 0.60],
-    airport: [0.22, 0.34],
-    lagoon: [0.28, 0.70],
-    plaza: [0.44, 0.20],
+    sedouikech: [0.66, 0.74],
+    ajim: [0.10, 0.58],
+    airport: [0.22, 0.28],
+    lagoon: [0.28, 0.68],
+    plaza: [0.48, 0.21],
   };
 
   const ZONE_MUSIC = {
@@ -75,6 +74,17 @@ const Island = (() => {
     ["sidi", "SIDI MAHREZ"],
     ["erriadh", "GHRIBA"],
     ["elmay", "EL MAY"],
+  ];
+
+  const MAP_ICONS = [
+    ["houmt", "ville"],
+    ["portHoumt", "fort"],
+    ["midoun", "market"],
+    ["erriadh", "holy"],
+    ["aghir", "beach"],
+    ["sidi", "beach"],
+    ["guellala", "pottery"],
+    ["ajim", "port"],
   ];
 
   const poly = UV.map(([u, v]) => ({ x: BOX.x + u * BOX.w, y: BOX.y + v * BOX.h }));
@@ -303,7 +313,7 @@ const Island = (() => {
         const wy = ty * TS + 8;
         const u = (wx - BOX.x) / BOX.w;
         const v = (wy - BOX.y) / BOX.h;
-        const westGreen = u < 0.36 || (u < 0.52 && v > 0.28 && v < 0.82);
+        const westGreen = u < 0.40 || (u < 0.56 && v > 0.26 && v < 0.80);
         let kind = SAND;
         if (westGreen) kind = GRASS;
         if (v < 0.22 && u > 0.50) kind = SAND;
@@ -332,6 +342,10 @@ const Island = (() => {
         if (Math.hypot(wx - lagoon.x, wy - lagoon.y) < 90 && (tx + ty) % 2) grid[i] = GRASS;
       }
     }
+
+    discTiles((xy("lagoon").x / TS) | 0, (xy("lagoon").y / TS) | 0, 8, GRASS);
+    discTiles((xy("elmay").x / TS) | 0 - 6, (xy("elmay").y / TS) | 0 + 4, 6, GRASS);
+    discTiles((xy("elmay").x / TS) | 0 - 2, (xy("elmay").y / TS) | 0 - 8, 5, GRASS);
 
     const towns = [
       ["houmt", 9, 4],
@@ -400,8 +414,8 @@ const Island = (() => {
         if (!k) continue;
         mg.fillStyle = colOf[k] || C.sandB;
         mg.fillRect(tx, ty, 1, 1);
-        if (k === ROAD && ((tx + ty) & 1)) {
-          mg.fillStyle = C.roadY;
+        if (k === ROAD) {
+          mg.fillStyle = C.white;
           mg.fillRect(tx, ty, 1, 1);
         }
         if (k === BEACH && ((tx + ty) & 3) === 0) {
@@ -424,13 +438,7 @@ const Island = (() => {
     if (k === PLAZA) return tiles.plaza;
     if (k === STONE) return tiles.stone;
     if (k === DIRT) return tiles.sand3;
-    if (k === ROAD) {
-      const d = roadDir[ty * TW + tx];
-      if (d === 3) return tiles.roadX;
-      if (d === 2) return tiles.roadV;
-      if (d === 1) return tiles.roadH;
-      return tiles.road;
-    }
+        if (k === ROAD) return tiles.path || tiles.plaza;
     return null;
   }
 
@@ -451,7 +459,7 @@ const Island = (() => {
 
   return {
     W, H, BOX, poly, contains, xy, uv, worldToMap, clamp, randLand, path, box,
-    zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, bake, drawGround,
+    zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, MAP_ICONS, bake, drawGround,
     groundCanvas: () => mini,
     mapCanvas: () => mini,
     MW: TW, MH: TH, cx, cy, TS,
