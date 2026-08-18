@@ -1,15 +1,16 @@
 /* Île NES : biomes en tiles 16px, routes, villes, plages, masque marchable */
 const Island = (() => {
-  const W = 3840;
-  const H = 2880;
+  const W = 5120;
+  const H = 3840;
   const TS = 16;
   const TW = W / TS;
   const TH = H / TS;
-  const MW = 960;
-  const MH = 720;
+  const MW = 1280;
+  const MH = 960;
   const SX = W / MW;
   const SY = H / MH;
-  const BOX = { x: 240, y: 180, w: 3360, h: 2520 };
+  const BOX = { x: 360, y: 280, w: 4400, h: 3280 };
+  const LOT = { x: 160, y: 176, hw: 80, hh: 88 };
 
   const WATER = 0;
   const SAND = 1;
@@ -32,23 +33,23 @@ const Island = (() => {
   ];
 
   const ANCHORS = {
-    houmt: [0.48, 0.18],
-    portHoumt: [0.48, 0.10],
-    sidi: [0.86, 0.16],
-    hotel: [0.88, 0.22],
-    midoun: [0.86, 0.40],
-    erriadh: [0.70, 0.52],
-    elmay: [0.50, 0.50],
-    explore: [0.68, 0.60],
-    guellala: [0.48, 0.84],
-    aghir: [0.88, 0.78],
-    mezraya: [0.78, 0.68],
-    mahboubine: [0.76, 0.76],
-    sedouikech: [0.66, 0.74],
-    ajim: [0.10, 0.58],
-    airport: [0.22, 0.28],
-    lagoon: [0.28, 0.68],
-    plaza: [0.48, 0.21],
+    houmt: [0.40, 0.18],
+    portHoumt: [0.40, 0.08],
+    sidi: [0.88, 0.14],
+    hotel: [0.90, 0.24],
+    midoun: [0.86, 0.42],
+    erriadh: [0.62, 0.48],
+    elmay: [0.36, 0.50],
+    explore: [0.62, 0.70],
+    guellala: [0.36, 0.86],
+    aghir: [0.88, 0.82],
+    mezraya: [0.74, 0.70],
+    mahboubine: [0.72, 0.80],
+    sedouikech: [0.52, 0.78],
+    ajim: [0.10, 0.56],
+    airport: [0.18, 0.30],
+    lagoon: [0.22, 0.70],
+    plaza: [0.40, 0.22],
   };
 
   const ZONE_MUSIC = {
@@ -160,7 +161,7 @@ const Island = (() => {
     return { x: cx, y: cy };
   }
 
-  const SWIM = 340;
+  const SWIM = 420;
 
   function clampPlay(x, y) {
     if (contains(x, y)) return { x, y, swim: false };
@@ -179,7 +180,7 @@ const Island = (() => {
     const ty0 = (y / TS) | 0;
     let best = null;
     let bestD = 1e9;
-    for (let r = 0; r <= 14; r++) {
+    for (let r = 0; r <= 18; r++) {
       for (let dy = -r; dy <= r; dy++) {
         for (let dx = -r; dx <= r; dx++) {
           if (r && Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
@@ -238,8 +239,8 @@ const Island = (() => {
     });
     if (best === "houmt") {
       const p = xy("houmt");
-      if (x < p.x - 140) return "souk";
-      if (x < p.x + 140 && y < p.y + 100) return "plaza";
+      if (x < p.x - 120) return "souk";
+      if (x < p.x + 200 && y < p.y + 220) return "plaza";
       return "ville";
     }
     return ZONE_MUSIC[best] || "ville";
@@ -279,19 +280,19 @@ const Island = (() => {
       [r.x, r.y, x.x, x.y],
       [ag.x, ag.y, g.x, g.y],
       [h.x, h.y, air.x, air.y],
-      [h.x - 500, h.y + 48, h.x + 720, h.y + 48],
-      [h.x + 48, h.y - 140, h.x + 48, h.y + 500],
-      [h.x + 320, h.y - 60, h.x + 320, h.y + 520],
-      [h.x - 352, h.y - 40, h.x - 352, h.y + 420],
-      [m.x - 180, m.y + 20, m.x + 420, m.y + 20],
-      [m.x + 20, m.y - 100, m.x + 20, m.y + 540],
-      [a.x - 80, a.y + 36, a.x + 420, a.y + 36],
-      [a.x + 128, a.y - 60, a.x + 128, a.y + 420],
-      [g.x - 200, g.y + 36, g.x + 280, g.y + 36],
-      [e.x - 200, e.y + 36, e.x + 420, e.y + 36],
-      [r.x - 200, r.y + 48, r.x + 360, r.y + 48],
-      [r.x - 180, r.y - 220, r.x + 320, r.y - 220],
-      [pl.x - 100, pl.y, pl.x + 100, pl.y],
+      [h.x - 1100, h.y + 88, h.x + 1100, h.y + 88],
+      [h.x + 40, h.y - 240, h.x + 40, h.y + 900],
+      [h.x + 240, h.y - 40, h.x + 240, h.y + 780],
+      [h.x - 640, h.y + 400, h.x + 40, h.y + 400],
+      [m.x - 200, m.y + 88, m.x + 720, m.y + 88],
+      [m.x + 40, m.y - 200, m.x + 40, m.y + 850],
+      [a.x - 80, a.y + 88, a.x + 700, a.y + 88],
+      [a.x + 160, a.y - 40, a.x + 160, a.y + 750],
+      [g.x - 200, g.y + 88, g.x + 560, g.y + 88],
+      [e.x - 200, e.y + 88, e.x + 560, e.y + 88],
+      [r.x + 400, r.y + 88, r.x + 900, r.y + 88],
+      [r.x + 480, r.y - 40, r.x + 480, r.y + 520],
+      [pl.x - 140, pl.y, pl.x + 140, pl.y],
     ];
   }
 
@@ -420,9 +421,9 @@ const Island = (() => {
         const wx = tx * TS + 8;
         const wy = ty * TS + 8;
         const nearBeach =
-          Math.hypot(wx - sidi.x, wy - sidi.y) < 260 ||
-          Math.hypot(wx - hotel.x, wy - hotel.y) < 200 ||
-          Math.hypot(wx - aghir.x, wy - aghir.y) < 220;
+          Math.hypot(wx - sidi.x, wy - sidi.y) < 320 ||
+          Math.hypot(wx - hotel.x, wy - hotel.y) < 240 ||
+          Math.hypot(wx - aghir.x, wy - aghir.y) < 280;
         if (wet || nearBeach) grid[i] = BEACH;
         if (Math.hypot(wx - lagoon.x, wy - lagoon.y) < 130 && (tx + ty) % 2) grid[i] = GRASS;
       }
@@ -433,61 +434,74 @@ const Island = (() => {
     discTiles((xy("elmay").x / TS) | 0 - 2, (xy("elmay").y / TS) | 0 - 10, 7, GRASS);
 
     const towns = [
-      ["houmt", 56, 40],
-      ["plaza", 22, 16],
-      ["midoun", 48, 40],
-      ["ajim", 36, 32],
-      ["elmay", 40, 28],
-      ["erriadh", 44, 32],
-      ["guellala", 40, 28],
-      ["explore", 20, 16],
-      ["aghir", 32, 24],
+      ["houmt", 72, 52],
+      ["plaza", 28, 20],
+      ["midoun", 64, 52],
+      ["ajim", 48, 44],
+      ["elmay", 52, 40],
+      ["erriadh", 52, 44],
+      ["guellala", 52, 40],
+      ["explore", 24, 20],
+      ["aghir", 44, 32],
     ];
     towns.forEach(([name, bw, bh]) => townBlock(name, bw, bh));
-    townPad("houmt", 400, 180, 52, 42);
-    townPad("houmt", -360, 140, 44, 36);
-    townPad("midoun", 80, 260, 48, 36);
-    townPad("ajim", 256, 120, 36, 32);
-    townPad("elmay", 80, 160, 40, 28);
-    townPad("erriadh", 40, -240, 44, 28);
-    townPad("guellala", 40, 160, 36, 26);
-    townPad("aghir", 256, 120, 32, 22);
-    discTiles((aghir.x / TS) | 0, (aghir.y / TS) | 0, 10, BEACH);
-    const air = xy("airport");
-    rectTiles(((air.x / TS) | 0) - 8, ((air.y / TS) | 0) - 5, 22, 10, STONE);
-    paintSeg(air.x - 30, air.y + 70, air.x + 280, air.y + 70, 10, STONE);
 
-    function paintTownGrid(name, ox, oy, cols, rows, px, py) {
+    function townGridPad(name, ox, oy, cols, rows) {
+      const px = LOT.x;
+      const py = LOT.y;
+      const cw = ((cols * px + 96) / TS) | 0;
+      const ch = ((rows * py + 96) / TS) | 0;
+      townPad(name, ox + (cols * px) / 2, oy + (rows * py) / 2, cw, ch);
+    }
+    townGridPad("houmt", 240, 0, 5, 4);
+    townGridPad("houmt", -640, 400, 4, 3);
+    townGridPad("houmt", -960, 0, 6, 2);
+    townPad("houmt", -1120, 200, 18, 40);
+    townGridPad("midoun", -160, 96, 5, 4);
+    townGridPad("ajim", 160, 0, 4, 4);
+    townGridPad("elmay", -160, 80, 4, 3);
+    townGridPad("erriadh", 480, 0, 3, 3);
+    townGridPad("guellala", -160, 80, 4, 3);
+    townGridPad("aghir", 160, 0, 4, 3);
+    discTiles((aghir.x / TS) | 0, (aghir.y / TS) | 0, 12, BEACH);
+    const air = xy("airport");
+    rectTiles(((air.x / TS) | 0) - 10, ((air.y / TS) | 0) - 6, 28, 12, STONE);
+    paintSeg(air.x - 40, air.y + 90, air.x + 360, air.y + 90, 12, STONE);
+
+    function paintTownGrid(name, ox, oy, cols, rows) {
+      const px = LOT.x;
+      const py = LOT.y;
       const a = xy(name);
-      const x0 = a.x + ox - 40;
-      const y0 = a.y + oy - 40;
-      const x1 = a.x + ox + cols * px + 24;
-      const y1 = a.y + oy + rows * py + 24;
+      const x0 = a.x + ox - 80;
+      const y0 = a.y + oy - 88;
+      const x1 = a.x + ox + cols * px + 16;
+      const y1 = a.y + oy + rows * py + 16;
       for (let r = 0; r <= rows; r++) {
-        const y = a.y + oy + r * py - 32;
-        paintSeg(x0, y, x1, y, 10, ROAD);
+        const y = a.y + oy + r * py - 44;
+        paintSeg(x0, y, x1, y, 18, ROAD);
       }
       for (let c = 0; c <= cols; c++) {
-        const x = a.x + ox + c * px - 32;
-        paintSeg(x, y0, x, y1, 10, ROAD);
+        const x = a.x + ox + c * px - 40;
+        paintSeg(x, y0, x, y1, 18, ROAD);
       }
     }
-    paintTownGrid("houmt", 192, -40, 4, 4, 128, 136);
-    paintTownGrid("houmt", -480, -20, 3, 3, 128, 136);
-    paintTownGrid("midoun", -128, 136, 4, 3, 128, 136);
-    paintTownGrid("ajim", 128, -40, 3, 3, 128, 136);
-    paintTownGrid("guellala", -192, 80, 3, 2, 128, 136);
-    paintTownGrid("elmay", -192, 80, 3, 2, 128, 136);
-    paintTownGrid("erriadh", -160, -356, 4, 2, 128, 136);
-    paintTownGrid("aghir", 128, 20, 3, 2, 128, 136);
+    paintTownGrid("houmt", 240, 0, 5, 4);
+    paintTownGrid("houmt", -640, 400, 4, 3);
+    paintTownGrid("houmt", -960, 0, 6, 2);
+    paintTownGrid("midoun", -160, 96, 5, 4);
+    paintTownGrid("ajim", 160, 0, 4, 4);
+    paintTownGrid("guellala", -160, 80, 4, 3);
+    paintTownGrid("elmay", -160, 80, 4, 3);
+    paintTownGrid("erriadh", 480, 0, 3, 3);
+    paintTownGrid("aghir", 160, 0, 4, 3);
 
     const loop = loopPts();
     for (let i = 0; i < loop.length; i++) {
       const a = loop[i];
       const b = loop[(i + 1) % loop.length];
-      paintSeg(a.x, a.y, b.x, b.y, 18, ROAD);
+      paintSeg(a.x, a.y, b.x, b.y, 22, ROAD);
     }
-    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 16, ROAD));
+    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 20, ROAD));
 
     const isRoad = (tx, ty) => {
       if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) return false;
@@ -631,7 +645,7 @@ const Island = (() => {
   }
 
   return {
-    W, H, BOX, poly, contains, xy, uv, worldToMap, clamp, clampPlay, snapRoad, randLand, path, box,
+    W, H, BOX, LOT, poly, contains, xy, uv, worldToMap, clamp, clampPlay, snapRoad, randLand, path, box,
     zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, MAP_ICONS, bake, drawGround,
     props, tileAt,
     groundCanvas: () => mini,

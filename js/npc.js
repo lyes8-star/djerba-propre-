@@ -6,21 +6,21 @@ const Npc = (() => {
   function makeZones() {
     const b = Island.box.bind(Island);
     return {
-      beach: b("sidi", 560, 280),
-      port: b("ajim", 420, 320),
-      souk: b("houmt", 560, 480, -320, 120),
-      ville: b("houmt", 720, 560, 280, 160),
-      plaza: b("plaza", 260, 220),
-      lagoon: b("lagoon", 360, 280),
-      road: b("elmay", 520, 200),
-      hotel: b("hotel", 400, 280),
-      airport: b("airport", 360, 240),
-      midounv: b("midoun", 560, 480),
-      erriadh: b("erriadh", 520, 420),
-      elmay: b("elmay", 520, 400),
-      guellala: b("guellala", 500, 380),
-      explore: b("explore", 360, 260),
-      aghir: b("aghir", 420, 320),
+      beach: b("sidi", 640, 320),
+      port: b("ajim", 520, 400),
+      souk: b("houmt", 900, 520, -520, 140),
+      ville: b("houmt", 1100, 900, 420, 320),
+      plaza: b("plaza", 360, 280),
+      lagoon: b("lagoon", 420, 320),
+      road: b("elmay", 640, 240),
+      hotel: b("hotel", 480, 320),
+      airport: b("airport", 420, 280),
+      midounv: b("midoun", 800, 700),
+      erriadh: b("erriadh", 720, 700),
+      elmay: b("elmay", 720, 600),
+      guellala: b("guellala", 720, 600),
+      explore: b("explore", 420, 300),
+      aghir: b("aghir", 560, 420),
       inside: { x0: 12, y0: 40, x1: 288, y1: 210 },
       holy: { x0: 12, y0: 40, x1: 288, y1: 210 },
     };
@@ -251,7 +251,7 @@ const Npc = (() => {
     const hv = Island.xy("houmt");
     const umbrellas = [[-80, 30], [-20, 18], [40, 34], [100, 20], [160, 38], [-50, 80], [80, 90], [20, 50]];
     const shops = (Places.TOWN || []).filter((b) => b.room === "shop").map((b) => [b.x + 12, b.y + 42]);
-    const houses = (Places.TOWN || []).filter((b) => b.room === "home" || b.room === "cafe").map((b) => [b.x + 24, b.y + 74]);
+    const houses = (Places.TOWN || []).filter((b) => b.room === "home" || b.room === "cafe").map((b) => [b.x + 28, b.y + 90]);
     const quay = [[ajim.x - 20, ajim.y + 10], [ajim.x + 20, ajim.y + 16], [port.x + 30, port.y + 10], [port.x + 70, port.y + 6]];
 
     umbrellas.forEach(([ox, oy], i) => {
@@ -271,7 +271,7 @@ const Npc = (() => {
     spawnFill(npcs, "port", 5, "wander", ["localM", "tourM", "tourM2", "localM2"]);
     spawnFill(npcs, "port", 2, "sit", ["elder"]);
     npcs.push(place(spawnOne("port", npcs.length, "stand", "escort"), ajim.x + 50, ajim.y + 20));
-    npcs.push(place(spawnOne("port", npcs.length, "stand", "cabaret"), ajim.x + 74, ajim.y + 16));
+    npcs.push(place(spawnOne("port", npcs.length, "stand", "cabaret"), ajim.x + 56, ajim.y + 416));
     npcs.push(place(spawnOne("port", npcs.length, "stand", "escort"), ajim.x + 26, ajim.y + 28));
 
     shops.forEach(([x, y], i) => {
@@ -280,11 +280,12 @@ const Npc = (() => {
     });
     spawnFill(npcs, "souk", 6, "wander", ["localM", "localF", "localF2", "localM2"]);
     spawnFill(npcs, "souk", 3, "run", ["kidM", "kidF"]);
-    spawnPair(npcs, "souk", hv.x - 352, hv.y + 40, ["localF", "localM"]);
-    spawnPair(npcs, "souk", hv.x - 224, hv.y + 180, ["merchF", "localF2"]);
+    spawnPair(npcs, "souk", hv.x - 640, hv.y + 48, ["localF", "localM"]);
+    spawnPair(npcs, "souk", hv.x - 480, hv.y + 200, ["merchF", "localF2"]);
     spawnFill(npcs, "souk", 2, "wander", ["cafe"]);
 
     houses.forEach(([x, y], i) => {
+      if (i % 2) return;
       const st = ["localM", "localF", "elder", "elderF", "cafe", "localM2"][i % 6];
       const job = st === "cafe" ? "wander" : (st.startsWith("elder") ? "sit" : "stand");
       npcs.push(place(spawnOne("ville", npcs.length, job, st), x, y));
@@ -293,9 +294,9 @@ const Npc = (() => {
     spawnFill(npcs, "ville", 3, "run", ["kidM", "kidF"]);
     spawnFill(npcs, "ville", 2, "sit", ["elderF"]);
     spawnFill(npcs, "ville", 5, "sit", ["localF", "localF2", "tourF", "localF", "localF2"]);
-    npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), hv.x + 728, hv.y + 248));
-    npcs.push(place(spawnOne("ville", npcs.length, "stand", "cabaret"), hv.x + 752, hv.y + 244));
-    npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), hv.x + 704, hv.y + 256));
+    npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), hv.x + 1056, hv.y + 368));
+    npcs.push(place(spawnOne("ville", npcs.length, "stand", "cabaret"), hv.x + 1080, hv.y + 364));
+    npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), hv.x + 1032, hv.y + 376));
 
     const pl = Island.xy("plaza");
     spawnPair(npcs, "plaza", pl.x - 20, pl.y - 10, ["localM", "localF"]);
@@ -313,9 +314,9 @@ const Npc = (() => {
       ["beach", sidi.x - 8, sidi.y + 22, "sit", "localF"],
       ["beach", sidi.x + 20, sidi.y + 26, "sit", "tourF"],
       ["beach", sidi.x + 72, sidi.y + 14, "lounge", "localF2"],
-      ["ville", hv.x + 40, hv.y + 160, "sit", "localF"],
-      ["ville", hv.x + 66, hv.y + 162, "sit", "localF2"],
-      ["ville", hv.x - 40, hv.y + 168, "stand", "localF"],
+      ["ville", hv.x + 20, hv.y + 150, "sit", "localF"],
+      ["ville", hv.x + 48, hv.y + 152, "sit", "localF2"],
+      ["ville", hv.x - 40, hv.y + 150, "stand", "localF"],
       ["plaza", pl.x + 52, pl.y + 6, "sit", "tourF"],
       ["plaza", pl.x + 78, pl.y + 8, "sit", "localF2"],
       ["hotel", hot.x + 18, hot.y + 78, "lounge", "tourF"],
