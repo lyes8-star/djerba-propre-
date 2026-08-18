@@ -205,7 +205,7 @@ const Places = (() => {
     world.npcs = (world.npcs || []).filter((n) => !n.indoor);
     const names = {
       elderF: "Lalla Fatma", cat: "Mimi", merchM: "Haj Ali", merchF: "Zohra",
-      localF: "Amina", localM: "Karim", cabaret: "Dalila", escort: "Sondes",
+      localF: "Amina", localM: "Karim", localF2: "Rim", cabaret: "Dalila", escort: "Sondes",
       cafe: "Khaled", tourF: "Emma", tourM: "Marc", tourF2: "Mia",
       elder: "Si Hedi", localM2: "Walid", kidM: "Yassine",
     };
@@ -243,10 +243,12 @@ const Places = (() => {
       add("escort", 210, 120, "stand");
     } else if (room === "cafe") {
       add("cafe", 140, 80, "stand");
-      add("localM", 40, 120, "sit");
+      add("localF", 40, 120, "sit");
+      add("localF2", 210, 120, "sit");
     } else if (room === "hotel") {
       add("merchF", 140, 70, "stand");
       add("tourF", 40, 120, "sit");
+      add("localF", 80, 130, "sit");
       add("tourM", 210, 130, "stand");
     } else if (room === "airport") {
       add("tourM", 40, 110, "stand");
