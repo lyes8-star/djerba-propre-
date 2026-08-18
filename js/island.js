@@ -1,12 +1,25 @@
-/* Île pixel NES : biomes de la carte, boucle de routes, masque marchable */
+/* Île NES : biomes en tiles 16px, routes, villes, plages, masque marchable */
 const Island = (() => {
   const W = 2560;
   const H = 1920;
+  const TS = 16;
+  const TW = W / TS;
+  const TH = H / TS;
   const MW = 640;
   const MH = 480;
   const SX = W / MW;
   const SY = H / MH;
   const BOX = { x: 160, y: 100, w: 2240, h: 1720 };
+
+  const WATER = 0;
+  const SAND = 1;
+  const GRASS = 2;
+  const BEACH = 3;
+  const COBBLE = 4;
+  const PLAZA = 5;
+  const ROAD = 6;
+  const DIRT = 7;
+  const STONE = 8;
 
   const UV = [
     [0.18, 0.16], [0.28, 0.12], [0.38, 0.14], [0.46, 0.10],
@@ -71,17 +84,19 @@ const Island = (() => {
   cx /= poly.length;
   cy /= poly.length;
 
-  let ground = null;
   let mask = null;
+  let grid = null;
+  let roadDir = null;
+  let mini = null;
   let baked = false;
 
   function colors() {
     return (typeof Atlas !== "undefined" && Atlas.C) ? Atlas.C : {
       sandB: "#f0cc84", sandC: "#d4a85c", sandA: "#ffe8b0", sandD: "#b88840",
-      green: "#3cbc3c", greenD: "#248024", greenH: "#58d848", greenX: "#145014",
-      cobbleA: "#c4a878", cobbleB: "#a88858", plaza: "#ece4d4",
+      green: "#3cbc3c", greenD: "#248024", greenH: "#58d848",
+      cobbleA: "#c4a878", cobbleB: "#a88858",
       road: "#3a3c48", roadY: "#fcbc14", roadD: "#24262e", wall: "#ece4d4",
-      sandE: "#8c6428", terra: "#e88850", white: "#fcfcfc", ink: "#140c1c",
+      sandE: "#8c6428", white: "#fcfcfc", stone: "#808890",
     };
   }
 
@@ -162,9 +177,9 @@ const Island = (() => {
     let bestD = 1e9;
     Object.keys(ANCHORS).forEach((name) => {
       const p = xy(name);
-      const d = (x - p.x) * (x - p.x) + (y - p.y) * (y - p.y);
-      if (d < bestD) {
-        bestD = d;
+      const dd = (x - p.x) * (x - p.x) + (y - p.y) * (y - p.y);
+      if (dd < bestD) {
+        bestD = dd;
         best = name;
       }
     });
@@ -216,215 +231,229 @@ const Island = (() => {
     }));
   }
 
-  function pset(ctx, x, y, col) {
-    const px = x | 0;
-    const py = y | 0;
-    if (px < 0 || py < 0 || px >= MW || py >= MH) return;
-    ctx.fillStyle = col;
-    ctx.fillRect(px, py, 1, 1);
+  function hash(px, py) {
+    return ((px * 1103515245 + py * 12345) >>> 0);
   }
 
-  function landAt(px, py) {
+  function landMask(px, py) {
     if (px < 0 || py < 0 || px >= MW || py >= MH) return false;
     return mask[py * MW + px] === 1;
   }
 
-  function psetLand(ctx, x, y, col) {
-    const px = x | 0;
-    const py = y | 0;
-    if (!landAt(px, py)) return;
-    ctx.fillStyle = col;
-    ctx.fillRect(px, py, 1, 1);
+  function gset(tx, ty, v) {
+    if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) return;
+    if (grid[ty * TW + tx] === WATER) return;
+    grid[ty * TW + tx] = v;
   }
 
-  function disc(ctx, x, y, r, col, maskOn) {
+  function discTiles(tx, ty, r, v) {
     const r2 = r * r;
     for (let dy = -r; dy <= r; dy++) {
       for (let dx = -r; dx <= r; dx++) {
         if (dx * dx + dy * dy > r2) continue;
-        const px = (x + dx) | 0;
-        const py = (y + dy) | 0;
-        if (maskOn) {
-          if (px < 0 || py < 0 || px >= MW || py >= MH) continue;
-          mask[py * MW + px] = 1;
-          pset(ctx, px, py, col);
-        } else {
-          psetLand(ctx, px, py, col);
-        }
+        gset(tx + dx, ty + dy, v);
       }
     }
   }
 
-  function line(ctx, x0, y0, x1, y1, col, w, onLand) {
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const n = Math.max(2, Math.hypot(dx, dy) | 0);
-    const hw = w || 1;
-    const put = onLand ? psetLand : pset;
+  function paintSeg(x0, y0, x1, y1, thick, v) {
+    const n = Math.max(2, (Math.hypot(x1 - x0, y1 - y0) / 8) | 0);
     for (let i = 0; i <= n; i++) {
       const t = i / n;
-      const x = x0 + dx * t;
-      const y = y0 + dy * t;
-      for (let oy = -hw; oy <= hw; oy++) {
-        for (let ox = -hw; ox <= hw; ox++) {
-          if (ox * ox + oy * oy > hw * hw + 1) continue;
-          put(ctx, x + ox, y + oy, col);
+      const x = x0 + (x1 - x0) * t;
+      const y = y0 + (y1 - y0) * t;
+      const tx = (x / TS) | 0;
+      const ty = (y / TS) | 0;
+      for (let oy = -thick; oy <= thick; oy++) {
+        for (let ox = -thick; ox <= thick; ox++) {
+          if (Math.abs(ox) + Math.abs(oy) > thick + 1) continue;
+          gset(tx + ox, ty + oy, v);
         }
       }
     }
-  }
-
-  function hash(px, py) {
-    return ((px * 1103515245 + py * 12345) >>> 0);
   }
 
   function bake() {
     if (baked) return;
     baked = true;
+    if (typeof Atlas !== "undefined" && Atlas.bake) Atlas.bake();
     const C = colors();
-    const c = document.createElement("canvas");
-    c.width = MW;
-    c.height = MH;
-    const g = c.getContext("2d");
-    g.imageSmoothingEnabled = false;
     mask = new Uint8Array(MW * MH);
+    grid = new Uint8Array(TW * TH);
+    roadDir = new Uint8Array(TW * TH);
 
     for (let py = 0; py < MH; py++) {
       for (let px = 0; px < MW; px++) {
-        const wx = (px + 0.5) * SX;
-        const wy = (py + 0.5) * SY;
-        if (!polyHit(wx, wy)) continue;
-        mask[py * MW + px] = 1;
+        if (polyHit((px + 0.5) * SX, (py + 0.5) * SY)) mask[py * MW + px] = 1;
+      }
+    }
+
+    for (let ty = 0; ty < TH; ty++) {
+      for (let tx = 0; tx < TW; tx++) {
+        const mx = tx * 4;
+        const my = ty * 4;
+        let n = 0;
+        for (let oy = 0; oy < 4; oy++) {
+          for (let ox = 0; ox < 4; ox++) {
+            if (landMask(mx + ox, my + oy)) n++;
+          }
+        }
+        if (n < 5) continue;
+        const wx = tx * TS + 8;
+        const wy = ty * TS + 8;
         const u = (wx - BOX.x) / BOX.w;
         const v = (wy - BOX.y) / BOX.h;
-        const n = hash(px, py) & 7;
-        let col;
-        const westGreen = u < 0.36 || (u < 0.50 && v > 0.30 && v < 0.80);
-        if (westGreen) {
-          col = n < 2 ? C.greenH : n < 5 ? C.green : C.greenD;
-        } else {
-          col = n < 3 ? C.sandA : n < 6 ? C.sandB : C.sandC;
-        }
-        if (v < 0.22 && u > 0.52) col = n < 4 ? C.sandA : C.sandB;
-        if (u > 0.78 && v > 0.68) col = n < 4 ? C.sandA : C.sandC;
-        pset(g, px, py, col);
+        const westGreen = u < 0.36 || (u < 0.52 && v > 0.28 && v < 0.82);
+        let kind = SAND;
+        if (westGreen) kind = GRASS;
+        if (v < 0.22 && u > 0.50) kind = SAND;
+        if (u > 0.76 && v > 0.66) kind = SAND;
+        if (westGreen && (hash(tx, ty) % 17) === 0) kind = DIRT;
+        grid[ty * TW + tx] = kind;
       }
     }
 
-    for (let py = 1; py < MH - 1; py++) {
-      for (let px = 1; px < MW - 1; px++) {
-        if (!landAt(px, py)) continue;
-        const shore = !landAt(px - 1, py) || !landAt(px + 1, py) || !landAt(px, py - 1) || !landAt(px, py + 1);
-        if (!shore) continue;
-        pset(g, px, py, (px + py) & 1 ? C.sandC : C.sandD);
-      }
-    }
-
-    for (let py = 0; py < MH; py++) {
-      for (let px = 0; px < MW; px++) {
-        if (!landAt(px, py)) continue;
-        const wx = (px + 0.5) * SX;
-        const u = (wx - BOX.x) / BOX.w;
-        if (u >= 0.36 && !(u < 0.50)) continue;
-        if ((hash(px, py + 9) % 41) !== 0) continue;
-        psetLand(g, px, py, C.greenX);
-        psetLand(g, px, py - 1, C.greenH);
+    const sidi = xy("sidi");
+    const hotel = xy("hotel");
+    const aghir = xy("aghir");
+    const lagoon = xy("lagoon");
+    for (let ty = 1; ty < TH - 1; ty++) {
+      for (let tx = 1; tx < TW - 1; tx++) {
+        const i = ty * TW + tx;
+        if (!grid[i]) continue;
+        const wet = !grid[i - 1] || !grid[i + 1] || !grid[i - TW] || !grid[i + TW];
+        const wx = tx * TS + 8;
+        const wy = ty * TS + 8;
+        const nearBeach =
+          Math.hypot(wx - sidi.x, wy - sidi.y) < 180 ||
+          Math.hypot(wx - hotel.x, wy - hotel.y) < 140 ||
+          Math.hypot(wx - aghir.x, wy - aghir.y) < 150;
+        if (wet || nearBeach) grid[i] = BEACH;
+        if (Math.hypot(wx - lagoon.x, wy - lagoon.y) < 90 && (tx + ty) % 2) grid[i] = GRASS;
       }
     }
 
     const towns = [
-      ["houmt", 18, C.wall],
-      ["plaza", 10, C.cobbleA],
-      ["midoun", 14, C.wall],
-      ["ajim", 12, C.wall],
-      ["guellala", 12, C.sandE],
-      ["elmay", 10, C.cobbleA],
-      ["aghir", 10, C.sandC],
-      ["erriadh", 9, C.cobbleB],
-      ["sidi", 8, C.sandA],
-      ["hotel", 8, C.wall],
-      ["airport", 8, C.cobbleB],
+      ["houmt", 9, 4],
+      ["plaza", 4, 3],
+      ["midoun", 7, 3],
+      ["ajim", 6, 3],
+      ["elmay", 5, 3],
+      ["erriadh", 5, 3],
+      ["guellala", 6, 2],
+      ["explore", 5, 3],
     ];
-    towns.forEach(([name, r, col]) => {
+    towns.forEach(([name, r, pr]) => {
       const p = xy(name);
-      disc(g, p.x / SX, p.y / SY, r, col, false);
+      discTiles((p.x / TS) | 0, (p.y / TS) | 0, r, COBBLE);
+      discTiles((p.x / TS) | 0, (p.y / TS) | 0, pr, PLAZA);
     });
-
-    disc(g, xy("guellala").x / SX + 4, xy("guellala").y / SY + 2, 3, C.terra, false);
+    discTiles((aghir.x / TS) | 0, (aghir.y / TS) | 0, 5, BEACH);
+    const air = xy("airport");
+    discTiles((air.x / TS) | 0, (air.y / TS) | 0, 5, STONE);
+    paintSeg(air.x - 20, air.y + 58, air.x + 220, air.y + 58, 1, STONE);
 
     const loop = loopPts();
     for (let i = 0; i < loop.length; i++) {
       const a = loop[i];
       const b = loop[(i + 1) % loop.length];
-      line(g, a.x / SX, a.y / SY, b.x / SX, b.y / SY, C.roadD, 2, true);
-      line(g, a.x / SX, a.y / SY, b.x / SX, b.y / SY, C.wall, 1, true);
+      paintSeg(a.x, a.y, b.x, b.y, 1, ROAD);
     }
-    roads().forEach(([x1, y1, x2, y2]) => {
-      line(g, x1 / SX, y1 / SY, x2 / SX, y2 / SY, C.roadD, 2, true);
-      line(g, x1 / SX, y1 / SY, x2 / SX, y2 / SY, C.wall, 1, true);
-    });
+    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 1, ROAD));
 
-    const aj = xy("ajim");
-    const ferryX = 22;
-    const ferryY = MH - 36;
-    for (let dy = -11; dy <= 11; dy++) {
-      for (let dx = -11; dx <= 11; dx++) {
-        if (dx * dx + dy * dy > 121) continue;
-        pset(g, ferryX + dx, ferryY + dy, (dx + dy) & 1 ? C.sandC : C.sandB);
+    const isRoad = (tx, ty) => {
+      if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) return false;
+      return grid[ty * TW + tx] === ROAD;
+    };
+    for (let ty = 0; ty < TH; ty++) {
+      for (let tx = 0; tx < TW; tx++) {
+        if (!isRoad(tx, ty)) continue;
+        const h = isRoad(tx - 1, ty) || isRoad(tx + 1, ty);
+        const v = isRoad(tx, ty - 1) || isRoad(tx, ty + 1);
+        roadDir[ty * TW + tx] = h && v ? 3 : v && !h ? 2 : 1;
       }
     }
-    const nDash = 18;
-    for (let i = 0; i < nDash; i++) {
-      if (i % 2) continue;
-      const t0 = i / nDash;
-      const t1 = (i + 0.55) / nDash;
-      line(
-        g,
-        aj.x / SX - 8 + (ferryX - aj.x / SX) * t0,
-        aj.y / SY + 6 + (ferryY - aj.y / SY) * t0,
-        aj.x / SX - 8 + (ferryX - aj.x / SX) * t1,
-        aj.y / SY + 6 + (ferryY - aj.y / SY) * t1,
-        C.white,
-        0,
-        false
-      );
+
+    const ferryTx = 5;
+    const ferryTy = TH - 9;
+    for (let dy = -4; dy <= 4; dy++) {
+      for (let dx = -5; dx <= 4; dx++) {
+        if (dx * dx + dy * dy > 22) continue;
+        const tx = ferryTx + dx;
+        const ty = ferryTy + dy;
+        if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) continue;
+        grid[ty * TW + tx] = dx * dx + dy * dy > 12 ? SAND : BEACH;
+      }
     }
 
-    for (let i = 0; i < poly.length; i++) {
-      if (i % 2) continue;
-      const p = poly[i];
-      const dx = p.x - cx;
-      const dy = p.y - cy;
-      const inv = 1 / (Math.hypot(dx, dy) || 1);
-      const rx = (p.x / SX) + dx * inv * 3;
-      const ry = (p.y / SY) + dy * inv * 3;
-      pset(g, rx, ry, C.sandE);
-      pset(g, rx + 1, ry, C.sandD);
+    mini = document.createElement("canvas");
+    mini.width = TW;
+    mini.height = TH;
+    const mg = mini.getContext("2d");
+    mg.imageSmoothingEnabled = false;
+    const colOf = [
+      null, C.sandB, C.green, C.sandA, C.cobbleA, C.wall, C.road, C.sandC, C.cobbleB,
+    ];
+    for (let ty = 0; ty < TH; ty++) {
+      for (let tx = 0; tx < TW; tx++) {
+        const k = grid[ty * TW + tx];
+        if (!k) continue;
+        mg.fillStyle = colOf[k] || C.sandB;
+        mg.fillRect(tx, ty, 1, 1);
+        if (k === ROAD && ((tx + ty) & 1)) {
+          mg.fillStyle = C.roadY;
+          mg.fillRect(tx, ty, 1, 1);
+        }
+        if (k === BEACH && ((tx + ty) & 3) === 0) {
+          mg.fillStyle = C.sandA;
+          mg.fillRect(tx, ty, 1, 1);
+        }
+      }
     }
+  }
 
-    ground = c;
+  function tileImage(tx, ty) {
+    if (!grid) return null;
+    const k = grid[ty * TW + tx];
+    const tiles = (typeof Atlas !== "undefined" && Atlas.tiles) ? Atlas.tiles : null;
+    if (!tiles || !k) return null;
+    if (k === SAND) return [tiles.sand0, tiles.sand1, tiles.sand2, tiles.sand3][(tx + ty * 3) & 3];
+    if (k === GRASS) return tiles.grass;
+    if (k === BEACH) return (tx + ty) & 1 ? (tiles.beach1 || tiles.sand0) : (tiles.beach0 || tiles.sand1);
+    if (k === COBBLE) return (tx + ty) & 1 ? tiles.cobble0 : tiles.cobble1;
+    if (k === PLAZA) return tiles.plaza;
+    if (k === STONE) return tiles.stone;
+    if (k === DIRT) return tiles.sand3;
+    if (k === ROAD) {
+      const d = roadDir[ty * TW + tx];
+      if (d === 3) return tiles.roadX;
+      if (d === 2) return tiles.roadV;
+      if (d === 1) return tiles.roadH;
+      return tiles.road;
+    }
+    return null;
   }
 
   function drawGround(ctx, cam) {
     if (!baked) bake();
-    if (!ground) return;
+    const x0 = cam ? Math.max(0, (cam.x / TS | 0) - 1) : 0;
+    const y0 = cam ? Math.max(0, (cam.y / TS | 0) - 1) : 0;
+    const x1 = cam ? Math.min(TW, ((cam.x + cam.vw) / TS | 0) + 2) : TW;
+    const y1 = cam ? Math.min(TH, ((cam.y + cam.vh) / TS | 0) + 2) : TH;
     ctx.imageSmoothingEnabled = false;
-    if (!cam) {
-      ctx.drawImage(ground, 0, 0, W, H);
-      return;
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        const img = tileImage(tx, ty);
+        if (img) ctx.drawImage(img, tx * TS, ty * TS);
+      }
     }
-    const sx = Math.max(0, (cam.x / SX | 0) - 1);
-    const sy = Math.max(0, (cam.y / SY | 0) - 1);
-    const sw = Math.min(MW - sx, ((cam.vw / SX) | 0) + 3);
-    const sh = Math.min(MH - sy, ((cam.vh / SY) | 0) + 3);
-    if (sw <= 0 || sh <= 0) return;
-    ctx.drawImage(ground, sx, sy, sw, sh, sx * SX, sy * SY, sw * SX, sh * SY);
   }
 
   return {
     W, H, BOX, poly, contains, xy, uv, worldToMap, clamp, randLand, path, box,
     zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, bake, drawGround,
-    groundCanvas: () => ground,
-    MW, MH, cx, cy,
+    groundCanvas: () => mini,
+    mapCanvas: () => mini,
+    MW: TW, MH: TH, cx, cy, TS,
   };
 })();

@@ -87,287 +87,394 @@ const Sprites = (() => {
     const w = inside.w;
     const h = inside.h;
     const kind = inside.room;
-    ctx.fillStyle = "#0a0810";
-    ctx.fillRect(-40, -40, w + 80, h + 80);
-    const pal = {
-      home: { wall: "#c8bca8", wallD: "#a09078", floor: "#d4a85c" },
-      shop: { wall: "#c4742c", wallD: "#8c4c18", floor: "#c4a878" },
-      cafe: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#8c7048" },
-      cabaret: { wall: "#2a1428", wallD: "#140818", floor: "#3c1c38" },
-      hotel: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#d0d4dc" },
-      airport: { wall: "#d0d4dc", wallD: "#808890", floor: "#3a3c48" },
-      mosque: { wall: "#ece8dc", wallD: "#c8bca8", floor: "#c4a070" },
-      synagogue: { wall: "#e8eef4", wallD: "#90a4b8", floor: "#d8c8a0" },
-      fort: { wall: "#d4a85c", wallD: "#8c6428", floor: "#c4a878" },
-      museum: { wall: "#ece4d4", wallD: "#3c64b0", floor: "#d0d4dc" },
-      workshop: { wall: "#c4742c", wallD: "#8c4c18", floor: "#c4a878" },
-      kiln: { wall: "#c4742c", wallD: "#8c4c18", floor: "#8c6428" },
-      mill: { wall: "#c4742c", wallD: "#5c3010", floor: "#8c7048" },
-      menzel: { wall: "#ece4d4", wallD: "#c8bca8", floor: "#d4a85c" },
-      cistern: { wall: "#a09078", wallD: "#5c4018", floor: "#8c7048" },
-      cemetery: { wall: "#ece8dc", wallD: "#a09078", floor: "#c8bca8" },
-      graffiti: { wall: "#ece4d4", wallD: "#2484d4", floor: "#c4a878" },
-      oven: { wall: "#c4742c", wallD: "#8c4c18", floor: "#8c6428" },
-    }[kind] || { wall: "#c8bca8", wallD: "#a09078", floor: "#d4a85c" };
-    ctx.fillStyle = pal.wallD;
-    ctx.fillRect(0, 0, w, 52);
-    ctx.fillStyle = pal.wall;
-    ctx.fillRect(4, 4, w - 8, 44);
-    ctx.fillStyle = pal.floor;
-    ctx.fillRect(0, 52, w, h - 52);
-    ctx.fillStyle = "rgba(0,0,0,0.12)";
-    for (let y = 52; y < h; y += 16) ctx.fillRect(0, y, w, 1);
-    ctx.fillStyle = C.ink;
-    ctx.fillRect(0, 0, w, 4);
-    ctx.fillRect(0, 0, 4, h);
-    ctx.fillRect(w - 4, 0, 4, h);
-    ctx.fillRect(0, h - 4, w, 4);
+    const title = inside.title || "";
+    const seed = title.split("").reduce((a, ch) => a + ch.charCodeAt(0), 0);
+    const variant = seed % 3;
+    ctx.fillStyle = "#08060c";
+    ctx.fillRect(-48, -48, w + 96, h + 96);
 
-    function window_(x, y) {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(x, y, 22, 18);
-      ctx.fillStyle = C.blueL;
-      ctx.fillRect(x + 2, y + 2, 18, 14);
-      ctx.fillStyle = C.white;
-      ctx.fillRect(x + 2, y + 2, 18, 4);
-      ctx.fillRect(x + 10, y + 2, 2, 14);
+    function rect(x, y, rw, rh, col) {
+      ctx.fillStyle = col;
+      ctx.fillRect(x | 0, y | 0, rw, rh);
+    }
+    function box(x, y, rw, rh, fill, edge) {
+      rect(x, y, rw, rh, C.ink);
+      rect(x + 1, y + 1, rw - 2, rh - 2, fill);
+      if (edge) rect(x + 2, y + 2, rw - 4, 3, edge);
+    }
+    function floorTiles(tile, y0) {
+      if (!tile) return;
+      for (let y = y0; y < h - 4; y += 16) {
+        for (let x = 4; x < w - 4; x += 16) ctx.drawImage(tile, x, y);
+      }
+    }
+    function window_(x, y, night) {
+      box(x, y, 22, 18, night ? C.navyD : C.blueX, night ? C.navyL : C.blueL);
+      rect(x + 10, y + 2, 2, 14, C.white);
+      rect(x + 2, y + 8, 18, 1, C.white);
+    }
+    function rug(x, y, rw, rh, a, b) {
+      rect(x, y, rw, rh, C.ink);
+      rect(x + 1, y + 1, rw - 2, rh - 2, a);
+      for (let i = 0; i < rw - 4; i += 6) rect(x + 2 + i, y + 2, 3, rh - 4, b);
+    }
+    function pot(x, y) {
+      rect(x + 2, y + 8, 10, 10, C.ink);
+      rect(x + 3, y + 9, 8, 8, C.terra);
+      rect(x + 4, y + 4, 6, 6, C.terraD);
+      rect(x + 5, y + 2, 4, 4, C.terraL);
+    }
+    function lantern(x, y) {
+      rect(x + 4, y, 4, 8, C.ink);
+      rect(x + 2, y + 8, 8, 8, Math.sin(t * 7 + x) > 0 ? C.gold : C.goldD);
+      rect(x + 3, y + 9, 6, 6, C.goldL);
+    }
+    function bench(x, y) {
+      box(x, y, 40, 12, C.wood, C.woodL);
+      rect(x + 2, y + 10, 4, 8, C.woodD);
+      rect(x + 34, y + 10, 4, 8, C.woodD);
     }
     function table(x, y) {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(x, y, 28, 16);
-      ctx.fillStyle = C.wood;
-      ctx.fillRect(x + 1, y + 1, 26, 14);
-      ctx.fillStyle = C.woodL;
-      ctx.fillRect(x + 2, y + 2, 10, 4);
+      box(x, y, 32, 18, C.wood, C.woodL);
     }
-    function bed(x, y) {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(x, y, 36, 22);
-      ctx.fillStyle = C.navy;
-      ctx.fillRect(x + 1, y + 1, 34, 20);
-      ctx.fillStyle = C.white;
-      ctx.fillRect(x + 2, y + 2, 12, 16);
+    function bed(x, y, col) {
+      box(x, y, 44, 24, col || C.navy, C.white);
+      rect(x + 2, y + 2, 14, 20, C.white);
     }
-    function desk(x, y, label) {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(x, y, 48, 18);
-      ctx.fillStyle = C.woodD;
-      ctx.fillRect(x + 1, y + 1, 46, 16);
+    function desk(x, y, label, col) {
+      box(x, y, 56, 20, col || C.woodD, C.woodL);
       ctx.fillStyle = C.goldL;
       ctx.font = "8px monospace";
-      ctx.fillText(label, x + 6, y + 12);
+      ctx.fillText(label, x + 8, y + 14);
+    }
+    function plant(x, y) {
+      rect(x + 4, y + 16, 8, 10, C.terraD);
+      rect(x + 2, y + 4, 12, 14, C.greenD);
+      rect(x + 4, y, 8, 8, C.greenL);
+    }
+    function pillar(x, y) {
+      rect(x, y, 10, 70, C.ink);
+      rect(x + 1, y + 1, 8, 68, C.wall);
+      rect(x + 1, y + 1, 8, 6, C.white);
+      rect(x + 1, y + 62, 8, 6, C.wallS);
+    }
+    function graves(x, y) {
+      box(x, y, 14, 22, C.wall, C.white);
+      rect(x + 4, y + 4, 6, 6, C.gold);
     }
 
+    const pal = {
+      home: { wall: C.wall, wallD: C.wallS, night: false },
+      shop: { wall: C.woodL, wallD: C.woodD, night: false },
+      cafe: { wall: C.wall, wallD: C.navy, night: false },
+      cabaret: { wall: "#3c1838", wallD: "#140818", night: true },
+      hotel: { wall: C.white, wallD: C.navyL, night: false },
+      airport: { wall: C.metal, wallD: C.metalD, night: false },
+      mosque: { wall: C.white, wallD: C.goldD, night: false },
+      synagogue: { wall: C.white, wallD: C.blue, night: false },
+      fort: { wall: C.sandC, wallD: C.sandE, night: false },
+      museum: { wall: C.wall, wallD: C.navy, night: false },
+      workshop: { wall: C.woodL, wallD: C.woodX, night: false },
+      kiln: { wall: C.terra, wallD: C.terraD, night: false },
+      mill: { wall: C.wood, wallD: C.woodX, night: false },
+      menzel: { wall: C.wall, wallD: C.sandE, night: false },
+      cistern: { wall: C.sandE, wallD: C.sandF, night: true },
+      cemetery: { wall: C.wall, wallD: C.wallS, night: false },
+      graffiti: { wall: C.white, wallD: C.ink, night: false },
+      oven: { wall: C.terraL, wallD: C.terraD, night: false },
+    }[kind] || { wall: C.wall, wallD: C.wallS, night: false };
+
+    rect(0, 0, w, 58, pal.wallD);
+    rect(4, 4, w - 8, 50, pal.wall);
+    rect(0, 56, w, h - 56, C.sandC);
+
+    if (kind === "home") floorTiles(Atlas.tiles.sand1, 56);
+    else if (kind === "shop" || kind === "workshop") floorTiles(Atlas.tiles.cobble0, 56);
+    else if (kind === "cafe") floorTiles(Atlas.tiles.plaza, 56);
+    else if (kind === "hotel") floorTiles(Atlas.tiles.plaza, 56);
+    else if (kind === "airport") floorTiles(Atlas.tiles.stone, 56);
+    else if (kind === "mosque" || kind === "synagogue") floorTiles(Atlas.tiles.cobble1, 56);
+    else if (kind === "fort") floorTiles(Atlas.tiles.stone, 56);
+    else if (kind === "museum") floorTiles(Atlas.tiles.plaza, 56);
+    else if (kind === "kiln" || kind === "oven") floorTiles(Atlas.tiles.sand3, 56);
+    else if (kind === "mill") floorTiles(Atlas.tiles.sand2, 56);
+    else if (kind === "menzel") floorTiles(Atlas.tiles.sand0, 56);
+    else if (kind === "cistern") floorTiles(Atlas.tiles.stone, 56);
+    else if (kind === "cemetery") floorTiles(Atlas.tiles.grass, 56);
+    else if (kind === "graffiti") floorTiles(Atlas.tiles.cobble0, 56);
+    else if (kind === "cabaret") {
+      rect(0, 56, w, h - 56, "#241028");
+      for (let y = 56; y < h; y += 8) rect(0, y, w, 1, "#3c1838");
+    } else floorTiles(Atlas.tiles.sand1, 56);
+
+    rect(0, 0, w, 4, C.ink);
+    rect(0, 0, 4, h, C.ink);
+    rect(w - 4, 0, 4, h, C.ink);
+    rect(0, h - 4, w, 4, C.ink);
+
+    const low = title.toLowerCase();
+
     if (kind === "home") {
-      window_(20, 16);
-      window_(w - 50, 16);
-      bed(20, 70);
-      table(120, 90);
-      if (Atlas.frames.the) Atlas.blit(ctx, Atlas.frames.the, 128, 82);
-      ctx.fillStyle = C.green;
-      ctx.fillRect(220, 80, 10, 28);
-      ctx.fillStyle = C.greenL;
-      ctx.fillRect(216, 70, 18, 12);
+      window_(18, 14);
+      window_(w - 46, 14);
+      if (variant === 0) {
+        bed(16, 70, C.navy);
+        table(140, 88);
+        plant(240, 80);
+        if (Atlas.frames.the) Atlas.blit(ctx, Atlas.frames.the, 148, 80);
+      } else if (variant === 1) {
+        bed(200, 70, C.redD);
+        bench(20, 90);
+        plant(16, 130);
+        table(120, 140);
+      } else {
+        rug(40, 80, 90, 50, C.redD, C.gold);
+        bench(40, 140);
+        bench(160, 140);
+        plant(240, 80);
+        table(160, 90);
+      }
     } else if (kind === "shop") {
-      window_(18, 16);
-      desk(110, 64, "CAISSE");
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(18, 70, 70, 50);
-      ctx.fillStyle = C.wood;
-      ctx.fillRect(20, 72, 66, 46);
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(24, 78, 10, 10);
-      ctx.fillStyle = C.red;
-      ctx.fillRect(40, 80, 10, 10);
-      ctx.fillStyle = C.green;
-      ctx.fillRect(56, 78, 10, 12);
-      ctx.fillStyle = C.bottle;
-      ctx.fillRect(24, 96, 8, 14);
-    } else if (kind === "cafe") {
-      window_(24, 16);
-      desk(120, 64, "DIRECT");
-      table(30, 100);
-      table(90, 130);
-      table(180, 100);
-      if (Atlas.frames.the) Atlas.blit(ctx, Atlas.frames.the, 38, 92);
-    } else if (kind === "cabaret") {
-      ctx.fillStyle = C.redD;
-      ctx.fillRect(80, 16, 140, 28);
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(90, 22, 120, 16);
-      ctx.fillStyle = C.ink;
-      ctx.font = "8px monospace";
-      ctx.fillText("CABARET", 118, 34);
-      ctx.fillStyle = Math.sin(t * 8) > 0 ? C.red : C.gold;
-      ctx.fillRect(20, 20, 8, 8);
-      ctx.fillRect(w - 28, 20, 8, 8);
-      desk(20, 80, "BAR");
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(200, 80, 16, 12);
-      ctx.fillRect(230, 80, 16, 12);
-      ctx.fillRect(200, 110, 16, 12);
-    } else if (kind === "hotel") {
-      window_(20, 14);
-      window_(w - 48, 14);
-      desk(110, 62, "ACCUEIL");
-      ctx.fillStyle = C.navy;
-      ctx.fillRect(20, 100, 40, 18);
-      ctx.fillStyle = C.navyL;
-      ctx.fillRect(22, 102, 36, 6);
-      ctx.fillStyle = C.greenL;
-      ctx.fillRect(240, 80, 16, 10);
-      ctx.fillStyle = C.green;
-      ctx.fillRect(244, 90, 8, 20);
-      ctx.fillStyle = C.gold;
-      ctx.font = "8px monospace";
-      ctx.fillText("4*", 24, 36);
-    } else if (kind === "airport") {
       window_(16, 14);
-      window_(50, 14);
-      window_(w - 48, 14);
-      desk(100, 62, "DJE");
+      window_(w - 46, 14);
+      desk(118, 62, "CAISSE");
+      if (low.indexOf("epice") >= 0 || low.indexOf("harissa") >= 0) {
+        rug(16, 90, 80, 60, C.redD, C.gold);
+        for (let i = 0; i < 6; i++) {
+          rect(20 + (i % 3) * 22, 96 + ((i / 3) | 0) * 22, 16, 16, C.ink);
+          rect(22 + (i % 3) * 22, 98 + ((i / 3) | 0) * 22, 12, 12, i % 2 ? C.red : C.terra);
+        }
+        if (Atlas.frames.harissa) Atlas.blit(ctx, Atlas.frames.harissa, 200, 100);
+      } else if (low.indexOf("tapis") >= 0 || low.indexOf("tiss") >= 0) {
+        rug(20, 80, 70, 90, C.red, C.navy);
+        rug(100, 80, 70, 90, C.goldD, C.greenD);
+        rug(180, 80, 70, 90, C.blue, C.gold);
+      } else if (low.indexOf("the") >= 0) {
+        table(24, 90);
+        table(24, 130);
+        table(200, 90);
+        if (Atlas.frames.the) {
+          Atlas.blit(ctx, Atlas.frames.the, 32, 82);
+          Atlas.blit(ctx, Atlas.frames.the, 208, 82);
+        }
+        plant(250, 130);
+      } else if (low.indexOf("poisson") >= 0 || low.indexOf("brik") >= 0) {
+        box(20, 80, 90, 50, C.sea3, C.sea1);
+        rect(28, 90, 20, 10, C.metal);
+        rect(56, 88, 24, 12, C.white);
+        if (Atlas.frames.brik) Atlas.blit(ctx, Atlas.frames.brik, 200, 90);
+      } else if (low.indexOf("bijou") >= 0) {
+        box(20, 80, 80, 40, C.navyD, C.gold);
+        rect(28, 88, 12, 12, C.gold);
+        rect(48, 90, 12, 8, C.red);
+        rect(68, 88, 12, 12, C.metalL);
+        desk(180, 120, "OR", C.navy);
+      } else {
+        box(18, 78, 72, 56, C.wood, C.woodL);
+        rect(24, 86, 12, 12, C.gold);
+        rect(42, 88, 12, 12, C.red);
+        rect(60, 86, 12, 14, C.green);
+        rect(24, 108, 10, 16, C.bottle);
+        plant(240, 90);
+      }
+    } else if (kind === "cafe") {
+      window_(20, 12);
+      window_(80, 12);
+      desk(120, 62, "DIRECT");
+      rug(20, 100, 250, 16, C.navy, C.gold);
+      table(24, 120);
+      table(90, 150);
+      table(170, 120);
+      table(230, 150);
+      if (Atlas.frames.the) Atlas.blit(ctx, Atlas.frames.the, 32, 112);
+      if (Atlas.frames.bambalouni) Atlas.blit(ctx, Atlas.frames.bambalouni, 178, 112);
+      plant(260, 70);
+    } else if (kind === "cabaret") {
+      rect(70, 8, 160, 40, C.redD);
+      rect(80, 14, 140, 28, C.gold);
       ctx.fillStyle = C.ink;
-      ctx.fillRect(20, 100, 28, 12);
-      ctx.fillRect(52, 100, 28, 12);
-      ctx.fillRect(20, 120, 28, 12);
-      ctx.fillStyle = C.white;
-      ctx.fillRect(22, 102, 24, 8);
-      ctx.fillRect(54, 102, 24, 8);
-      if (Atlas.frames.plane) Atlas.blit(ctx, Atlas.frames.plane, 200, 18);
+      ctx.font = "8px monospace";
+      ctx.fillText("CABARET", 118, 32);
+      lantern(16, 12);
+      lantern(w - 28, 12);
+      lantern(50, 12);
+      lantern(w - 62, 12);
+      box(16, 70, 90, 28, C.woodX, C.wood);
+      ctx.fillStyle = C.goldL;
+      ctx.fillText("BAR", 46, 88);
+      rect(200, 78, 18, 14, Math.sin(t * 9) > 0 ? C.red : C.gold);
+      rect(228, 78, 18, 14, Math.sin(t * 9 + 1) > 0 ? C.blueL : C.gold);
+      rect(200, 108, 18, 14, C.navy);
+      rect(228, 108, 18, 14, C.navyL);
+      rug(110, 120, 80, 40, C.redD, C.gold);
+    } else if (kind === "hotel") {
+      window_(16, 12);
+      window_(52, 12);
+      window_(w - 46, 12);
+      desk(110, 62, "ACCUEIL", C.navy);
+      box(16, 100, 70, 22, C.navyL, C.white);
+      ctx.fillStyle = C.gold;
+      ctx.font = "8px monospace";
+      ctx.fillText("4 ETOILES", 22, 36);
+      if (Atlas.frames.lounge) {
+        Atlas.blit(ctx, Atlas.frames.lounge, 200, 110);
+        Atlas.blit(ctx, Atlas.frames.lounge, 230, 114);
+      }
+      plant(260, 70);
+      plant(16, 140);
+      rug(110, 130, 70, 24, C.navy, C.gold);
+    } else if (kind === "airport") {
+      window_(12, 10);
+      window_(42, 10);
+      window_(72, 10);
+      window_(w - 46, 10);
+      desk(100, 62, "DJE", C.metalD);
+      box(16, 96, 32, 16, C.white, C.navy);
+      box(54, 96, 32, 16, C.white, C.navy);
+      box(16, 120, 32, 16, C.white, C.navy);
+      if (Atlas.frames.plane) Atlas.blit(ctx, Atlas.frames.plane, 196, 14);
       ctx.fillStyle = C.gold;
       ctx.font = "8px monospace";
       ctx.fillText("GATE A", 210, 100);
+      ctx.fillText("TUNISAIR", 200, 130);
+      rect(200, 140, 60, 8, C.navy);
     } else if (kind === "mosque") {
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(w / 2 - 16, 12, 32, 28);
-      ctx.fillStyle = C.white;
-      ctx.fillRect(w / 2 - 12, 16, 24, 22);
-      ctx.fillStyle = C.goldD;
-      ctx.fillRect(w / 2 - 4, 8, 8, 8);
-      ctx.fillStyle = C.greenD;
-      ctx.fillRect(24, 70, 70, 28);
-      ctx.fillRect(110, 90, 70, 28);
-      ctx.fillRect(196, 70, 70, 28);
-      ctx.fillStyle = C.green;
-      ctx.fillRect(28, 74, 62, 8);
-      ctx.fillRect(114, 94, 62, 8);
-      window_(20, 16);
-      window_(w - 50, 16);
+      pillar(20, 8);
+      pillar(w - 30, 8);
+      box(w / 2 - 22, 8, 44, 40, C.white, C.gold);
+      rect(w / 2 - 6, 4, 12, 10, C.gold);
+      rug(24, 80, 70, 90, C.greenD, C.gold);
+      rug(110, 90, 70, 80, C.greenD, C.gold);
+      rug(196, 80, 70, 90, C.greenD, C.gold);
+      lantern(w / 2 - 6, 16);
     } else if (kind === "synagogue") {
-      ctx.fillStyle = C.blue;
-      ctx.fillRect(w / 2 - 18, 10, 36, 30);
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(w / 2 - 6, 18, 12, 12);
-      ctx.fillRect(w / 2 - 2, 14, 4, 20);
-      ctx.fillRect(w / 2 - 8, 22, 16, 4);
-      window_(18, 16);
-      window_(w - 48, 16);
-      ctx.fillStyle = C.blueD;
-      ctx.fillRect(30, 80, 50, 16);
-      ctx.fillRect(220, 80, 50, 16);
-      table(120, 110);
+      box(w / 2 - 24, 8, 48, 42, C.white, C.blue);
+      rect(w / 2 - 8, 18, 16, 16, C.gold);
+      rect(w / 2 - 2, 12, 4, 28, C.gold);
+      rect(w / 2 - 10, 24, 20, 4, C.gold);
+      window_(16, 14);
+      window_(w - 46, 14);
+      bench(24, 90);
+      bench(24, 120);
+      bench(210, 90);
+      bench(210, 120);
+      table(124, 110);
+      rug(110, 150, 70, 20, C.blue, C.gold);
     } else if (kind === "fort") {
-      window_(20, 16);
-      window_(w - 50, 16);
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(40, 70, 40, 50);
-      ctx.fillRect(220, 70, 40, 50);
-      ctx.fillStyle = C.navyD;
-      ctx.fillRect(42, 72, 36, 46);
-      ctx.fillRect(222, 72, 36, 46);
-      desk(110, 64, "BORJ");
+      window_(18, 14, true);
+      window_(w - 48, 14, true);
+      box(24, 70, 44, 70, C.sandE, C.sandC);
+      box(220, 70, 44, 70, C.sandE, C.sandC);
+      rect(32, 90, 28, 10, C.navyD);
+      rect(228, 90, 28, 10, C.navyD);
+      desk(110, 64, "BORJ", C.sandE);
+      rect(130, 120, 40, 8, C.metalD);
+      rect(138, 112, 24, 10, C.metal);
     } else if (kind === "museum") {
-      window_(20, 14);
-      window_(w - 48, 14);
-      desk(110, 62, "MUSEE");
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(24, 90, 28, 28);
-      ctx.fillRect(64, 90, 28, 28);
-      ctx.fillRect(210, 90, 28, 28);
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(28, 94, 20, 20);
-      ctx.fillStyle = C.terra;
-      ctx.fillRect(68, 94, 20, 20);
-      ctx.fillStyle = C.blue;
-      ctx.fillRect(214, 94, 20, 20);
-    } else if (kind === "workshop") {
-      window_(18, 16);
-      desk(110, 64, "ATELIER");
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(20, 80, 60, 40);
-      ctx.fillStyle = C.terra;
-      ctx.fillRect(22, 82, 56, 36);
-      ctx.fillStyle = C.goldD;
-      ctx.fillRect(30, 90, 12, 12);
-      ctx.fillRect(48, 88, 16, 16);
-    } else if (kind === "kiln" || kind === "oven") {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(110, 60, 70, 50);
-      ctx.fillStyle = C.terraD;
-      ctx.fillRect(114, 64, 62, 42);
-      ctx.fillStyle = Math.sin(t * 6) > 0 ? C.red : C.gold;
-      ctx.fillRect(130, 84, 28, 16);
-      desk(20, 70, "FOUR");
-    } else if (kind === "mill") {
-      window_(20, 16);
-      desk(110, 64, "HUILE");
-      ctx.fillStyle = C.woodD;
-      ctx.fillRect(40, 90, 36, 36);
-      ctx.fillRect(200, 90, 36, 36);
-      ctx.fillStyle = C.goldD;
-      ctx.fillRect(48, 98, 20, 20);
-    } else if (kind === "menzel") {
-      window_(20, 16);
-      window_(w - 50, 16);
-      bed(20, 70);
-      table(120, 100);
-      ctx.fillStyle = C.green;
-      ctx.fillRect(220, 80, 16, 28);
-      ctx.fillStyle = C.greenL;
-      ctx.fillRect(214, 70, 28, 12);
-    } else if (kind === "cistern") {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(80, 70, 140, 70);
-      ctx.fillStyle = C.navyD;
-      ctx.fillRect(86, 76, 128, 58);
-      ctx.fillStyle = C.blueL;
-      ctx.fillRect(90, 80, 120, 20);
+      window_(16, 12);
+      window_(w - 46, 12);
+      desk(110, 62, "MUSEE", C.navy);
+      box(20, 88, 36, 40, C.goldD, C.gold);
+      box(64, 88, 36, 40, C.terra, C.terraL);
+      box(200, 88, 36, 40, C.blue, C.blueL);
+      box(244, 88, 36, 40, C.greenD, C.greenL);
       ctx.fillStyle = C.white;
       ctx.font = "8px monospace";
-      ctx.fillText("EAU", 136, 120);
-    } else if (kind === "cemetery") {
-      window_(20, 16);
-      ctx.fillStyle = C.wall;
-      for (let i = 0; i < 4; i++) {
-        ctx.fillRect(30 + i * 60, 80, 16, 28);
-        ctx.fillStyle = C.white;
-        ctx.fillRect(32 + i * 60, 84, 12, 8);
-        ctx.fillStyle = C.wall;
+      ctx.fillText("1", 34, 112);
+      ctx.fillText("2", 78, 112);
+      ctx.fillText("3", 214, 112);
+    } else if (kind === "workshop") {
+      window_(16, 14);
+      desk(110, 62, low.indexOf("tiss") >= 0 ? "METIER" : "ATELIER");
+      if (low.indexOf("tiss") >= 0) {
+        box(20, 88, 80, 50, C.wood, C.woodL);
+        rug(24, 94, 72, 16, C.red, C.gold);
+        rug(24, 114, 72, 16, C.navy, C.white);
+      } else if (low.indexOf("alfa") >= 0 || low.indexOf("panier") >= 0) {
+        pot(24, 100);
+        pot(48, 110);
+        pot(72, 100);
+        pot(40, 140);
+      } else {
+        box(20, 88, 70, 48, C.terra, C.terraL);
+        rect(30, 100, 14, 14, C.goldD);
+        rect(52, 96, 18, 18, C.sandE);
       }
+      plant(250, 90);
+    } else if (kind === "kiln" || kind === "oven") {
+      box(108, 58, 84, 70, C.terraD, C.terra);
+      rect(128, 88, 44, 28, Math.sin(t * 7) > 0 ? C.red : C.gold);
+      rect(136, 96, 28, 12, C.goldL);
+      pot(20, 80);
+      pot(48, 100);
+      pot(24, 130);
+      pot(230, 90);
+      pot(250, 120);
+      desk(20, 64, kind === "oven" ? "PAIN" : "ARGILE", C.terraD);
+    } else if (kind === "mill") {
+      window_(18, 14);
+      desk(110, 62, "HUILE", C.woodX);
+      box(36, 90, 48, 48, C.woodD, C.woodL);
+      box(200, 90, 48, 48, C.woodD, C.woodL);
+      rect(48, 102, 24, 24, C.goldD);
+      rect(212, 102, 24, 24, C.goldD);
+      rect(120, 140, 60, 16, C.sandE);
+    } else if (kind === "menzel") {
+      window_(16, 14);
+      window_(w - 46, 14);
+      rect(80, 70, 140, 90, C.ink);
+      for (let y = 74; y < 156; y += 16) {
+        for (let x = 84; x < 216; x += 16) {
+          if (Atlas.tiles.plaza) ctx.drawImage(Atlas.tiles.plaza, x, y);
+        }
+      }
+      rect(80, 70, 140, 4, C.wallS);
+      rect(80, 70, 4, 90, C.wallS);
+      rect(216, 70, 4, 90, C.wallS);
+      box(136, 100, 28, 20, C.cobbleB, C.wall);
+      rect(140, 104, 20, 8, C.blueL);
+      plant(90, 80);
+      plant(190, 80);
+      if (variant === 0) bed(16, 80, C.navy);
+      else bench(16, 90);
+      table(230, 150);
+    } else if (kind === "cistern") {
+      box(70, 64, 160, 90, C.navyD, C.sandE);
+      const wave = 10 + Math.sin(t * 2) * 4;
+      rect(78, 72 + wave, 144, 70 - wave, C.blue);
+      rect(78, 72 + wave, 144, 6, C.blueL);
+      rect(86, 88, 20, 4, C.white);
+      ctx.fillStyle = C.white;
+      ctx.font = "8px monospace";
+      ctx.fillText("CITERNE", 118, 50);
+    } else if (kind === "cemetery") {
+      window_(16, 14);
+      window_(w - 46, 14);
+      graves(30, 80);
+      graves(90, 80);
+      graves(150, 80);
+      graves(210, 80);
+      graves(60, 130);
+      graves(180, 130);
+      plant(250, 90);
     } else if (kind === "graffiti") {
-      ctx.fillStyle = C.red;
-      ctx.fillRect(20, 12, 40, 28);
-      ctx.fillStyle = C.blue;
-      ctx.fillRect(80, 10, 50, 32);
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(160, 14, 36, 24);
-      ctx.fillStyle = C.green;
-      ctx.fillRect(220, 12, 50, 28);
-      desk(100, 70, "HOOD");
-      table(40, 120);
+      const cols = [C.red, C.blue, C.gold, C.green, C.terra, C.navyL];
+      for (let i = 0; i < 6; i++) {
+        rect(10 + i * 46, 8, 42, 42, cols[i]);
+        rect(14 + i * 46, 12, 34, 12, C.white);
+      }
+      desk(100, 70, "HOOD", C.navy);
+      table(36, 130);
+      plant(240, 120);
     }
 
     const dx = w / 2 - 10;
     const dy = h - 28;
-    ctx.fillStyle = C.ink;
-    ctx.fillRect(dx - 2, dy - 2, 24, 26);
-    ctx.fillStyle = C.woodD;
-    ctx.fillRect(dx, dy, 20, 22);
-    ctx.fillStyle = C.gold;
-    ctx.fillRect(dx + 14, dy + 10, 2, 2);
+    box(dx - 2, dy - 2, 24, 26, C.woodD, C.wood);
+    rect(dx + 14, dy + 10, 2, 2, C.gold);
     ctx.fillStyle = C.white;
     ctx.font = "8px monospace";
-    ctx.fillText(inside.title || "SALLE", 12, 16);
+    ctx.fillText(title || "SALLE", 12, 16);
     ctx.fillText("PORTE", dx - 4, dy - 6);
   }
 
@@ -678,25 +785,6 @@ const Sprites = (() => {
     }
   }
 
-  function drawRoadPulse(ctx, t) {
-    ctx.save();
-    ctx.strokeStyle = Atlas.C.roadY;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([8, 10]);
-    ctx.lineDashOffset = -((t * 22) % 18);
-    ctx.beginPath();
-    const loop = Island.loopPts();
-    ctx.moveTo(loop[0].x, loop[0].y);
-    for (let i = 1; i < loop.length; i++) ctx.lineTo(loop[i].x, loop[i].y);
-    ctx.closePath();
-    Island.roads().forEach(([x1, y1, x2, y2]) => {
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-    });
-    ctx.stroke();
-    ctx.restore();
-  }
-
   function drawFerry(ctx, t, cam) {
     const aj = Island.xy("ajim");
     const destX = 90;
@@ -738,16 +826,7 @@ const Sprites = (() => {
 
     Island.drawGround(ctx, cam);
     drawCoastFoam(ctx, t, cam);
-    drawRoadPulse(ctx, t);
     drawFerry(ctx, t, cam);
-
-    const grassAt = (name, ox, oy, w, h) => {
-      const p = Island.xy(name);
-      tileFill(ctx, Atlas.tiles.grass, p.x + ox, p.y + oy, w, h, cam);
-    };
-    grassAt("elmay", -40, 80, 128, 80);
-    grassAt("guellala", 40, 100, 112, 64);
-    grassAt("lagoon", -20, 40, 100, 70);
 
     function blitSign(frame, name, ox, oy) {
       if (!frame) return;
@@ -813,24 +892,49 @@ const Sprites = (() => {
     drawBoat(ctx, aj.x - 110, aj.y + 70, t + 2.8, cam);
 
     const sidi = Island.xy("sidi");
-    [[-80, 20], [-20, 8], [40, 24], [100, 10], [160, 28], [-50, 70], [80, 80]].forEach(([ux, uy]) => {
+    [[-80, 20], [-20, 8], [40, 24], [100, 10], [160, 28], [-50, 70], [80, 80], [200, 16], [-110, 40]].forEach(([ux, uy]) => {
       drawUmbrella(ctx, sidi.x + ux, sidi.y + uy, cam);
     });
+    [[-70, 50], [30, 44], [120, 60], [180, 48]].forEach(([ux, uy]) => {
+      drawRock(ctx, sidi.x + ux, sidi.y + uy, cam);
+    });
     const agh = Island.xy("aghir");
-    [[-30, 30], [20, 18], [70, 36]].forEach(([ux, uy]) => {
+    [[-30, 30], [20, 18], [70, 36], [110, 22], [-70, 40]].forEach(([ux, uy]) => {
       drawUmbrella(ctx, agh.x + ux, agh.y + uy, cam);
+    });
+    drawRock(ctx, agh.x + 50, agh.y + 50, cam);
+    drawRock(ctx, agh.x - 40, agh.y + 58, cam);
+    [[-40, 40], [20, 70], [80, 30]].forEach(([ux, uy]) => {
+      drawUmbrella(ctx, hot.x + ux, hot.y + uy, cam);
     });
     Island.poly.forEach((p, i) => {
       if (i % 3 !== 0) return;
       drawPalm(ctx, p.x - 16, p.y - 20, t, i, cam);
     });
     [
-      ["lagoon", -40, 20], ["lagoon", 30, 50], ["elmay", 50, 90],
-      ["guellala", -80, 10], ["guellala", 90, 70], ["ajim", 40, 80],
+      ["lagoon", -40, 20], ["lagoon", 30, 50], ["lagoon", -10, 80],
+      ["elmay", 50, 90], ["elmay", -70, 70],
+      ["guellala", -80, 10], ["guellala", 90, 70],
+      ["ajim", 40, 80],
     ].forEach(([name, ox, oy], i) => {
       const p = Island.xy(name);
       drawPalm(ctx, p.x + ox, p.y + oy, t, i + 11, cam);
     });
+    [
+      ["lagoon", 10, 10], ["lagoon", 60, 40], ["elmay", -20, 100],
+      ["guellala", 20, 110], ["guellala", -50, 80],
+    ].forEach(([name, ox, oy]) => {
+      const p = Island.xy(name);
+      drawBush(ctx, p.x + ox, p.y + oy, cam);
+    });
+    const houmt = Island.xy("houmt");
+    [[-60, 40], [40, 40], [120, 10], [-140, 10], [200, 80]].forEach(([ox, oy]) => {
+      drawLamp(ctx, houmt.x + ox, houmt.y + oy, cam);
+    });
+    const mid = Island.xy("midoun");
+    drawLamp(ctx, mid.x - 30, mid.y + 20, cam);
+    drawLamp(ctx, mid.x + 50, mid.y + 20, cam);
+    drawLamp(ctx, aj.x + 10, aj.y - 10, cam);
     drawFountain(ctx, Island.xy("plaza").x - 16, Island.xy("plaza").y, cam);
     drawMinaret(ctx, Island.xy("houmt").x + 200, Island.xy("houmt").y - 80, cam);
     drawFlag(ctx, sidi.x, sidi.y - 20, "tn", t, cam);
