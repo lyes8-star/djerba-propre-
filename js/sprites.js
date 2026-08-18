@@ -567,6 +567,34 @@ const Sprites = (() => {
     Atlas.blit(ctx, Atlas.frames.rock, x, y);
   }
 
+  function drawTowel(ctx, x, y, cam, col) {
+    if (cam && !Atlas.inView(cam, x, y, 12, 20)) return;
+    ctx.fillStyle = Atlas.C.ink;
+    ctx.fillRect(x, y, 12, 20);
+    ctx.fillStyle = col || Atlas.C.red;
+    ctx.fillRect(x + 1, y + 1, 10, 18);
+    ctx.fillStyle = Atlas.C.white;
+    ctx.fillRect(x + 2, y + 2, 8, 3);
+  }
+
+  function beachClub(ctx, origin, cam) {
+    const cols = [Atlas.C.red, Atlas.C.blue, Atlas.C.gold, Atlas.C.green, Atlas.C.navyL];
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 5; c++) {
+        const x = origin.x + c * 38 - 90;
+        const y = origin.y + r * 30 + 8;
+        drawUmbrella(ctx, x, y, cam);
+        if ((c + r) % 2 === 0) drawTowel(ctx, x + 18, y + 14, cam, cols[(c + r) % cols.length]);
+        if ((c + r) % 3 === 0 && Atlas.frames.lounge) {
+          Atlas.blit(ctx, Atlas.frames.lounge, x + 6, y + 20);
+        }
+      }
+    }
+    [[-100, 70], [80, 78], [40, 96], [-40, 88]].forEach(([ox, oy]) => {
+      drawRock(ctx, origin.x + ox, origin.y + oy, cam);
+    });
+  }
+
   function drawUmbrella(ctx, x, y, cam) {
     if (cam && !Atlas.inView(cam, x, y, 32, 32)) return;
     Atlas.blit(ctx, Atlas.frames.umbrella, x, y);
@@ -892,49 +920,51 @@ const Sprites = (() => {
     drawBoat(ctx, aj.x - 110, aj.y + 70, t + 2.8, cam);
 
     const sidi = Island.xy("sidi");
-    [[-80, 20], [-20, 8], [40, 24], [100, 10], [160, 28], [-50, 70], [80, 80], [200, 16], [-110, 40]].forEach(([ux, uy]) => {
-      drawUmbrella(ctx, sidi.x + ux, sidi.y + uy, cam);
-    });
-    [[-70, 50], [30, 44], [120, 60], [180, 48]].forEach(([ux, uy]) => {
-      drawRock(ctx, sidi.x + ux, sidi.y + uy, cam);
-    });
+    beachClub(ctx, sidi, cam);
     const agh = Island.xy("aghir");
-    [[-30, 30], [20, 18], [70, 36], [110, 22], [-70, 40]].forEach(([ux, uy]) => {
-      drawUmbrella(ctx, agh.x + ux, agh.y + uy, cam);
-    });
-    drawRock(ctx, agh.x + 50, agh.y + 50, cam);
-    drawRock(ctx, agh.x - 40, agh.y + 58, cam);
-    [[-40, 40], [20, 70], [80, 30]].forEach(([ux, uy]) => {
-      drawUmbrella(ctx, hot.x + ux, hot.y + uy, cam);
-    });
+    beachClub(ctx, { x: agh.x, y: agh.y + 10 }, cam);
+    beachClub(ctx, { x: hot.x + 40, y: hot.y + 30 }, cam);
     Island.poly.forEach((p, i) => {
-      if (i % 3 !== 0) return;
-      drawPalm(ctx, p.x - 16, p.y - 20, t, i, cam);
+      drawPalm(ctx, p.x - 16, p.y - 22, t, i, cam);
+      if (i % 2 === 0) drawPalm(ctx, p.x + 10, p.y - 8, t, i + 7, cam);
     });
     [
-      ["lagoon", -40, 20], ["lagoon", 30, 50], ["lagoon", -10, 80],
-      ["elmay", 50, 90], ["elmay", -70, 70],
-      ["guellala", -80, 10], ["guellala", 90, 70],
-      ["ajim", 40, 80],
+      ["lagoon", -40, 20], ["lagoon", 30, 50], ["lagoon", -10, 80], ["lagoon", 70, 10],
+      ["elmay", 50, 90], ["elmay", -70, 70], ["elmay", 20, 40],
+      ["guellala", -80, 10], ["guellala", 90, 70], ["guellala", 40, 20],
+      ["ajim", 40, 80], ["ajim", -40, 90],
+      ["midoun", 40, 120], ["erriadh", -40, 90],
     ].forEach(([name, ox, oy], i) => {
       const p = Island.xy(name);
       drawPalm(ctx, p.x + ox, p.y + oy, t, i + 11, cam);
     });
     [
-      ["lagoon", 10, 10], ["lagoon", 60, 40], ["elmay", -20, 100],
-      ["guellala", 20, 110], ["guellala", -50, 80],
+      ["lagoon", 10, 10], ["lagoon", 60, 40], ["lagoon", -30, 50],
+      ["elmay", -20, 100], ["elmay", 80, 60],
+      ["guellala", 20, 110], ["guellala", -50, 80], ["guellala", 70, 40],
     ].forEach(([name, ox, oy]) => {
       const p = Island.xy(name);
       drawBush(ctx, p.x + ox, p.y + oy, cam);
     });
+    if (Atlas.frames.hill) {
+      const lg = Island.xy("lagoon");
+      Atlas.blit(ctx, Atlas.frames.hill, lg.x - 40, lg.y - 10);
+      const em = Island.xy("elmay");
+      Atlas.blit(ctx, Atlas.frames.hill, em.x - 90, em.y + 20);
+    }
     const houmt = Island.xy("houmt");
-    [[-60, 40], [40, 40], [120, 10], [-140, 10], [200, 80]].forEach(([ox, oy]) => {
+    [[-60, 40], [40, 40], [120, 10], [-140, 10], [200, 80], [-200, 40], [80, 100], [-40, 120]].forEach(([ox, oy]) => {
       drawLamp(ctx, houmt.x + ox, houmt.y + oy, cam);
     });
     const mid = Island.xy("midoun");
     drawLamp(ctx, mid.x - 30, mid.y + 20, cam);
     drawLamp(ctx, mid.x + 50, mid.y + 20, cam);
+    drawLamp(ctx, mid.x + 10, mid.y + 80, cam);
     drawLamp(ctx, aj.x + 10, aj.y - 10, cam);
+    drawLamp(ctx, aj.x + 70, aj.y + 40, cam);
+    drawStall(ctx, mid.x - 50, mid.y + 50, cam);
+    drawStall(ctx, mid.x + 20, mid.y + 50, cam);
+    tileFill(ctx, Atlas.tiles.stone, aj.x - 90, aj.y + 28, 80, 16, cam);
     drawFountain(ctx, Island.xy("plaza").x - 16, Island.xy("plaza").y, cam);
     drawMinaret(ctx, Island.xy("houmt").x + 200, Island.xy("houmt").y - 80, cam);
     drawFlag(ctx, sidi.x, sidi.y - 20, "tn", t, cam);

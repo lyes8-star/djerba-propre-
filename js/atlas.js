@@ -188,17 +188,21 @@ const Atlas = (() => {
     return c;
   }
 
-  function bakeGrass() {
+  function bakeGrass(v) {
     const { c, ctx } = make(16, 16);
-    px(ctx, 0, 0, 16, 16, C.sandB);
-    const blades = [2, 5, 7, 10, 12, 14];
+    px(ctx, 0, 0, 16, 16, v ? C.sandC : C.sandB);
+    const blades = v ? [1, 3, 6, 8, 11, 13, 15] : [2, 5, 7, 10, 12, 14];
     blades.forEach((x, i) => {
-      const h = 5 + (i % 3);
+      const h = 5 + ((i + (v || 0)) % 3);
       const y = 15 - h;
       px(ctx, x, y, 1, h, i % 2 ? C.greenD : C.green);
       p1(ctx, x, y, C.greenL);
       if (i % 2 === 0) p1(ctx, x + 1, y + 2, C.greenH);
     });
+    if (v) {
+      p1(ctx, 5, 12, C.woodD);
+      p1(ctx, 10, 14, C.greenX);
+    }
     p1(ctx, 4, 14, C.sandD);
     p1(ctx, 11, 13, C.sandA);
     return c;
@@ -249,16 +253,38 @@ const Atlas = (() => {
     return c;
   }
 
-  function bakeWhiteRoad() {
+  function bakeWhiteRoad(kind) {
     const { c, ctx } = make(16, 16);
     px(ctx, 0, 0, 16, 16, C.wall);
-    px(ctx, 0, 0, 16, 1, C.white);
-    px(ctx, 0, 15, 16, 1, C.wallS);
-    px(ctx, 0, 0, 1, 16, C.wallD);
-    px(ctx, 15, 0, 1, 16, C.wallD);
-    p1(ctx, 4, 5, C.white);
-    p1(ctx, 11, 9, C.wallS);
-    p1(ctx, 7, 12, C.white);
+    for (let i = 0; i < 7; i++) p1(ctx, (i * 5 + 2) % 16, (i * 3 + 4) % 16, C.white);
+    if (kind === "h") {
+      px(ctx, 0, 0, 16, 2, C.cobbleB);
+      px(ctx, 0, 14, 16, 2, C.sandE);
+      px(ctx, 0, 2, 16, 1, C.white);
+      px(ctx, 0, 13, 16, 1, C.wallS);
+      px(ctx, 2, 7, 5, 2, C.gold);
+      px(ctx, 10, 7, 5, 2, C.gold);
+    } else if (kind === "v") {
+      px(ctx, 0, 0, 2, 16, C.cobbleB);
+      px(ctx, 14, 0, 2, 16, C.sandE);
+      px(ctx, 2, 0, 1, 16, C.white);
+      px(ctx, 13, 0, 1, 16, C.wallS);
+      px(ctx, 7, 2, 2, 5, C.gold);
+      px(ctx, 7, 10, 2, 5, C.gold);
+    } else if (kind === "x") {
+      px(ctx, 0, 0, 16, 2, C.cobbleB);
+      px(ctx, 0, 14, 16, 2, C.sandE);
+      px(ctx, 0, 0, 2, 16, C.cobbleB);
+      px(ctx, 14, 0, 2, 16, C.sandE);
+      px(ctx, 2, 7, 12, 2, C.gold);
+      px(ctx, 7, 2, 2, 12, C.gold);
+      px(ctx, 6, 6, 4, 4, C.wall);
+    } else {
+      px(ctx, 0, 0, 16, 1, C.white);
+      px(ctx, 0, 15, 16, 1, C.wallS);
+      px(ctx, 0, 0, 1, 16, C.cobbleB);
+      px(ctx, 15, 0, 1, 16, C.sandE);
+    }
     return c;
   }
 
@@ -1629,14 +1655,18 @@ const Atlas = (() => {
     tiles.sandCap = bakeSandCap();
     tiles.beach0 = bakeBeach(0);
     tiles.beach1 = bakeBeach(1);
-    tiles.grass = bakeGrass();
+    tiles.grass = bakeGrass(0);
+    tiles.grass2 = bakeGrass(1);
     tiles.brick = bakeBrick();
     tiles.stone = bakeStone();
     tiles.road = bakeRoad("plain");
     tiles.roadH = bakeRoad("h");
     tiles.roadV = bakeRoad("v");
     tiles.roadX = bakeRoad("x");
-    tiles.path = bakeWhiteRoad();
+    tiles.path = bakeWhiteRoad("plain");
+    tiles.pathH = bakeWhiteRoad("h");
+    tiles.pathV = bakeWhiteRoad("v");
+    tiles.pathX = bakeWhiteRoad("x");
     tiles.cobble0 = bakeCobble(0);
     tiles.cobble1 = bakeCobble(1);
     tiles.plaza = bakePlaza();

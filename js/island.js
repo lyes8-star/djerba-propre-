@@ -20,6 +20,7 @@ const Island = (() => {
   const ROAD = 6;
   const DIRT = 7;
   const STONE = 8;
+  const SHORE = 9;
 
   const UV = [
     [0.18, 0.22], [0.28, 0.13], [0.40, 0.08], [0.52, 0.06], [0.64, 0.08],
@@ -266,19 +267,36 @@ const Island = (() => {
     }
   }
 
-  function paintSeg(x0, y0, x1, y1, thick, v) {
-    const n = Math.max(2, (Math.hypot(x1 - x0, y1 - y0) / 8) | 0);
+  function rectTiles(tx, ty, w, h, v) {
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) gset(tx + x, ty + y, v);
+    }
+  }
+
+  function townBlock(name, bw, bh) {
+    const p = xy(name);
+    const tx = ((p.x / TS) | 0) - (bw >> 1);
+    const ty = ((p.y / TS) | 0) - (bh >> 1);
+    rectTiles(tx, ty, bw, bh, COBBLE);
+    rectTiles(tx, ty + (bh >> 1) - 1, bw, 2, PLAZA);
+    rectTiles(tx + (bw >> 1) - 1, ty, 2, bh, PLAZA);
+  }
+
+  function paintSeg(x0, y0, x1, y1, half, v) {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const n = Math.max(2, (len / 6) | 0);
+    const hw = half == null ? 10 : half;
+    const kind = v == null ? ROAD : v;
     for (let i = 0; i <= n; i++) {
       const t = i / n;
-      const x = x0 + (x1 - x0) * t;
-      const y = y0 + (y1 - y0) * t;
-      const tx = (x / TS) | 0;
-      const ty = (y / TS) | 0;
-      for (let oy = -thick; oy <= thick; oy++) {
-        for (let ox = -thick; ox <= thick; ox++) {
-          if (Math.abs(ox) + Math.abs(oy) > thick + 1) continue;
-          gset(tx + ox, ty + oy, v);
-        }
+      const x = x0 + dx * t;
+      const y = y0 + dy * t;
+      for (let s = -hw; s <= hw; s += 5) {
+        gset(((x + nx * s) / TS) | 0, ((y + ny * s) / TS) | 0, kind);
       }
     }
   }
@@ -348,32 +366,28 @@ const Island = (() => {
     discTiles((xy("elmay").x / TS) | 0 - 2, (xy("elmay").y / TS) | 0 - 8, 5, GRASS);
 
     const towns = [
-      ["houmt", 9, 4],
-      ["plaza", 4, 3],
-      ["midoun", 7, 3],
-      ["ajim", 6, 3],
-      ["elmay", 5, 3],
-      ["erriadh", 5, 3],
-      ["guellala", 6, 2],
-      ["explore", 5, 3],
+      ["houmt", 20, 16],
+      ["plaza", 10, 8],
+      ["midoun", 14, 12],
+      ["ajim", 12, 10],
+      ["elmay", 12, 10],
+      ["erriadh", 12, 10],
+      ["guellala", 12, 10],
+      ["explore", 10, 8],
     ];
-    towns.forEach(([name, r, pr]) => {
-      const p = xy(name);
-      discTiles((p.x / TS) | 0, (p.y / TS) | 0, r, COBBLE);
-      discTiles((p.x / TS) | 0, (p.y / TS) | 0, pr, PLAZA);
-    });
-    discTiles((aghir.x / TS) | 0, (aghir.y / TS) | 0, 5, BEACH);
+    towns.forEach(([name, bw, bh]) => townBlock(name, bw, bh));
+    discTiles((aghir.x / TS) | 0, (aghir.y / TS) | 0, 7, BEACH);
     const air = xy("airport");
-    discTiles((air.x / TS) | 0, (air.y / TS) | 0, 5, STONE);
-    paintSeg(air.x - 20, air.y + 58, air.x + 220, air.y + 58, 1, STONE);
+    rectTiles(((air.x / TS) | 0) - 6, ((air.y / TS) | 0) - 4, 16, 8, STONE);
+    paintSeg(air.x - 20, air.y + 58, air.x + 220, air.y + 58, 8, STONE);
 
     const loop = loopPts();
     for (let i = 0; i < loop.length; i++) {
       const a = loop[i];
       const b = loop[(i + 1) % loop.length];
-      paintSeg(a.x, a.y, b.x, b.y, 1, ROAD);
+      paintSeg(a.x, a.y, b.x, b.y, 10, ROAD);
     }
-    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 1, ROAD));
+    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 10, ROAD));
 
     const isRoad = (tx, ty) => {
       if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) return false;
@@ -385,6 +399,15 @@ const Island = (() => {
         const h = isRoad(tx - 1, ty) || isRoad(tx + 1, ty);
         const v = isRoad(tx, ty - 1) || isRoad(tx, ty + 1);
         roadDir[ty * TW + tx] = h && v ? 3 : v && !h ? 2 : 1;
+      }
+    }
+
+    for (let ty = 1; ty < TH - 1; ty++) {
+      for (let tx = 1; tx < TW - 1; tx++) {
+        const i = ty * TW + tx;
+        const k = grid[i];
+        if (k !== BEACH && k !== SAND) continue;
+        if (!grid[i - 1] || !grid[i + 1] || !grid[i - TW] || !grid[i + TW]) grid[i] = SHORE;
       }
     }
 
@@ -406,7 +429,7 @@ const Island = (() => {
     const mg = mini.getContext("2d");
     mg.imageSmoothingEnabled = false;
     const colOf = [
-      null, C.sandB, C.green, C.sandA, C.cobbleA, C.wall, C.road, C.sandC, C.cobbleB,
+      null, C.sandB, C.green, C.sandA, C.cobbleA, C.wall, C.white, C.sandC, C.cobbleB, C.sandD,
     ];
     for (let ty = 0; ty < TH; ty++) {
       for (let tx = 0; tx < TW; tx++) {
@@ -432,13 +455,20 @@ const Island = (() => {
     const tiles = (typeof Atlas !== "undefined" && Atlas.tiles) ? Atlas.tiles : null;
     if (!tiles || !k) return null;
     if (k === SAND) return [tiles.sand0, tiles.sand1, tiles.sand2, tiles.sand3][(tx + ty * 3) & 3];
-    if (k === GRASS) return tiles.grass;
+    if (k === GRASS) return (tx + ty) & 1 ? (tiles.grass2 || tiles.grass) : tiles.grass;
     if (k === BEACH) return (tx + ty) & 1 ? (tiles.beach1 || tiles.sand0) : (tiles.beach0 || tiles.sand1);
+    if (k === SHORE) return tiles.sandCap || tiles.beach0 || tiles.sand1;
     if (k === COBBLE) return (tx + ty) & 1 ? tiles.cobble0 : tiles.cobble1;
     if (k === PLAZA) return tiles.plaza;
     if (k === STONE) return tiles.stone;
     if (k === DIRT) return tiles.sand3;
-        if (k === ROAD) return tiles.path || tiles.plaza;
+    if (k === ROAD) {
+      const d = roadDir[ty * TW + tx];
+      if (d === 3) return tiles.pathX || tiles.roadX;
+      if (d === 2) return tiles.pathV || tiles.roadV;
+      if (d === 1) return tiles.pathH || tiles.roadH;
+      return tiles.path || tiles.plaza;
+    }
     return null;
   }
 
