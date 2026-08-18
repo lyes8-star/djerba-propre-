@@ -113,6 +113,21 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeBeach(v) {
+    const { c, ctx } = make(16, 16);
+    px(ctx, 0, 0, 16, 16, v ? C.sandA : C.sandB);
+    px(ctx, 0, 13, 16, 3, C.sandC);
+    px(ctx, 0, 15, 16, 1, C.sandD);
+    for (let i = 0; i < 4; i++) {
+      p1(ctx, (i * 5 + v * 3) % 16, 3 + ((i + v) % 3), C.sandA);
+      p1(ctx, (i * 4 + 2) % 16, 8, C.foamD);
+    }
+    p1(ctx, 4 + v * 7, 6, C.sandE);
+    p1(ctx, 11 - v * 3, 10, C.white);
+    p1(ctx, 7, 12, C.sandD);
+    return c;
+  }
+
   function bakeSandCap() {
     const { c, ctx } = make(16, 16);
     stamp(ctx, 0, 0, [
@@ -1599,6 +1614,8 @@ const Atlas = (() => {
     tiles.sand2 = bakeSand(2);
     tiles.sand3 = bakeSand(3);
     tiles.sandCap = bakeSandCap();
+    tiles.beach0 = bakeBeach(0);
+    tiles.beach1 = bakeBeach(1);
     tiles.grass = bakeGrass();
     tiles.brick = bakeBrick();
     tiles.stone = bakeStone();
