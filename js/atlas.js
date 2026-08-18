@@ -1290,6 +1290,37 @@ const Atlas = (() => {
     return c;
   }
 
+  function bakeTaxiStand() {
+    const { c, ctx } = make(64, 36);
+    px(ctx, 2, 30, 60, 5, "rgba(20,12,28,0.28)");
+    px(ctx, 4, 28, 56, 6, C.cobbleC);
+    px(ctx, 5, 28, 54, 2, C.cobbleA);
+    px(ctx, 6, 30, 10, 2, C.cobbleB);
+    px(ctx, 22, 31, 12, 2, C.cobbleB);
+    px(ctx, 40, 30, 10, 2, C.cobbleA);
+    px(ctx, 8, 16, 3, 13, C.ink);
+    px(ctx, 9, 16, 1, 13, C.woodL);
+    px(ctx, 53, 16, 3, 13, C.ink);
+    px(ctx, 54, 16, 1, 13, C.woodL);
+    px(ctx, 6, 10, 52, 8, C.ink);
+    px(ctx, 7, 11, 50, 6, C.gold);
+    for (let i = 0; i < 8; i++) {
+      px(ctx, 8 + i * 6, 11, 3, 6, i % 2 ? C.ink : C.goldL);
+    }
+    px(ctx, 7, 11, 50, 1, C.goldL);
+    px(ctx, 18, 20, 28, 8, C.woodX);
+    px(ctx, 19, 21, 26, 2, C.woodL);
+    px(ctx, 22, 0, 20, 11, C.ink);
+    px(ctx, 23, 1, 18, 9, C.goldD);
+    px(ctx, 24, 2, 16, 7, C.gold);
+    ctx.fillStyle = C.ink;
+    ctx.font = "8px monospace";
+    ctx.fillText("TAXI", 26, 8);
+    p1(ctx, 30, 0, C.goldL);
+    p1(ctx, 33, 0, C.goldL);
+    return c;
+  }
+
   function bakeBush() {
     const { c, ctx } = make(24, 16);
     stamp(ctx, 0, 0, [
@@ -1803,6 +1834,8 @@ const Atlas = (() => {
     frames.carBlue = bakeCar("blue");
     frames.carRed = bakeCar("red");
     frames.carLouage = bakeCar("louage");
+    frames.taxiStand = bakeTaxiStand();
+    frames.signTaxi = bakeBanner("TAXI", C.goldD);
     frames.umbrella = bakeUmbrella();
     frames.rock = bakeRock();
     frames.sign = bakeSign();

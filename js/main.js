@@ -588,6 +588,12 @@
       if (t.kind === "step") AudioSys.sfx("click");
       UI.toggleObjectives(true);
     }
+    if (world.taxiToast) {
+      const tt = world.taxiToast;
+      world.taxiToast = null;
+      UI.toast(tt.html, 1800);
+      AudioSys.sfx("click");
+    }
     if (!world.inside) World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
@@ -614,14 +620,16 @@
     if (!speaking && UI.hideTalk) UI.hideTalk();
     const door = Places.nearDoor(player, world);
     const nearNpc = Npc.nearest(world, player, 34);
-    const nearTaxi = !world.inside && typeof Traffic !== "undefined" ? Traffic.nearestTaxi(world, player, 36) : null;
+    const taxiRange = (typeof Traffic !== "undefined" && Traffic.BOARD_RANGE) || 52;
+    const nearTaxi = !world.inside && typeof Traffic !== "undefined" ? Traffic.nearestTaxi(world, player, taxiRange) : null;
     const taxiD = nearTaxi ? Math.hypot(nearTaxi.px - (player.x + 16), nearTaxi.py - (player.y + 20)) : 999;
     const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
     const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1 && world.ride.bubble > 0;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
-    } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    } else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
+    else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
@@ -647,7 +655,7 @@
         showStoryLine();
         return;
       }
-      if (e.key === " " || k === "e") doAction();
+      if ((e.key === " " || k === "e") && !e.repeat) doAction();
       if (k === "q") toggleTool();
       if (e.key === "Escape" && state === "play") pauseGame();
       syncKeyInput();
