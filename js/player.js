@@ -21,6 +21,20 @@ const Player = (() => {
   }
 
   function update(p, dt, input, world) {
+    if (world.ride) {
+      p.vx = 0;
+      p.vy = 0;
+      p.ride = true;
+      p.facing = world.ride.facing || p.facing;
+      if (p.attackTimer > 0) {
+        p.attackTimer -= dt;
+        if (p.attackTimer <= 0) p.attacking = false;
+      }
+      if (p.cooldown > 0) p.cooldown -= dt;
+      Places.tick(world, p, dt);
+      return;
+    }
+    p.ride = false;
     const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
     const speed = p.baseSpeed * (1 + p.stats.moveBonus) * (1 - loaded * 0.2);
 
@@ -63,10 +77,29 @@ const Player = (() => {
 
   function action(p, world, mode) {
     if (p.cooldown > 0) return null;
+    if (world.ride) {
+      const more = Traffic.talkNext(world.ride);
+      if (more) return more;
+      return Traffic.hopOff(world, p);
+    }
     const door = Places.tryDoor(p, world);
     if (door) {
       p.attacking = false;
       return door;
+    }
+    if (!world.inside && typeof Traffic !== "undefined") {
+      const taxi = Traffic.nearestTaxi(world, p, 36);
+      if (taxi) {
+        const td = Math.hypot(taxi.px - (p.x + 16), taxi.py - (p.y + 20));
+        const npc = Npc.nearest(world, p, 36);
+        const nd = npc
+          ? Math.hypot(npc.x + 16 - (p.x + 16), npc.y + 20 - (p.y + 20))
+          : 999;
+        if (td < 36 && td <= nd + 6) {
+          p.cooldown = 0.35;
+          return Traffic.board(world, p, taxi);
+        }
+      }
     }
     p.cooldown = 0.3 / p.stats.pinceSpeed;
     p.attacking = true;

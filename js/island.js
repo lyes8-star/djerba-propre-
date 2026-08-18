@@ -100,6 +100,7 @@ const Island = (() => {
   let roadDir = null;
   let mini = null;
   let baked = false;
+  let deco = [];
 
   function colors() {
     return (typeof Atlas !== "undefined" && Atlas.C) ? Atlas.C : {
@@ -423,6 +424,8 @@ const Island = (() => {
       }
     }
 
+    scatterProps();
+
     mini = document.createElement("canvas");
     mini.width = TW;
     mini.height = TH;
@@ -447,6 +450,47 @@ const Island = (() => {
         }
       }
     }
+  }
+
+  function scatterProps() {
+    deco = [];
+    for (let ty = 3; ty < TH - 3; ty += 2) {
+      for (let tx = 3; tx < TW - 3; tx += 2) {
+        const k = grid[ty * TW + tx];
+        if (!k || k === ROAD || k === COBBLE || k === PLAZA || k === STONE) continue;
+        const h = hash(tx * 7 + 3, ty * 13 + 11);
+        const x = tx * TS + (h % 7) - 3;
+        const y = ty * TS + ((h >> 4) % 7) - 3;
+        if (k === GRASS || k === DIRT) {
+          const r = h % 23;
+          if (r === 0) deco.push({ kind: "palm", x, y: y - 18, seed: h });
+          else if (r === 1 || r === 2) deco.push({ kind: "bush", x, y: y + 4, seed: h });
+        } else if (k === BEACH) {
+          const r = h % 29;
+          if (r === 0) deco.push({ kind: "rock", x, y: y + 6, seed: h });
+          else if (r === 1) deco.push({ kind: "palm", x, y: y - 16, seed: h });
+          else if (r === 2) deco.push({ kind: "bush", x, y: y + 2, seed: h });
+        } else if (k === SAND) {
+          const r = h % 31;
+          if (r === 0) deco.push({ kind: "bush", x, y: y + 4, seed: h });
+          else if (r === 1) deco.push({ kind: "rock", x, y: y + 6, seed: h });
+        }
+      }
+    }
+  }
+
+  function props() {
+    if (!baked) bake();
+    return deco;
+  }
+
+  function tileAt(wx, wy) {
+    if (!baked) bake();
+    if (!grid) return 0;
+    const tx = (wx / TS) | 0;
+    const ty = (wy / TS) | 0;
+    if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) return 0;
+    return grid[ty * TW + tx];
   }
 
   function tileImage(tx, ty) {
@@ -490,6 +534,7 @@ const Island = (() => {
   return {
     W, H, BOX, poly, contains, xy, uv, worldToMap, clamp, randLand, path, box,
     zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, MAP_ICONS, bake, drawGround,
+    props, tileAt,
     groundCanvas: () => mini,
     mapCanvas: () => mini,
     MW: TW, MH: TH, cx, cy, TS,

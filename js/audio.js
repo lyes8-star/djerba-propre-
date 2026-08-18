@@ -366,6 +366,10 @@ const AudioSys = (() => {
       case "click":
         tone(700, t, 0.025, "square", sfxGain, 0.09);
         break;
+      case "horn":
+        tone(420, t, 0.09, "square", sfxGain, 0.16);
+        tone(280, t + 0.1, 0.14, "square", sfxGain, 0.14);
+        break;
       default:
         break;
     }
