@@ -655,69 +655,19 @@ const Sprites = (() => {
   function drawWorldBg(ctx, W, H, t, theme = "beach", cam) {
     Atlas.bake();
     const sky = themeSky(theme);
-    const seaY = 208;
-    const sandY = 320;
-
-    ctx.fillStyle = sky[0];
-    ctx.fillRect(0, 0, W, 90);
-    ctx.fillStyle = sky[1];
-    ctx.fillRect(0, 90, W, 70);
     ctx.fillStyle = sky[2];
-    ctx.fillRect(0, 160, W, seaY - 160);
+    if (cam) ctx.fillRect(cam.x - 8, cam.y - 8, cam.vw + 16, cam.vh + 16);
+    else ctx.fillRect(0, 0, W, H);
 
-    // sun
-    if (theme === "festival") {
-      ctx.fillStyle = "#fff0a8";
-      ctx.fillRect(W - 86, 18, 18, 18);
-      ctx.fillStyle = sky[1];
-      ctx.fillRect(W - 80, 22, 12, 12);
-      for (let i = 0; i < 18; i++) {
-        if (Math.sin(t * 3 + i) > 0) {
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(20 + i * 48, 12 + (i % 5) * 10, 2, 2);
-        }
-      }
-    } else if (theme === "sunset") {
-      Atlas.blit(ctx, Atlas.frames.sun, W - 120, 40);
-    } else {
-      Atlas.blit(ctx, Atlas.frames.sun, W - 110, 8);
-    }
+    tileFill(ctx, seaFrame(1, t), 0, 0, W, H, cam);
+    tileFill(ctx, seaFrame(0, t + 0.3), 0, 0, W, 80, cam);
 
-    // SMB hills behind the water
-    if (!cam || Atlas.inView(cam, 40, seaY - 28, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 40, seaY - 28);
-    if (!cam || Atlas.inView(cam, 280, seaY - 36, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 280, seaY - 36);
-    if (!cam || Atlas.inView(cam, 620, seaY - 24, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 620, seaY - 24);
-    if (!cam || Atlas.inView(cam, 820, seaY - 32, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 820, seaY - 32);
-    if (!cam || Atlas.inView(cam, 1040, seaY - 28, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 1040, seaY - 28);
-    if (!cam || Atlas.inView(cam, 1180, seaY - 34, 80, 32)) Atlas.blit(ctx, Atlas.frames.hill, 1180, seaY - 34);
-
-    // clouds (slow drift)
-    const cx = [30, 180, 360, 540, 720, 860, 1020, 1180];
-    cx.forEach((x, i) => {
-      const ox = x + Math.sin(t * 0.15 + i) * 10 + (t * (4 + i % 3)) % 20;
-      const oy = 12 + (i % 4) * 10;
-      if (!cam || Atlas.inView(cam, ox, oy, 48, 20)) Atlas.blit(ctx, Atlas.frames.cloud, ox, oy);
-    });
-
-    // animated sea bands
-    tileFill(ctx, seaFrame(0, t), 0, seaY, W, 32, cam);
-    tileFill(ctx, Atlas.tiles.foam[Math.floor(t * 6) % 3], 0, seaY + 28, W, 16, cam);
-    tileFill(ctx, seaFrame(1, t + 0.4), 0, seaY + 40, W, 32, cam);
-    tileFill(ctx, seaFrame(2, t + 0.8), 0, seaY + 72, W, 24, cam);
-    tileFill(ctx, Atlas.tiles.foam[Math.floor(t * 6 + 1) % 3], 0, sandY - 16, W, 16, cam);
-
-    // sun reflection
-    const rx = W - 86;
-    for (let k = 0; k < 10; k++) {
-      const rw = 4 + (k % 3) * 3 + Math.sin(t * 4 + k) * 2;
-      ctx.fillStyle = theme === "festival" ? "#c8d8ff" : "#ffe9a0";
-      ctx.fillRect(rx - rw / 2 + Math.sin(t * 2 + k) * 3, seaY + 10 + k * 8, rw, 2);
-    }
-
-    // sand body (plage + palmeraie)
+    ctx.save();
+    Island.path(ctx);
+    ctx.clip();
     const sands = [Atlas.tiles.sand0, Atlas.tiles.sand1, Atlas.tiles.sand2, Atlas.tiles.sand3];
     const x0 = cam ? Math.max(0, (cam.x / TILE | 0) * TILE) : 0;
-    const y0 = cam ? Math.max(sandY, (cam.y / TILE | 0) * TILE) : sandY;
+    const y0 = cam ? Math.max(0, (cam.y / TILE | 0) * TILE) : 0;
     const x1 = cam ? Math.min(W, cam.x + cam.vw + TILE) : W;
     const y1 = cam ? Math.min(H, cam.y + cam.vh + TILE) : H;
     for (let ty = y0; ty < y1; ty += TILE) {
@@ -725,204 +675,125 @@ const Sprites = (() => {
         ctx.drawImage(sands[((tx / 16 | 0) + (ty / 16 | 0) * 3) % 4], tx, ty);
       }
     }
-    tileFill(ctx, Atlas.tiles.sandCap, 0, sandY, W, 16, cam);
+    ctx.restore();
 
-    const ROAD_N = 496;
-    const TOWN_Y = 528;
-    const ROAD_S = 864;
-    const SOUK_W = 400;
-    const VILLE_X = 544;
+    ctx.save();
+    Island.path(ctx);
+    ctx.strokeStyle = Atlas.C.foam;
+    ctx.lineWidth = 10;
+    ctx.stroke();
+    ctx.strokeStyle = Atlas.C.sea1;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.restore();
 
-    cobbleFill(ctx, 0, TOWN_Y, SOUK_W, ROAD_S - TOWN_Y, cam);
-    tileFill(ctx, Atlas.tiles.plaza, 400, TOWN_Y, 144, 192, cam);
-    cobbleFill(ctx, VILLE_X, TOWN_Y, W - VILLE_X, ROAD_S - TOWN_Y, cam);
-    tileFill(ctx, Atlas.tiles.brick, 720, 256, 240, 64, cam);
-
-    hRoad(ctx, 0, ROAD_N, W, cam);
-    hRoad(ctx, 0, ROAD_S, W, cam);
-    hRoad(ctx, 0, 1184, W, cam);
-    hRoad(ctx, 0, 1472, W, cam);
-    vRoad(ctx, 448, ROAD_N, H - ROAD_N, cam);
-    vRoad(ctx, 160, TOWN_Y, ROAD_S - TOWN_Y, cam);
-    vRoad(ctx, 736, TOWN_Y, ROAD_S - TOWN_Y, cam);
-    vRoad(ctx, 960, ROAD_N, H - ROAD_N, cam);
-    if (!cam || Atlas.inView(cam, 448, ROAD_N, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_N);
-    if (!cam || Atlas.inView(cam, 448, ROAD_S, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, ROAD_S);
-    if (!cam || Atlas.inView(cam, 960, ROAD_N, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, ROAD_N);
-    if (!cam || Atlas.inView(cam, 960, ROAD_S, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, ROAD_S);
-    if (!cam || Atlas.inView(cam, 448, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1184);
-    if (!cam || Atlas.inView(cam, 960, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1184);
-    if (!cam || Atlas.inView(cam, 448, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1472);
-    if (!cam || Atlas.inView(cam, 960, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1472);
-    drawFlag(ctx, 200, 468, "tn", t, cam);
-    drawFlag(ctx, 700, 468, "il", t, cam);
-
-    // PORT
-    drawLighthouse(ctx, 820, 196, t, cam);
-    drawBoat(ctx, 740, 268, t, cam);
-    drawBoat(ctx, 820, 278, t + 1.1, cam);
-    if (theme === "port") {
-      drawBoat(ctx, 700, 258, t + 0.4, cam);
-      drawBoat(ctx, 880, 270, t + 2, cam);
-    }
-    Atlas.blit(ctx, Atlas.frames.signPort, 748, 318);
-    if (Atlas.frames.signAjim) Atlas.blit(ctx, Atlas.frames.signAjim, 688, 318);
-    drawCabaret(ctx, 868, 348, cam);
-    if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 874, 332);
-    drawFlag(ctx, 788, 292, "tn", t, cam);
-    drawFlag(ctx, 900, 300, "il", t, cam);
-
-    // PLAGE
-    const umbrellas = [[40, 360], [120, 348], [200, 368], [280, 352], [360, 372], [520, 356], [600, 368], [80, 428], [240, 440], [520, 432]];
-    if (theme === "resort" || theme === "festival") {
-      umbrellas.push([160, 400], [320, 412], [560, 400]);
-    }
-    for (const [ux, uy] of umbrellas) drawUmbrella(ctx, ux, uy, cam);
-    [[48, 272, 0], [200, 264, 1.4], [340, 276, 0.7], [560, 268, 2.1], [640, 280, 3]].forEach(([px, py, s]) => drawPalm(ctx, px, py, t, s, cam));
-    drawRock(ctx, 250, 420, cam);
-    drawRock(ctx, 90, 400, cam);
-    drawRock(ctx, 400, 450, cam);
-    tileFill(ctx, Atlas.tiles.grass, 400, 400, 48, 32, cam);
-    Atlas.blit(ctx, Atlas.frames.signPlage, 20, 328);
-    drawFlag(ctx, 70, 328, "tn", t, cam);
-    drawFlag(ctx, 620, 336, "tn", t, cam);
-    drawFlag(ctx, 580, 340, "il", t, cam);
-
-    // SOUK
-    const shops = [
-      [16, 540], [80, 540], [224, 540], [288, 540],
-      [16, 620], [80, 628], [224, 620], [288, 624],
-      [16, 710], [80, 718], [224, 710], [288, 716],
-      [16, 790], [80, 798], [224, 790], [288, 796],
-    ];
-    shops.forEach(([sx, sy], i) => (i % 3 === 0 ? drawStall(ctx, sx, sy, cam) : drawShop(ctx, sx, sy, cam)));
-    Atlas.blit(ctx, Atlas.frames.signSouk, 18, 534);
-    drawFlag(ctx, 80, 500, "tn", t, cam);
-    drawFlag(ctx, 350, 504, "il", t, cam);
-    drawLamp(ctx, 140, 560, cam);
-    drawLamp(ctx, 140, 680, cam);
-    drawLamp(ctx, 140, 800, cam);
-    drawBush(ctx, 340, 580, cam);
-    drawBush(ctx, 348, 760, cam);
-
-    // PLACE
-    drawFountain(ctx, 452, 600, cam);
-    drawLamp(ctx, 420, 560, cam);
-    drawLamp(ctx, 500, 560, cam);
-    drawLamp(ctx, 420, 680, cam);
-    drawLamp(ctx, 500, 680, cam);
-    tileFill(ctx, Atlas.tiles.plaza, 416, 592, 80, 48, cam);
-    drawFlag(ctx, 428, 548, "tn", t, cam);
-    drawFlag(ctx, 508, 548, "il", t, cam);
-
-    // VILLE
-    drawMinaret(ctx, 800, 500, cam);
-    drawHouse(ctx, 560, 548, cam);
-    drawHouseWarm(ctx, 624, 556, cam);
-    drawHouse(ctx, 800, 548, cam);
-    drawHouseWarm(ctx, 864, 552, cam);
-    drawHouseWarm(ctx, 560, 640, cam);
-    drawHouse(ctx, 624, 648, cam);
-    drawHouse(ctx, 800, 640, cam);
-    drawHouseWarm(ctx, 864, 644, cam);
-    drawHouse(ctx, 560, 740, cam);
-    drawCabaret(ctx, 792, 728, cam);
-    if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, 792, 714);
-    drawHouseWarm(ctx, 624, 748, cam);
-    drawHouseWarm(ctx, 864, 744, cam);
-    Atlas.blit(ctx, Atlas.frames.signVille, 548, 534);
-    if (Atlas.frames.signHoumt) Atlas.blit(ctx, Atlas.frames.signHoumt, 548, 500);
-    drawFlag(ctx, 616, 500, "tn", t, cam);
-    drawFlag(ctx, 890, 504, "il", t, cam);
-    drawLamp(ctx, 716, 560, cam);
-    drawLamp(ctx, 716, 680, cam);
-    drawLamp(ctx, 716, 800, cam);
-
-    // SUD: lagune, hotel, piscine, aeroport
-    tileFill(ctx, Atlas.tiles.grass, 160, 1000, 64, 48, cam);
-    tileFill(ctx, Atlas.tiles.grass, 360, 980, 96, 48, cam);
-    [[64, 920, 1.9], [180, 960, 0.6], [300, 940, 2.2], [400, 1040, 2.8]].forEach(([px, py, s]) => drawPalm(ctx, px, py, t, s, cam));
-    drawBush(ctx, 100, 980, cam);
-    drawFlag(ctx, 48, 910, "tn", t, cam);
-    if (theme === "lagoon") tileFill(ctx, seaFrame(0, t), 320, 1000, 112, 40, cam);
-
-    if (Atlas.frames.hotel) Atlas.blit(ctx, Atlas.frames.hotel, 620, 910);
-    if (Atlas.frames.signHotel) Atlas.blit(ctx, Atlas.frames.signHotel, 640, 896);
-    drawPool(ctx, 740, 988, t, cam);
-    if (Atlas.frames.signPool) Atlas.blit(ctx, Atlas.frames.signPool, 760, 972);
-    if (Atlas.frames.lounge) {
-      Atlas.blit(ctx, Atlas.frames.lounge, 724, 1044);
-      Atlas.blit(ctx, Atlas.frames.lounge, 812, 1046);
-      Atlas.blit(ctx, Atlas.frames.lounge, 748, 1052);
-    }
-    drawUmbrella(ctx, 700, 1020, cam);
-    drawPalm(ctx, 880, 980, t, 1.1, cam);
-    drawFlag(ctx, 860, 930, "il", t, cam);
-
-    if (Atlas.frames.airport) Atlas.blit(ctx, Atlas.frames.airport, 32, 1000);
-    if (Atlas.frames.signAirport) Atlas.blit(ctx, Atlas.frames.signAirport, 40, 986);
-    tileFill(ctx, Atlas.tiles.stone, 24, 1064, 240, 28, cam);
-    ctx.fillStyle = Atlas.C.gold;
-    for (let x = 36; x < 250; x += 18) ctx.fillRect(x, 1076, 10, 2);
-    if (Atlas.frames.plane) Atlas.blit(ctx, Atlas.frames.plane, 90, 1056);
-    drawFlag(ctx, 128, 992, "tn", t, cam);
-
-    if (theme === "festival") {
-      drawLamp(ctx, 100, 360, cam);
-      drawLamp(ctx, 300, 360, cam);
-      drawLamp(ctx, 500, 360, cam);
-    }
-
-    cobbleFill(ctx, 16, 1216, 464, 248, cam);
-    cobbleFill(ctx, 528, 1216, 416, 248, cam);
-    cobbleFill(ctx, 16, 1504, 464, 264, cam);
-    cobbleFill(ctx, 528, 1504, 416, 264, cam);
-    cobbleFill(ctx, 976, 1216, 288, 552, cam);
-    hRoad(ctx, 0, 1184, W, cam);
-    hRoad(ctx, 0, 1472, W, cam);
-    vRoad(ctx, 448, 1184, H - 1184, cam);
-    vRoad(ctx, 960, 1184, H - 1184, cam);
-    if (!cam || Atlas.inView(cam, 448, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1184);
-    if (!cam || Atlas.inView(cam, 960, 1184, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1184);
-    if (!cam || Atlas.inView(cam, 448, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 448, 1472);
-    if (!cam || Atlas.inView(cam, 960, 1472, 32, 32)) ctx.drawImage(Atlas.tiles.roadX, 960, 1472);
-    tileFill(ctx, Atlas.tiles.grass, 180, 1288, 96, 64, cam);
-    tileFill(ctx, Atlas.tiles.grass, 600, 1360, 128, 80, cam);
-    tileFill(ctx, Atlas.tiles.grass, 200, 1640, 112, 64, cam);
-    tileFill(ctx, Atlas.tiles.grass, 640, 1680, 144, 72, cam);
-    tileFill(ctx, Atlas.tiles.grass, 1040, 1360, 96, 64, cam);
-    tileFill(ctx, Atlas.tiles.grass, 1080, 1688, 112, 56, cam);
-    [[80, 1296, 0.4], [240, 1360, 1.2], [620, 1300, 2.1], [840, 1380, 0.8],
-      [120, 1660, 1.6], [700, 1700, 2.4], [1100, 1280, 0.2], [1180, 1700, 3]].forEach(([px, py, s]) => {
-      drawPalm(ctx, px, py, t, s, cam);
+    Island.roads().forEach(([x1, y1, x2, y2]) => {
+      ctx.strokeStyle = Atlas.C.road;
+      ctx.lineWidth = 22;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.strokeStyle = Atlas.C.roadY;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 12]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
     });
-    drawBush(ctx, 200, 1400, cam);
-    drawBush(ctx, 680, 1420, cam);
-    drawBush(ctx, 1080, 1440, cam);
-    drawLamp(ctx, 80, 1240, cam);
-    drawLamp(ctx, 600, 1240, cam);
-    drawLamp(ctx, 80, 1528, cam);
-    drawLamp(ctx, 600, 1528, cam);
-    drawLamp(ctx, 1000, 1240, cam);
-    if (Atlas.frames.signErriadh) Atlas.blit(ctx, Atlas.frames.signErriadh, 24, 1190);
-    if (Atlas.frames.signElMay) Atlas.blit(ctx, Atlas.frames.signElMay, 540, 1190);
-    if (Atlas.frames.signMidounV) Atlas.blit(ctx, Atlas.frames.signMidounV, 980, 518);
-    if (Atlas.frames.signGuellala) Atlas.blit(ctx, Atlas.frames.signGuellala, 24, 1480);
-    if (Atlas.frames.signExplore) Atlas.blit(ctx, Atlas.frames.signExplore, 540, 1480);
-    if (Atlas.frames.signAghir) Atlas.blit(ctx, Atlas.frames.signAghir, 980, 1190);
-    if (Atlas.frames.signMezraya) Atlas.blit(ctx, Atlas.frames.signMezraya, 1140, 1190);
-    if (Atlas.frames.signSedouik) Atlas.blit(ctx, Atlas.frames.signSedouik, 980, 1480);
-    if (Atlas.frames.signMahboub) Atlas.blit(ctx, Atlas.frames.signMahboub, 1140, 1480);
-    drawFlag(ctx, 100, 1190, "tn", t, cam);
-    drawFlag(ctx, 620, 1190, "tn", t, cam);
-    drawFlag(ctx, 100, 1480, "il", t, cam);
-    drawFlag(ctx, 700, 1480, "tn", t, cam);
+
+    const grassAt = (name, ox, oy, w, h) => {
+      const p = Island.xy(name);
+      tileFill(ctx, Atlas.tiles.grass, p.x + ox, p.y + oy, w, h, cam);
+    };
+    grassAt("elmay", -40, 80, 128, 80);
+    grassAt("guellala", 40, 100, 112, 64);
+    grassAt("aghir", -60, 40, 96, 64);
+    grassAt("lagoon", -20, 40, 100, 70);
+
+    function blitSign(frame, name, ox, oy) {
+      if (!frame) return;
+      const p = Island.xy(name);
+      Atlas.blit(ctx, frame, p.x + (ox || 0), p.y + (oy || -20));
+    }
+    blitSign(Atlas.frames.signHoumt, "houmt", -40, -50);
+    blitSign(Atlas.frames.signVille, "houmt", 40, -50);
+    blitSign(Atlas.frames.signSouk, "houmt", -220, -50);
+    blitSign(Atlas.frames.signAjim, "ajim", -20, -40);
+    blitSign(Atlas.frames.signPort, "portHoumt", 20, -40);
+    blitSign(Atlas.frames.signPlage, "sidi", -20, -30);
+    blitSign(Atlas.frames.signHotel, "hotel", 10, -30);
+    blitSign(Atlas.frames.signPool, "hotel", 90, 50);
+    blitSign(Atlas.frames.signAirport, "airport", 0, -30);
+    blitSign(Atlas.frames.signMidounV, "midoun", -20, -50);
+    blitSign(Atlas.frames.signErriadh, "erriadh", -40, -60);
+    blitSign(Atlas.frames.signElMay, "elmay", -20, -50);
+    blitSign(Atlas.frames.signGuellala, "guellala", -40, -60);
+    blitSign(Atlas.frames.signExplore, "explore", -20, -50);
+    blitSign(Atlas.frames.signAghir, "aghir", -20, -40);
+    blitSign(Atlas.frames.signMezraya, "mezraya", -20, -40);
+    blitSign(Atlas.frames.signSedouik, "sedouikech", -20, -40);
+    blitSign(Atlas.frames.signMahboub, "mahboubine", -20, -40);
+
+    if (typeof Places !== "undefined" && Places.TOWN) {
+      Places.TOWN.forEach((b, i) => {
+        if (cam && !Atlas.inView(cam, b.x, b.y, b.w, b.h)) return;
+        if (b.room === "home" || b.room === "cafe") {
+          if (i % 2) drawHouseWarm(ctx, b.x, b.y, cam);
+          else drawHouse(ctx, b.x, b.y, cam);
+        } else if (b.room === "shop") {
+          if (b.w < 32) drawStall(ctx, b.x, b.y, cam);
+          else drawShop(ctx, b.x, b.y, cam);
+        } else if (b.room === "cabaret") {
+          drawCabaret(ctx, b.x, b.y, cam);
+          if (Atlas.frames.signCabaret) Atlas.blit(ctx, Atlas.frames.signCabaret, b.x + 4, b.y - 16);
+        } else if (b.room === "hotel" && Atlas.frames.hotel) {
+          Atlas.blit(ctx, Atlas.frames.hotel, b.x, b.y);
+        } else if (b.room === "airport" && Atlas.frames.airport) {
+          Atlas.blit(ctx, Atlas.frames.airport, b.x, b.y);
+        }
+      });
+    }
+
+    const hot = Island.xy("hotel");
+    drawPool(ctx, hot.x + 80, hot.y + 50, t, cam);
+    if (Atlas.frames.lounge) {
+      Atlas.blit(ctx, Atlas.frames.lounge, hot.x + 70, hot.y + 100);
+      Atlas.blit(ctx, Atlas.frames.lounge, hot.x + 140, hot.y + 104);
+    }
+    const air = Island.xy("airport");
+    tileFill(ctx, Atlas.tiles.stone, air.x - 20, air.y + 50, 240, 28, cam);
+    if (Atlas.frames.plane) Atlas.blit(ctx, Atlas.frames.plane, air.x + 40, air.y + 40);
+
+    const ph = Island.xy("portHoumt");
+    drawLighthouse(ctx, ph.x + 80, ph.y - 90, t, cam);
+    drawBoat(ctx, ph.x + 20, ph.y - 50, t, cam);
+    drawBoat(ctx, ph.x + 90, ph.y - 40, t + 1.1, cam);
+    const aj = Island.xy("ajim");
+    drawBoat(ctx, aj.x - 70, aj.y + 20, t + 0.4, cam);
+    drawBoat(ctx, aj.x - 30, aj.y + 50, t + 2, cam);
+
+    const sidi = Island.xy("sidi");
+    [[-80, 20], [-20, 8], [40, 24], [100, 10], [160, 28], [-50, 70], [80, 80]].forEach(([ux, uy]) => {
+      drawUmbrella(ctx, sidi.x + ux, sidi.y + uy, cam);
+    });
+    Island.poly.forEach((p, i) => {
+      if (i % 3 !== 0) return;
+      drawPalm(ctx, p.x - 16, p.y - 20, t, i, cam);
+    });
+    drawFountain(ctx, Island.xy("plaza").x - 16, Island.xy("plaza").y, cam);
+    drawMinaret(ctx, Island.xy("houmt").x + 200, Island.xy("houmt").y - 80, cam);
+    drawFlag(ctx, sidi.x, sidi.y - 20, "tn", t, cam);
+    drawFlag(ctx, ph.x, ph.y, "tn", t, cam);
+    drawFlag(ctx, aj.x + 20, aj.y - 20, "tn", t, cam);
+    drawFlag(ctx, hot.x + 90, hot.y, "il", t, cam);
 
     drawHeritage(ctx, cam);
-
-    drawSeagull(ctx, 120, 70, t, 0);
-    drawSeagull(ctx, 480, 50, t, 2.1);
-    drawSeagull(ctx, 760, 80, t, 4.2);
+    drawSeagull(ctx, sidi.x, sidi.y - 80, t, 0);
+    drawSeagull(ctx, ph.x + 40, ph.y - 60, t, 2.1);
+    drawSeagull(ctx, aj.x, aj.y - 40, t, 4.2);
   }
 
   function drawTitleScene(ctx, t) {
@@ -958,18 +829,24 @@ const Sprites = (() => {
   }
 
   function drawTitleBackground(ctx, W, H, t) {
-    drawWorldBg(ctx, W, H, t, "beach", null);
+    const p = Island.xy("houmt");
+    const cam = { x: p.x - W / 2, y: p.y - H / 3, vw: W, vh: H };
+    ctx.save();
+    ctx.translate(-cam.x, -cam.y);
+    drawWorldBg(ctx, Island.W, Island.H, t, "beach", cam);
+    ctx.restore();
   }
 
   function drawCinematic(ctx, vw, vh, t) {
     Atlas.bake();
-    const WW = 960;
-    const WH = 1200;
+    const p = Island.xy("sidi");
+    const WW = Island.W;
+    const WH = Island.H;
     const zoom = 1.32;
     const camW = vw / zoom;
     const camH = vh / zoom;
-    const camX = Math.max(0, Math.min(WW - camW, 30 + (t * 26) % 640));
-    const camY = Math.max(0, Math.min(WH - camH, 236 + Math.sin(t * 0.16) * 28));
+    const camX = Math.max(0, Math.min(WW - camW, p.x - 80 + (t * 18) % 220));
+    const camY = Math.max(0, Math.min(WH - camH, p.y - 40 + Math.sin(t * 0.16) * 28));
     const cam = { x: camX, y: camY, vw: camW, vh: camH };
     ctx.save();
     ctx.imageSmoothingEnabled = false;
@@ -979,19 +856,19 @@ const Sprites = (() => {
     const walk = Math.floor(t * 9) % 4;
     const nWalk = Math.floor(t * 8) % 4;
     const pack = Atlas.frames.npc || {};
-    const px = 90 + (t * 20) % 380;
-    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_1_0`], px, 398);
-    Atlas.blit(ctx, Atlas.frames.bin, px + 34, 410);
-    if (pack.tourF) Atlas.blit(ctx, pack.tourF[`-1_${nWalk}_0`], 70, 428);
-    if (pack.localM) Atlas.blit(ctx, pack.localM[`1_${nWalk}_0`], 250, 414);
-    if (pack.kidM) Atlas.blit(ctx, pack.kidM[`1_${Math.floor(t * 14) % 4}_0`], 188, 438);
-    if (pack.tourM) Atlas.blit(ctx, pack.tourM[`1_0_1`], 500, 372);
-    if (pack.elder) Atlas.blit(ctx, pack.elder[`-1_0_0`], 340, 408);
-    Atlas.blit(ctx, Atlas.frames.can, 160, 448);
-    Atlas.blit(ctx, Atlas.frames.bottle, 310, 436);
-    Atlas.blit(ctx, Atlas.frames.bag, 430, 444);
-    Atlas.blit(ctx, Atlas.frames.gull0, 130 + Math.sin(t) * 46, 228);
-    Atlas.blit(ctx, Atlas.frames.gull1 || Atlas.frames.gull0, 420 + Math.cos(t * 0.7) * 40, 210);
+    const px = p.x - 40 + (t * 20) % 180;
+    Atlas.blit(ctx, Atlas.frames.player[`1_${walk}_1_0`], px, p.y + 20);
+    Atlas.blit(ctx, Atlas.frames.bin, px + 34, p.y + 32);
+    if (pack.tourF) Atlas.blit(ctx, pack.tourF[`-1_${nWalk}_0`], p.x - 80, p.y + 40);
+    if (pack.localM) Atlas.blit(ctx, pack.localM[`1_${nWalk}_0`], p.x + 40, p.y + 28);
+    if (pack.kidM) Atlas.blit(ctx, pack.kidM[`1_${Math.floor(t * 14) % 4}_0`], p.x - 20, p.y + 50);
+    if (pack.tourM) Atlas.blit(ctx, pack.tourM[`1_0_1`], p.x + 120, p.y);
+    if (pack.elder) Atlas.blit(ctx, pack.elder[`-1_0_0`], p.x + 80, p.y + 20);
+    Atlas.blit(ctx, Atlas.frames.can, p.x - 40, p.y + 60);
+    Atlas.blit(ctx, Atlas.frames.bottle, p.x + 30, p.y + 48);
+    Atlas.blit(ctx, Atlas.frames.bag, p.x + 90, p.y + 56);
+    Atlas.blit(ctx, Atlas.frames.gull0, p.x - 80 + Math.sin(t) * 46, p.y - 160);
+    Atlas.blit(ctx, Atlas.frames.gull1 || Atlas.frames.gull0, p.x + 80 + Math.cos(t * 0.7) * 40, p.y - 180);
     ctx.restore();
   }
 
@@ -1036,63 +913,39 @@ const Sprites = (() => {
     ctx.fillRect(mx + 3 + (player.x / W) * (mw - 6), my + 3 + (player.y / H) * (mh - 6), 3, 3);
   }
 
-  function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId) {
-    ctx.fillStyle = "#1c7cc0";
-    ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < 40; i++) {
-      ctx.fillStyle = "#38a4e8";
-      ctx.fillRect((i * 37) % W, 10 + (i * 19) % H, 3, 2);
-    }
-    Atlas.blit(ctx, Atlas.frames.cloud, 16, 8);
-    Atlas.blit(ctx, Atlas.frames.cloud, 200, 20);
-    ctx.fillStyle = "#f0cc84";
-    for (let y = 28; y < 210; y += 2) {
-      const inset = Math.abs(y - 118) / 8 | 0;
-      ctx.fillRect(24 + inset, y, W - 48 - inset * 2, 2);
-    }
-    ctx.fillStyle = "#3cbc3c";
-    ctx.fillRect(80, 90, 50, 28);
-    ctx.fillRect(140, 130, 44, 22);
-    Atlas.blit(ctx, Atlas.frames.hill, 40, 70);
+  const islandArt = new Image();
+  islandArt.src = "img/djerba-map.jpg?v=25";
 
-    Campaign.list().forEach((lv) => {
-      const open = lv.id <= unlocked;
-      const st = (starsMap && starsMap[String(lv.id)]) || 0;
-      const sel = lv.id === selectedId;
-      const pulse = sel && Math.sin(t * 6) > 0 ? 2 : 0;
-      ctx.fillStyle = sel ? "#fcbc14" : "#140c1c";
-      ctx.fillRect(lv.mapX - 6 - pulse, lv.mapY - 6 - pulse, 18 + pulse * 2, 18 + pulse * 2);
-      ctx.fillStyle = open ? "#3cbc3c" : "#555";
-      ctx.fillRect(lv.mapX - 4, lv.mapY - 4, 14, 14);
-      if (open) {
-        ctx.fillStyle = "#fff";
-        ctx.font = "8px monospace";
-        ctx.fillText(String(lv.id), lv.mapX, lv.mapY + 6);
-        if (st > 0) {
-          ctx.fillStyle = "#fcbc14";
-          ctx.fillText("*".repeat(st), lv.mapX - 4, lv.mapY + 20);
-        }
-      }
-    });
-    ctx.fillStyle = "#fff";
-    ctx.font = "9px monospace";
-    ctx.fillText("CARTE DE DJERBA", 55, 18);
+  function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId, player) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#7ec8e0";
+    ctx.fillRect(0, 0, W, H);
+    if (islandArt.complete && islandArt.naturalWidth) {
+      ctx.drawImage(islandArt, 0, 0, W, H);
+    }
+    ctx.textAlign = "left";
+    if (player) {
+      const m = Island.worldToMap(player.x, player.y, W, H);
+      ctx.fillStyle = "#140c1c";
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y - 8);
+      ctx.lineTo(m.x + 7, m.y + 7);
+      ctx.lineTo(m.x - 7, m.y + 7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = Math.sin(t * 8) > 0 ? "#3cbc3c" : "#fff";
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y - 6);
+      ctx.lineTo(m.x + 5, m.y + 5);
+      ctx.lineTo(m.x - 5, m.y + 5);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 
   function zoneAt(x, y) {
-    if (y < 496) return x >= 700 ? "port" : "beach";
-    if (y < 864) return x >= 960 ? "midounv" : (x < 400 ? "souk" : (x < 544 ? "plaza" : "ville"));
-    if (x < 340 && y > 970 && y < 1200) return "airport";
-    if (x > 520 && x < 960 && y > 880 && y < 1200) return "hotel";
-    if (y < 1184) return "lagoon";
-    if (y < 1490) {
-      if (x < 500) return "erriadh";
-      if (x < 960) return "elmay";
-      return "aghir";
-    }
-    if (x < 500) return "guellala";
-    if (x < 960) return "explore";
-    return "aghir";
+    return Island.zoneAt(x, y);
   }
 
   return {

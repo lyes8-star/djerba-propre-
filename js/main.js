@@ -11,8 +11,8 @@
   canvas.height = 400;
   titleBg.width = 320;
   titleBg.height = 560;
-  mapCanvas.width = 280;
-  mapCanvas.height = 250;
+  mapCanvas.width = 360;
+  mapCanvas.height = 240;
 
   const ZOOM = 1.3;
   let cam = { x: 0, y: 0, vw: 0, vh: 0 };
@@ -148,7 +148,7 @@
     }
     if (introPhase === "menu") {
       AudioSys.sfx("click");
-      launchCampaignFromTitle();
+      launchOpenWorld();
     }
   }
 
@@ -178,7 +178,8 @@
       animTime,
       camp.unlocked || 1,
       camp.stars || {},
-      selectedMapId
+      selectedMapId,
+      player
     );
     mapRaf = requestAnimationFrame(drawMapFrame);
   }
@@ -258,16 +259,13 @@
     }
   }
 
-  function launchCampaignFromTitle() {
-    quickPlay = false;
+  function launchOpenWorld() {
     AudioSys.unlock();
-    AudioSys.setTheme("title");
-    AudioSys.startMusic("title");
-    if (!Progress.get().campaign.introSeen) {
-      startStory(Campaign.INTRO, "intro", "PROLOGUE");
-    } else {
-      openMap(Progress.get().campaign.unlocked || 1);
-    }
+    beginMission(0);
+  }
+
+  function launchCampaignFromTitle() {
+    launchOpenWorld();
   }
 
   function startMissionFlow(id) {
@@ -283,6 +281,7 @@
   function playMusicTheme() {
     if (!world || !player) return (world && world.theme) || "beach";
     const z = world.inside ? world.inside.room : Sprites.zoneAt(player.x, player.y);
+    if (z === "sea") return "beach";
     if (z === "hotel" || z === "cabaret") return "resort";
     if (z === "airport") return "port";
     if (z === "inside" || z === "holy") return "ville";
@@ -302,20 +301,18 @@
   }
 
   function beginMission(id) {
-    const mission = quickPlay
-      ? {
-          id: 0,
-          name: "Partie Rapide",
-          theme: "beach",
-          time: 150,
-          trash: 48,
-          bagRatio: 0.3,
-          bagTarget: 6,
-          recycleTarget: 14,
-          cleanTarget: 80,
-          spawn: true,
-        }
-      : Campaign.get(id);
+    const mission = {
+      id: 0,
+      name: "Djerba",
+      code: "LIBRE",
+      theme: "beach",
+      trash: 80,
+      bagRatio: 0.3,
+      bagTarget: 8,
+      recycleTarget: 16,
+      cleanTarget: 80,
+      spawn: true,
+    };
 
     currentMissionId = mission.id || id;
     FX.reset();
@@ -334,7 +331,7 @@
     window.__playerRefresh = () => {
       if (player) player.stats = Progress.toolStats();
     };
-    timeLeft = (mission.time || 150) + (boosts.time ? 30 : 0);
+    timeLeft = 99999;
     window.__timeLeft = timeLeft;
     cleanToastShown = false;
     lastTickSecond = 999;
@@ -345,7 +342,7 @@
     state = "play";
     fitGameCanvas();
     const missionLabel = document.getElementById("hud-mission");
-    if (missionLabel) missionLabel.textContent = (mission.code || mission.name || "RUN").slice(0, 10);
+    if (missionLabel) missionLabel.textContent = "LIBRE";
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
     UI.toggleObjectives(true);
@@ -491,14 +488,16 @@
     if (!cleanToastShown && clean >= ct) {
       cleanToastShown = true;
       world.score += 500;
-      timeLeft += 25;
+      timeLeft += 0;
       AudioSys.sfx("super");
       FX.stars(player.x + 8, player.y);
       FX.hitShake(0.35);
       UI.toast(`SUPER!<br/>Objectif propre! +500<span class="bonus">+25s</span>`, 2200);
     }
     if (World.objectives(world).filter((o) => o.id !== "plats").every((o) => o.done) && player.inventory.length === 0) {
-      endGame("clear");
+      if (!cleanToastShown) {
+        UI.toast("Ile propre. Continue a te balader.");
+      }
     }
   }
 
@@ -572,18 +571,7 @@
 
     if (holdAction && selectedTool === "balai" && player.cooldown <= 0) doAction();
 
-    timeLeft -= dt;
     window.__timeLeft = timeLeft;
-    const sec = Math.ceil(timeLeft);
-    if (sec <= 10 && sec !== lastTickSecond && sec > 0) {
-      lastTickSecond = sec;
-      AudioSys.sfx("tick");
-    }
-    if (timeLeft <= 0) {
-      timeLeft = 0;
-      endGame("time");
-      return;
-    }
 
     checkObjectives();
     if (state !== "play") return;
@@ -655,8 +643,9 @@
   }
 
   function resumeGame() {
-    if (state !== "pause") return;
     document.getElementById("screen-pause").classList.remove("active");
+    UI.showScreen("screen-game");
+    document.getElementById("screen-game").classList.add("active");
     state = "play";
     lastTs = performance.now();
     raf = requestAnimationFrame(loop);
@@ -668,8 +657,7 @@
     });
     document.getElementById("btn-quick").addEventListener("click", () => {
       AudioSys.sfx("click");
-      quickPlay = true;
-      beginMission(1);
+      launchOpenWorld();
     });
     document.getElementById("btn-story-next").addEventListener("click", () => {
       AudioSys.sfx("click");
@@ -678,7 +666,10 @@
     });
     document.getElementById("btn-map-back").addEventListener("click", () => {
       AudioSys.sfx("click");
-      goTitle();
+      if (world && player) {
+        UI.showScreen("screen-game", true);
+        resumeGame();
+      } else goTitle();
     });
     document.getElementById("btn-map-prev").addEventListener("click", () => {
       AudioSys.sfx("click");
@@ -691,16 +682,18 @@
       refreshMapInfo();
     });
     document.getElementById("btn-map-play").addEventListener("click", () => {
-      if (!Progress.isUnlocked(selectedMapId)) return;
       AudioSys.sfx("click");
-      startMissionFlow(selectedMapId);
+      if (world && player) {
+        UI.showScreen("screen-game", true);
+        resumeGame();
+      } else launchOpenWorld();
     });
     mapCanvas.addEventListener("click", (e) => {
       const rect = mapCanvas.getBoundingClientRect();
       const sx = (e.clientX - rect.left) * (mapCanvas.width / rect.width);
       const sy = (e.clientY - rect.top) * (mapCanvas.height / rect.height);
       let best = null;
-      let bestD = 20;
+      let bestD = 24;
       Campaign.list().forEach((lv) => {
         const d = Math.hypot(lv.mapX - sx, lv.mapY - sy);
         if (d < bestD) {
@@ -717,8 +710,7 @@
 
     document.getElementById("btn-replay").addEventListener("click", () => {
       AudioSys.sfx("click");
-      if (quickPlay) beginMission(1);
-      else startMissionFlow(currentMissionId);
+      launchOpenWorld();
     });
     document.getElementById("btn-next-level").addEventListener("click", () => {
       AudioSys.sfx("click");
@@ -735,10 +727,24 @@
       AudioSys.sfx("click");
       resumeGame();
     });
+    const btnMapPause = document.getElementById("btn-map-pause");
+    if (btnMapPause) {
+      btnMapPause.addEventListener("click", () => {
+        AudioSys.sfx("click");
+        document.getElementById("screen-pause").classList.remove("active");
+        state = "map";
+        UI.showScreen("screen-map", true);
+        const z = player ? Island.zoneLabel(Sprites.zoneAt(player.x, player.y)) : "DJERBA";
+        document.getElementById("map-level-name").textContent = z;
+        document.getElementById("map-level-sub").textContent = "MONDE LIBRE";
+        document.getElementById("map-level-desc").textContent = "Triangle vert = toi. Toute l'ile est ouverte, sans chrono.";
+        startMapLoop();
+      });
+    }
     document.getElementById("btn-quit").addEventListener("click", () => {
       AudioSys.sfx("click");
       document.getElementById("screen-pause").classList.remove("active");
-      openMap(currentMissionId || 1);
+      goTitle();
     });
     document.getElementById("btn-close-panel").addEventListener("click", () => {
       AudioSys.sfx("click");

@@ -495,9 +495,11 @@ button.hud-chip {
   pointer-events: none;
 }
 .hud-timer .value {
-  font-size: 12px;
+  font-size: 7px;
   line-height: 1.2;
   color: #fff;
+  max-width: 92px;
+  overflow: hidden;
 }
 .hud-timer.urgent {
   background: rgba(90, 16, 16, 0.55);
@@ -1034,9 +1036,8 @@ button.hud-chip {
 #map-canvas {
   width: 100%;
   max-height: 100%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  background: #1a6bb5;
+  image-rendering: auto;
+  background: #7ec8e0;
 }
 
 .map-info {

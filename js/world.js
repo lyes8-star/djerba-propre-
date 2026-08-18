@@ -31,9 +31,9 @@ const World = (() => {
 
   function create(mission) {
     const m = mission || {};
-    const W = 1280;
-    const H = 1840;
-    const count = Math.round((m.trash || 24) * 1.65);
+    const W = Island.W;
+    const H = Island.H;
+    const count = Math.round((m.trash || 70) * 1.4);
     const bagTarget = m.bagTarget || 5;
     const recycleTarget = m.recycleTarget || 12;
     const cleanTarget = m.cleanTarget || 80;
@@ -55,7 +55,7 @@ const World = (() => {
       bagTarget,
       recycleTarget,
       cleanTarget,
-      spawnEnabled: !!m.spawn,
+      spawnEnabled: m.spawn !== false,
       spawnTimer: 0,
       stains,
       combo: 0,
@@ -71,9 +71,10 @@ const World = (() => {
   }
 
   function clampPos(W, H, x, y) {
+    const c = Island.clamp(x, y);
     return {
-      x: Math.max(18, Math.min(W - 28, x)),
-      y: Math.max(338, Math.min(H - 28, y)),
+      x: Math.max(18, Math.min(W - 28, c.x)),
+      y: Math.max(18, Math.min(H - 28, c.y)),
     };
   }
 
@@ -82,7 +83,10 @@ const World = (() => {
     const r = Math.random();
     if (r < bagRatio) type = "bag";
     else type = TYPES[(seed + (Math.random() * TYPES.length) | 0) % TYPES.length];
-    const p = x != null ? clampPos(W, H, x, y) : clampPos(W, H, 30 + Math.random() * (W - 80), 340 + Math.random() * (H - 420));
+    const p = x != null ? clampPos(W, H, x, y) : (() => {
+      const r = Island.randLand();
+      return clampPos(W, H, r.x, r.y);
+    })();
     return {
       id: `${Date.now()}_${seed}_${Math.random()}`,
       type,
@@ -96,10 +100,8 @@ const World = (() => {
     const nCl = Math.max(8, Math.round(count / 5));
     const centers = [];
     for (let i = 0; i < nCl; i++) {
-      centers.push({
-        x: 50 + Math.random() * (W - 100),
-        y: 360 + Math.random() * (H - 450),
-      });
+      const r = Island.randLand();
+      centers.push({ x: r.x, y: r.y });
     }
     const trash = [];
     for (let i = 0; i < count; i++) {
@@ -116,7 +118,7 @@ const World = (() => {
     for (let i = 0; i < n; i++) {
       out.push({
         x: 16 + Math.random() * (W - 40),
-        y: 332 + Math.random() * (H - 380),
+        y: 16 + Math.random() * (H - 40),
         w: 8 + ((i * 13) % 26),
         h: 4 + ((i * 7) % 14),
         kind: i % 5,
@@ -138,13 +140,14 @@ const World = (() => {
     const out = [];
     for (let i = 0; i < n && i < pool.length; i++) {
       const d = pool[i];
+      const r = Island.randLand();
       out.push({
         id: `rare_${d.type}_${i}`,
         type: d.type,
         name: d.name,
         rare: true,
-        x: 40 + Math.random() * (W - 100),
-        y: 350 + Math.random() * (H - 440),
+        x: r.x,
+        y: r.y,
         alive: true,
       });
     }
@@ -261,6 +264,9 @@ const World = (() => {
   function followBin(world, player) {
     world.bin.x += (player.x - 18 - world.bin.x) * 0.12;
     world.bin.y += (player.y + 8 - world.bin.y) * 0.12;
+    const c = Island.clamp(world.bin.x, world.bin.y);
+    world.bin.x = c.x;
+    world.bin.y = c.y;
   }
 
   function objectives(world) {
