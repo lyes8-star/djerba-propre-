@@ -52,13 +52,14 @@ const UI = (() => {
     return "*".repeat(n) + ".".repeat(3 - n);
   }
 
-  function updateHud(progress, world, timeLeft) {
+    function updateHud(progress, world, timeLeft) {
     const st = progress;
     els.level.textContent = `NV.${st.level}`;
     els.xpFill.style.width = `${Math.min(100, (st.xp / st.xpToNext) * 100)}%`;
     if (els.xpLabel) els.xpLabel.textContent = `${st.xp}/${st.xpToNext}`;
-    els.timer.textContent = formatTime(timeLeft);
-    if (els.timerBox) els.timerBox.classList.toggle("urgent", timeLeft <= 10);
+    const zone = window.__player ? Island.zoneLabel(Sprites.zoneAt(window.__player.x, window.__player.y)) : "DJERBA";
+    els.timer.textContent = zone;
+    if (els.timerBox) els.timerBox.classList.remove("urgent");
     const scoreTxt = world.score.toLocaleString("fr-FR");
     if (els.score.textContent !== scoreTxt) {
       els.score.textContent = scoreTxt;

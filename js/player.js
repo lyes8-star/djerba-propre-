@@ -4,9 +4,10 @@ const Player = (() => {
   const PH = 40;
 
   function create(stats) {
+    const start = Island.xy("sidi");
     return {
-      x: 448,
-      y: 430,
+      x: start.x,
+      y: start.y,
       vx: 0,
       vy: 0,
       facing: 1,
@@ -42,8 +43,11 @@ const Player = (() => {
     if (world.inside) {
       Places.collide(p, world);
     } else {
+      const c = Island.clamp(p.x + 16, p.y + 28);
+      p.x = c.x - 16;
+      p.y = c.y - 28;
       p.x = Math.max(8, Math.min(world.W - PW, p.x));
-      p.y = Math.max(330, Math.min(world.H - PH, p.y));
+      p.y = Math.max(8, Math.min(world.H - PH, p.y));
       Places.collide(p, world);
     }
     Places.tick(world, p, dt);
