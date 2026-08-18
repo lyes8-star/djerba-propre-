@@ -35,7 +35,7 @@ const Sprites = (() => {
   }
 
   function drawHouse(ctx, x, y, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 48, 56)) return;
+    if (cam && !Atlas.inView(cam, x, y, 64, 72)) return;
     Atlas.blit(ctx, Atlas.frames.house, x, y);
   }
 
@@ -499,7 +499,7 @@ const Sprites = (() => {
   }
 
   function drawHouseWarm(ctx, x, y, cam) {
-    if (cam && !Atlas.inView(cam, x, y, 48, 56)) return;
+    if (cam && !Atlas.inView(cam, x, y, 64, 72)) return;
     Atlas.blit(ctx, Atlas.frames.houseWarm, x, y);
   }
 
@@ -941,7 +941,7 @@ const Sprites = (() => {
     }
     blitSign(Atlas.frames.signHoumt, "houmt", -40, -50);
     blitSign(Atlas.frames.signVille, "houmt", 40, -50);
-    blitSign(Atlas.frames.signSouk, "houmt", -220, -50);
+    blitSign(Atlas.frames.signSouk, "houmt", -352, -50);
     blitSign(Atlas.frames.signAjim, "ajim", -20, -40);
     blitSign(Atlas.frames.signPort, "portHoumt", 20, -40);
     blitSign(Atlas.frames.signPlage, "sidi", -20, -30);
@@ -1037,15 +1037,18 @@ const Sprites = (() => {
       Atlas.blit(ctx, Atlas.frames.hill, md.x - 110, md.y + 90);
     }
     const houmt = Island.xy("houmt");
-    [[-60, 40], [40, 40], [120, 10], [-140, 10], [200, 80], [-200, 40], [80, 100], [-40, 120]].forEach(([ox, oy]) => {
+    [[-40, 40], [80, 40], [192, 96], [320, 96], [448, 232], [576, 232],
+      [-352, -20], [-224, 116], [-480, 252], [80, 232], [192, 368], [448, 368]].forEach(([ox, oy]) => {
       drawLamp(ctx, houmt.x + ox, houmt.y + oy, cam);
     });
     const mid = Island.xy("midoun");
-    drawLamp(ctx, mid.x - 30, mid.y + 20, cam);
-    drawLamp(ctx, mid.x + 50, mid.y + 20, cam);
-    drawLamp(ctx, mid.x + 10, mid.y + 80, cam);
+    drawLamp(ctx, mid.x - 32, mid.y + 20, cam);
+    drawLamp(ctx, mid.x + 96, mid.y + 20, cam);
+    drawLamp(ctx, mid.x - 32, mid.y + 200, cam);
+    drawLamp(ctx, mid.x + 224, mid.y + 200, cam);
     drawLamp(ctx, aj.x + 10, aj.y - 10, cam);
-    drawLamp(ctx, aj.x + 70, aj.y + 40, cam);
+    drawLamp(ctx, aj.x + 128, aj.y + 96, cam);
+    drawLamp(ctx, aj.x + 256, aj.y + 232, cam);
     Island.loopPts().forEach((p, i) => {
       if (i % 3) return;
       drawLamp(ctx, p.x - 18, p.y - 6, cam);
@@ -1059,11 +1062,11 @@ const Sprites = (() => {
     const er = Island.xy("erriadh");
     drawLamp(ctx, er.x - 16, er.y + 20, cam);
     drawLamp(ctx, er.x + 36, er.y + 8, cam);
-    drawStall(ctx, mid.x - 50, mid.y + 50, cam);
-    drawStall(ctx, mid.x + 20, mid.y + 50, cam);
+    drawStall(ctx, mid.x - 50, mid.y - 20, cam);
+    drawStall(ctx, mid.x + 20, mid.y - 20, cam);
     tileFill(ctx, Atlas.tiles.stone, aj.x - 90, aj.y + 28, 80, 16, cam);
     drawFountain(ctx, Island.xy("plaza").x - 16, Island.xy("plaza").y, cam);
-    drawMinaret(ctx, Island.xy("houmt").x + 200, Island.xy("houmt").y - 80, cam);
+    drawMinaret(ctx, Island.xy("houmt").x + 80, Island.xy("houmt").y - 140, cam);
     drawFlag(ctx, sidi.x, sidi.y - 20, "tn", t, cam);
     drawFlag(ctx, ph.x, ph.y, "tn", t, cam);
     drawFlag(ctx, aj.x + 20, aj.y - 20, "tn", t, cam);

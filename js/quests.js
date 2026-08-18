@@ -123,28 +123,28 @@ const Quests = (() => {
   ];
 
   const NPCS = [
-    { role: "tata", name: "Tata Zohra", style: "elderF", job: "sit", zone: "elmay", anchor: "elmay", dx: -30, dy: 86 },
-    { role: "miller", name: "Haj Slim", style: "merchM", job: "stand", zone: "elmay", anchor: "elmay", dx: 44, dy: 118 },
+    { role: "tata", name: "Tata Zohra", style: "elderF", job: "sit", zone: "elmay", anchor: "elmay", dx: 16, dy: 160 },
+    { role: "miller", name: "Haj Slim", style: "merchM", job: "stand", zone: "elmay", anchor: "elmay", dx: 160, dy: 340 },
     { role: "emma", name: "Emma", style: "tourF", job: "lounge", zone: "hotel", anchor: "hotel", dx: -40, dy: 40 },
     { role: "kidQ", name: "Yassine", style: "kidM", job: "run", zone: "beach", anchor: "sidi", dx: 50, dy: 70 },
-    { role: "amina", name: "Amina", style: "localF", job: "stand", zone: "ville", anchor: "houmt", dx: 60, dy: 90 },
+    { role: "amina", name: "Amina", style: "localF", job: "stand", zone: "ville", anchor: "houmt", dx: 80, dy: 168 },
     { role: "lalla", name: "Lalla Fatma", style: "elderF", job: "sit", zone: "plaza", anchor: "plaza", dx: 28, dy: 50 },
     { role: "marc", name: "Marc", style: "tourM", job: "stand", zone: "beach", anchor: "sidi", dx: -70, dy: 20 },
-    { role: "khaled", name: "Khaled", style: "cafe", job: "stand", zone: "ville", anchor: "houmt", dx: -20, dy: 92 },
+    { role: "khaled", name: "Khaled", style: "cafe", job: "stand", zone: "ville", anchor: "houmt", dx: -20, dy: 168 },
     { role: "hans", name: "Hans", style: "tourM2", job: "stand", zone: "airport", anchor: "airport", dx: 30, dy: 36 },
-    { role: "chedly", name: "Chedly", style: "merchM", job: "stand", zone: "souk", anchor: "houmt", dx: -200, dy: 70 },
-    { role: "lotfi", name: "Lotfi", style: "merchM", job: "stand", zone: "midounv", anchor: "midoun", dx: -40, dy: 40 },
-    { role: "omamina", name: "Om Amina", style: "elderF", job: "sit", zone: "elmay", anchor: "elmay", dx: 100, dy: 150 },
+    { role: "chedly", name: "Chedly", style: "merchM", job: "stand", zone: "souk", anchor: "houmt", dx: -352, dy: 100 },
+    { role: "lotfi", name: "Lotfi", style: "merchM", job: "stand", zone: "midounv", anchor: "midoun", dx: 0, dy: 48 },
+    { role: "omamina", name: "Om Amina", style: "elderF", job: "sit", zone: "elmay", anchor: "elmay", dx: 80, dy: 160 },
     { role: "lea", name: "Lea", style: "tourF2", job: "lounge", zone: "hotel", anchor: "hotel", dx: 50, dy: 70 },
-    { role: "sami", name: "Sami", style: "localM", job: "stand", zone: "souk", anchor: "houmt", dx: -170, dy: 180 },
+    { role: "sami", name: "Sami", style: "localM", job: "stand", zone: "souk", anchor: "houmt", dx: -224, dy: 240 },
     { role: "hedi", name: "Si Hedi", style: "elder", job: "sit", zone: "plaza", anchor: "plaza", dx: -36, dy: 16 },
     { role: "karim", name: "Karim", style: "localM", job: "stand", zone: "ville", anchor: "houmt", dx: 20, dy: 40 },
     { role: "nabil", name: "Nabil", style: "localM2", job: "stand", zone: "beach", anchor: "sidi", dx: 96, dy: 18 },
-    { role: "mimi", name: "Mimi", style: "cat", job: "sit", zone: "souk", anchor: "houmt", dx: -130, dy: 40 },
+    { role: "mimi", name: "Mimi", style: "cat", job: "sit", zone: "souk", anchor: "houmt", dx: -224, dy: 40 },
     { role: "brahim", name: "Brahim", style: "fisher", job: "fish", zone: "port", anchor: "ajim", dx: -40, dy: 8 },
     { role: "clara", name: "Clara", style: "tourF", job: "photo", zone: "erriadh", anchor: "erriadh", dx: -50, dy: -10 },
     { role: "riad", name: "Riadh", style: "localM2", job: "stand", zone: "erriadh", anchor: "erriadh", dx: 20, dy: 20 },
-    { role: "drippy", name: "Fathi", style: "localM2", job: "stand", zone: "ville", anchor: "houmt", dx: -50, dy: 130 },
+    { role: "drippy", name: "Fathi", style: "localM2", job: "stand", zone: "ville", anchor: "houmt", dx: -48, dy: 168 },
   ];
 
   function def(id) {
