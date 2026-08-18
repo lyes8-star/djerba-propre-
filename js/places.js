@@ -34,11 +34,14 @@ const Places = (() => {
     };
   }
 
+  const PX = 160;
+  const PY = 176;
+
   function house(anchor, dx, dy, room, title) {
     const p = at(anchor, dx, dy);
     return {
-      x: p.x, y: p.y, w: 64, h: 72,
-      doorX: 24, doorY: 48, doorW: 16, doorH: 20,
+      x: p.x, y: p.y, w: 80, h: 88,
+      doorX: 28, doorY: 60, doorW: 24, doorH: 24,
       room: room || "home", title: title || "Maison",
     };
   }
@@ -53,10 +56,14 @@ const Places = (() => {
     const out = [];
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        out.push(house(anchor, ox + c * 128, oy + r * 136, "home", title || "Maison"));
+        out.push(house(anchor, ox + c * PX, oy + r * PY, "home", title || "Maison"));
       }
     }
     return out;
+  }
+
+  function shopRow(anchor, ox, oy, names) {
+    return names.map((title, i) => shop(anchor, ox + i * PX, oy, title, title === "Etal"));
   }
 
   const hHotel = Island.xy("hotel");
@@ -65,108 +72,106 @@ const Places = (() => {
   const hHoumt = Island.xy("houmt");
 
   const TOWN = [
-    ...block("houmt", 192, -40, 4, 4, "Maison Houmt"),
-    house("houmt", -48, 88, "cafe", "Cafe DIRECT"),
-    shop("houmt", -480, -20, "Boutique"), shop("houmt", -352, -20, "Harissa"), shop("houmt", -224, -20, "The"),
-    shop("houmt", -480, 116, "Brik"), shop("houmt", -352, 116, "Souk"), shop("houmt", -224, 116, "Epices"),
-    shop("houmt", -480, 252, "Tapis"), shop("houmt", -352, 252, "Etal", true), shop("houmt", -224, 252, "Etal", true),
-    ...block("midoun", -128, 136, 4, 3, "Maison Midoun"),
-    shop("midoun", -128, 0, "Marche"), shop("midoun", 0, 0, "Etal", true), shop("midoun", 128, 0, "Harissa"),
-    ...block("ajim", 128, -40, 3, 3, "Maison Ajim"),
-    shop("ajim", -160, 8, "Poisson"), shop("ajim", -160, 144, "Etal", true),
-    ...block("guellala", -192, 80, 3, 2, "Maison potier"),
-    ...block("elmay", -192, 80, 3, 2, "Maison El May"),
-    house("elmay", 256, 80), house("elmay", 384, 80),
-    ...block("aghir", 128, 20, 3, 2, "Maison plage"),
-    ...block("erriadh", -160, -356, 4, 2, "Maison Erriadh"),
-    { x: hAjim.x + 24, y: hAjim.y + 200, w: 56, h: 48, doorX: 18, doorY: 28, doorW: 20, doorH: 18, room: "cabaret", title: "Cabaret" },
-    { x: hHoumt.x + 720, y: hHoumt.y + 232, w: 56, h: 48, doorX: 18, doorY: 28, doorW: 20, doorH: 18, room: "cabaret", title: "Cabaret" },
+    ...block("houmt", 240, 0, 5, 4, "Maison Houmt"),
+    ...block("houmt", -640, 400, 4, 3, "Maison Houmt"),
+    house("houmt", -40, 48, "cafe", "Cafe DIRECT"),
+    ...shopRow("houmt", -960, 0, ["Boutique", "Harissa", "The", "Brik", "Souk", "Epices"]),
+    ...shopRow("houmt", -960, 176, ["Tapis", "Etal", "Etal", "Poisson", "The", "Harissa"]),
+    ...block("midoun", -160, 96, 5, 4, "Maison Midoun"),
+    ...shopRow("midoun", -160, -80, ["Marche", "Etal", "Harissa", "The", "Epices"]),
+    ...block("ajim", 160, 0, 4, 4, "Maison Ajim"),
+    shop("ajim", -200, 0, "Poisson"), shop("ajim", -200, 176, "Etal", true),
+    ...block("guellala", -160, 80, 4, 3, "Maison potier"),
+    ...block("elmay", -160, 80, 4, 3, "Maison El May"),
+    ...block("aghir", 160, 0, 4, 3, "Maison plage"),
+    ...block("erriadh", 480, 0, 3, 3, "Maison Erriadh"),
+    { x: hAjim.x + 40, y: hAjim.y + 400, w: 56, h: 48, doorX: 18, doorY: 28, doorW: 20, doorH: 18, room: "cabaret", title: "Cabaret" },
+    { x: hHoumt.x + 1040, y: hHoumt.y + 352, w: 56, h: 48, doorX: 18, doorY: 28, doorW: 20, doorH: 18, room: "cabaret", title: "Cabaret" },
     { x: hHotel.x - 20, y: hHotel.y - 10, w: 88, h: 64, doorX: 36, doorY: 48, doorW: 16, doorH: 14, room: "hotel", title: "Hotel" },
     { x: hAir.x - 20, y: hAir.y - 10, w: 88, h: 56, doorX: 36, doorY: 40, doorW: 16, doorH: 14, room: "airport", title: "Aeroport DJE" },
   ];
 
   const SITES = [
     site("fort", "portHoumt", -40, -40, "Borj El Kebir", "BORJ KEBIR"),
-    site("fort", "portHoumt", -160, -20, "Borj El Ghazi Mustapha", "BORJ GHAZI"),
-    site("mosque", "houmt", 20, -140, "Mosquee des Turcs", "TURCS"),
-    site("mosque", "houmt", 148, -140, "Jemaa El Ghorba", "GHORBA"),
+    site("fort", "portHoumt", -200, -20, "Borj El Ghazi Mustapha", "BORJ GHAZI"),
+    site("mosque", "houmt", 0, -220, "Mosquee des Turcs", "TURCS"),
+    site("mosque", "houmt", 180, -220, "Jemaa El Ghorba", "GHORBA"),
     site("mosque", "sidi", -160, 50, "Mosquee Sidi Yati", "SIDI YATI"),
-    site("mosque", "ajim", -60, -160, "Mosquee Sidi Jmour", "SIDI JMOUR"),
-    site("menzel", "houmt", 40, 280, "Medina Houmt Souk", "MEDINA"),
+    site("mosque", "ajim", -80, -220, "Mosquee Sidi Jmour", "SIDI JMOUR"),
     site("fish", "portHoumt", 90, 50, "Marche aux poissons", "POISSONS"),
-    site("artisan", "houmt", -608, -20, "Marche artisanal", "ARTISAN"),
-    site("artisan", "houmt", -608, 116, "Atelier de tissage", "TISSAGE"),
-    site("artisan", "houmt", -608, 252, "Atelier de bijoux", "BIJOUX"),
-    site("artisan", "houmt", -608, 388, "Paniers en alfa", "ALFA"),
-    site("artisan", "houmt", -224, 388, "Marche d'epices", "EPICES"),
-    site("menzel", "houmt", 40, 420, "Ancien menzel", "MENZEL"),
+    site("artisan", "houmt", -1120, 0, "Marche artisanal", "ARTISAN"),
+    site("artisan", "houmt", -1120, 176, "Atelier de tissage", "TISSAGE"),
+    site("artisan", "houmt", -1120, 352, "Atelier de bijoux", "BIJOUX"),
+    site("artisan", "houmt", -1120, 528, "Paniers en alfa", "ALFA"),
+    site("artisan", "houmt", -800, 352, "Marche d'epices", "EPICES"),
+    site("menzel", "houmt", 80, 220, "Medina Houmt Souk", "MEDINA"),
 
-    site("mosque", "midoun", -48, -120, "Mosquee Sidi Salem", "SIDI SALEM"),
-    site("mosque", "midoun", 128, -120, "Mosquee El Bassi", "EL BASSI"),
-    site("menzel", "midoun", 400, 136, "Village Midoun", "MIDOUN"),
-    site("menzel", "midoun", 400, 272, "Houch djerbien", "HOUCH"),
-    site("menzel", "midoun", 400, 408, "Menzel Midoun", "MENZEL"),
-    site("oven", "midoun", 528, 408, "Four traditionnel", "FOUR"),
+    site("mosque", "midoun", -80, -260, "Mosquee Sidi Salem", "SIDI SALEM"),
+    site("mosque", "midoun", 160, -260, "Mosquee El Bassi", "EL BASSI"),
+    site("menzel", "midoun", 720, 96, "Village Midoun", "MIDOUN"),
+    site("menzel", "midoun", 720, 272, "Houch djerbien", "HOUCH"),
+    site("menzel", "midoun", 720, 448, "Menzel Midoun", "MENZEL"),
+    site("oven", "midoun", 720, 624, "Four traditionnel", "FOUR"),
 
-    site("graffiti", "erriadh", -160, -80, "Djerbahood", "DJERBAHOOD"),
-    site("graffiti", "erriadh", 0, -80, "Mur Erriadh", "STREET ART"),
-    site("graffiti", "erriadh", 160, -80, "Djerbahood Est", "HOOD"),
-    site("synagogue", "erriadh", 0, 20, "Synagogue de la Ghriba", "GHRIBA"),
-    site("mosque", "erriadh", 180, 20, "Petite mosquee", "MOSQUEE"),
-    site("menzel", "erriadh", -160, 80, "Hara Sghira", "HARA SGHIRA"),
-    site("menzel", "erriadh", 0, 80, "Maison juive", "MAISON"),
-    site("menzel", "erriadh", 160, 80, "Maison de la communaute", "MAISON"),
-    site("cemetery", "erriadh", 300, 80, "Cimetiere juif", "CIMETIERE"),
-    site("graffiti", "erriadh", -160, 456, "Atelier Djerbahood", "ATELIER"),
-    site("cistern", "erriadh", 352, 312, "Citerne Erriadh", "CITERNE"),
+    site("graffiti", "erriadh", -160, 0, "Djerbahood", "DJERBAHOOD"),
+    site("graffiti", "erriadh", 0, 0, "Mur Erriadh", "STREET ART"),
+    site("graffiti", "erriadh", 160, 0, "Djerbahood Est", "HOOD"),
+    site("synagogue", "erriadh", 0, 200, "Synagogue de la Ghriba", "GHRIBA"),
+    site("mosque", "erriadh", 200, 200, "Petite mosquee", "MOSQUEE"),
+    site("menzel", "erriadh", -160, 376, "Hara Sghira", "HARA SGHIRA"),
+    site("menzel", "erriadh", 0, 376, "Maison juive", "MAISON"),
+    site("menzel", "erriadh", 160, 376, "Maison de la communaute", "MAISON"),
+    site("cemetery", "erriadh", 360, 200, "Cimetiere juif", "CIMETIERE"),
+    site("graffiti", "erriadh", -160, 552, "Atelier Djerbahood", "ATELIER"),
+    site("cistern", "erriadh", 360, 376, "Citerne Erriadh", "CITERNE"),
 
-    site("mosque", "elmay", -48, -80, "Mosquee Fadhloun", "FADHLOUN"),
-    site("mosque", "elmay", 96, -80, "Mosquee Jamaa El May", "EL MAY"),
-    site("mosque", "elmay", -200, -80, "Mosquee Sidi Brahim", "SIDI BRAHIM"),
-    site("mosque", "elmay", 200, -80, "Mosquee Sidi Zayed", "SIDI ZAYED"),
-    site("menzel", "elmay", 0, -20, "Menzel El May", "MENZEL"),
-    site("menzel", "elmay", 128, -20, "Houch El May", "HOUCH"),
-    site("cistern", "elmay", -192, 352, "Citerne traditionnelle", "CITERNE"),
-    site("foggara", "elmay", -64, 352, "Foggara", "FOGGARA"),
-    site("oven", "elmay", 384, 216, "Four du village", "FOUR"),
-    site("mill", "elmay", 160, 352, "Huilerie traditionnelle", "HUILERIE"),
+    site("mosque", "elmay", -160, -200, "Mosquee Fadhloun", "FADHLOUN"),
+    site("mosque", "elmay", 0, -200, "Mosquee Jamaa El May", "EL MAY"),
+    site("mosque", "elmay", 160, -200, "Mosquee Sidi Brahim", "SIDI BRAHIM"),
+    site("mosque", "elmay", 320, -200, "Mosquee Sidi Zayed", "SIDI ZAYED"),
+    site("menzel", "elmay", 480, 80, "Menzel El May", "MENZEL"),
+    site("menzel", "elmay", 480, 256, "Houch El May", "HOUCH"),
+    site("cistern", "elmay", -160, 608, "Citerne traditionnelle", "CITERNE"),
+    site("foggara", "elmay", 0, 608, "Foggara", "FOGGARA"),
+    site("oven", "elmay", 480, 432, "Four du village", "FOUR"),
+    site("mill", "elmay", 160, 608, "Huilerie traditionnelle", "HUILERIE"),
 
-    site("museum", "guellala", -80, -80, "Musee du patrimoine", "MUSEE"),
-    site("kiln", "guellala", 40, -80, "Atelier de poterie", "POTERIE"),
-    site("kiln", "guellala", 140, -80, "Four de potier", "FOUR"),
-    site("kiln", "guellala", 240, -80, "Atelier Guellala", "POTERIE"),
-    site("kiln", "guellala", 40, 0, "Atelier d'argile", "ARGILE"),
-    site("oven", "guellala", 240, 0, "Four a pain", "FOUR"),
-    site("menzel", "guellala", 208, 80, "Village Guellala", "GUELLALA"),
-    site("menzel", "guellala", 208, 216, "Houch Guellala", "HOUCH"),
-    site("mosque", "guellala", 80, 352, "Petite mosquee", "MOSQUEE"),
-    site("cistern", "guellala", 240, 352, "Citerne Guellala", "CITERNE"),
+    site("museum", "guellala", -80, -200, "Musee du patrimoine", "MUSEE"),
+    site("kiln", "guellala", 80, -200, "Atelier de poterie", "POTERIE"),
+    site("kiln", "guellala", 240, -200, "Four de potier", "FOUR"),
+    site("kiln", "guellala", 400, -200, "Atelier Guellala", "POTERIE"),
+    site("kiln", "guellala", 80, -80, "Atelier d'argile", "ARGILE"),
+    site("oven", "guellala", 400, -80, "Four a pain", "FOUR"),
+    site("menzel", "guellala", 480, 80, "Village Guellala", "GUELLALA"),
+    site("menzel", "guellala", 480, 256, "Houch Guellala", "HOUCH"),
+    site("mosque", "guellala", 80, 608, "Petite mosquee", "MOSQUEE"),
+    site("cistern", "guellala", 400, 608, "Citerne Guellala", "CITERNE"),
 
-    site("museum", "explore", -60, 40, "Djerba Explore", "EXPLORE"),
-    site("museum", "explore", 80, 40, "Musee Lalla Hadria", "LALLA HADRIA"),
-    site("artisan", "explore", 220, 48, "Centre des arts et metiers", "ARTS"),
-    site("mill", "explore", -60, 180, "Ancienne huilerie", "HUILERIE"),
-    site("menzel", "explore", 80, 180, "Menzel Explore", "MENZEL"),
-    site("foggara", "explore", 220, 190, "Foggara Explore", "FOGGARA"),
-    site("cistern", "explore", 300, 180, "Citerne", "CITERNE"),
+    site("museum", "explore", -80, 0, "Djerba Explore", "EXPLORE"),
+    site("museum", "explore", 80, 0, "Musee Lalla Hadria", "LALLA HADRIA"),
+    site("artisan", "explore", 240, 8, "Centre des arts et metiers", "ARTS"),
+    site("mill", "explore", -80, 176, "Ancienne huilerie", "HUILERIE"),
+    site("menzel", "explore", 80, 176, "Menzel Explore", "MENZEL"),
+    site("foggara", "explore", 240, 188, "Foggara Explore", "FOGGARA"),
+    site("cistern", "explore", 320, 176, "Citerne", "CITERNE"),
 
-    site("menzel", "aghir", -40, -30, "Village Aghir", "AGHIR"),
+    site("menzel", "aghir", -80, -40, "Village Aghir", "AGHIR"),
     site("menzel", "mezraya", 80, 20, "Village Mezraya", "MEZRAYA"),
-    site("cistern", "aghir", -40, 90, "Citerne Aghir", "CITERNE"),
-    site("foggara", "mezraya", -30, 90, "Foggara Mezraya", "FOGGARA"),
-    site("mill", "aghir", -40, 180, "Huilerie Aghir", "HUILERIE"),
-    site("oven", "mezraya", 50, 180, "Four Mezraya", "FOUR"),
-    site("menzel", "sedouikech", -30, -30, "Village Sedouikech", "SEDOUIKECH"),
-    site("menzel", "mahboubine", -30, -30, "Village Mahboubine", "MAHBOUBINE"),
-    site("mosque", "sedouikech", 80, 90, "Petite mosquee", "MOSQUEE"),
-    site("menzel", "sedouikech", -30, 180, "Houch Sedouikech", "HOUCH"),
-    site("menzel", "mahboubine", -30, 180, "Ferme d'oliveraie", "FERME"),
-    site("foggara", "mahboubine", 100, 100, "Foggara sud", "FOGGARA"),
+    site("cistern", "aghir", -80, 120, "Citerne Aghir", "CITERNE"),
+    site("foggara", "mezraya", 80, 120, "Foggara Mezraya", "FOGGARA"),
+    site("mill", "aghir", -80, 220, "Huilerie Aghir", "HUILERIE"),
+    site("oven", "mezraya", 80, 220, "Four Mezraya", "FOUR"),
+    site("menzel", "sedouikech", -40, -40, "Village Sedouikech", "SEDOUIKECH"),
+    site("menzel", "mahboubine", -40, -40, "Village Mahboubine", "MAHBOUBINE"),
+    site("mosque", "sedouikech", 80, 120, "Petite mosquee", "MOSQUEE"),
+    site("menzel", "sedouikech", -40, 220, "Houch Sedouikech", "HOUCH"),
+    site("menzel", "mahboubine", -40, 220, "Ferme d'oliveraie", "FERME"),
+    site("foggara", "mahboubine", 120, 120, "Foggara sud", "FOGGARA"),
 
-    site("menzel", "lagoon", -30, -30, "Menzel palmeraie", "MENZEL"),
-    site("foggara", "lagoon", 80, 30, "Foggara lagune", "FOGGARA"),
-    site("cistern", "hotel", 100, 100, "Citerne hotel", "CITERNE"),
-    site("oven", "lagoon", -100, -50, "Four rural", "FOUR"),
+    site("menzel", "lagoon", 240, 200, "Menzel palmeraie", "MENZEL"),
+    site("foggara", "lagoon", 80, 40, "Foggara lagune", "FOGGARA"),
+    site("cistern", "hotel", 120, 120, "Citerne hotel", "CITERNE"),
+    site("oven", "lagoon", -120, -60, "Four rural", "FOUR"),
   ];
 
   const BUILDINGS = TOWN.concat(SITES);

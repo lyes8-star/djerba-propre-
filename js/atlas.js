@@ -723,62 +723,63 @@ const Atlas = (() => {
     return c;
   }
 
-  /* —— HOUSE (Djerba, plus grande, rues entre les lots) —— */
+  /* —— HOUSE (houch djerbien, lot + rue) —— */
   function bakeHouse() {
-    const { c, ctx } = make(64, 72);
-    px(ctx, 6, 69, 52, 2, "rgba(0,0,0,0.25)");
-    px(ctx, 6, 30, 52, 38, C.ink);
-    px(ctx, 7, 31, 50, 36, C.wall);
-    for (let y = 34; y < 64; y += 4) px(ctx, 8, y, 48, 1, C.wallD);
-    px(ctx, 7, 62, 50, 4, C.wallS);
-    px(ctx, 18, 6, 28, 26, C.ink);
-    px(ctx, 20, 8, 24, 24, C.blue);
-    px(ctx, 24, 6, 16, 8, C.blueL);
-    px(ctx, 26, 12, 12, 14, C.blueD);
-    px(ctx, 28, 14, 8, 5, C.blueL);
-    p1(ctx, 32, 8, C.white);
-    p1(ctx, 33, 7, C.white);
-    px(ctx, 24, 48, 16, 20, C.ink);
-    px(ctx, 25, 49, 14, 18, C.woodD);
-    px(ctx, 26, 50, 4, 16, C.woodL);
-    p1(ctx, 36, 60, C.gold);
+    const { c, ctx } = make(80, 88);
+    px(ctx, 8, 85, 64, 2, "rgba(0,0,0,0.28)");
+    px(ctx, 6, 36, 68, 50, C.ink);
+    px(ctx, 8, 38, 64, 46, C.wall);
+    for (let y = 42; y < 78; y += 5) px(ctx, 10, y, 60, 1, C.wallD);
+    px(ctx, 8, 78, 64, 6, C.wallS);
+    px(ctx, 10, 40, 12, 6, C.white);
+    px(ctx, 22, 4, 36, 34, C.ink);
+    px(ctx, 24, 6, 32, 32, C.blue);
+    px(ctx, 30, 4, 20, 10, C.blueL);
+    px(ctx, 32, 12, 16, 18, C.blueD);
+    px(ctx, 36, 16, 8, 6, C.blueL);
+    p1(ctx, 40, 6, C.white);
+    p1(ctx, 41, 5, C.white);
+    px(ctx, 28, 60, 24, 24, C.ink);
+    px(ctx, 30, 62, 20, 22, C.woodD);
+    px(ctx, 32, 64, 6, 18, C.woodL);
+    p1(ctx, 46, 76, C.gold);
     function win(x, y) {
-      px(ctx, x, y, 12, 12, C.ink);
-      px(ctx, x + 1, y + 1, 10, 10, C.blueX);
-      px(ctx, x + 1, y + 1, 10, 4, C.blueL);
-      px(ctx, x + 6, y + 1, 1, 10, C.white);
-      px(ctx, x + 1, y + 6, 10, 1, C.white);
+      px(ctx, x, y, 14, 14, C.ink);
+      px(ctx, x + 1, y + 1, 12, 12, C.blueX);
+      px(ctx, x + 1, y + 1, 12, 5, C.blueL);
+      px(ctx, x + 7, y + 1, 1, 12, C.white);
+      px(ctx, x + 1, y + 7, 12, 1, C.white);
     }
-    win(8, 40);
-    win(44, 40);
+    win(10, 46);
+    win(56, 46);
     return c;
   }
 
   function bakeHouseWarm() {
-    const { c, ctx } = make(64, 72);
-    px(ctx, 6, 69, 52, 2, "rgba(0,0,0,0.25)");
-    px(ctx, 6, 30, 52, 38, C.ink);
-    px(ctx, 7, 31, 50, 36, C.terra);
-    for (let y = 36; y < 64; y += 4) px(ctx, 8, y, 48, 1, C.terraD);
-    px(ctx, 7, 62, 50, 4, C.terraD);
-    px(ctx, 8, 32, 10, 5, C.terraL);
-    px(ctx, 18, 6, 28, 26, C.ink);
-    px(ctx, 20, 8, 24, 24, C.goldD);
-    px(ctx, 24, 6, 16, 8, C.gold);
-    px(ctx, 28, 14, 8, 5, C.goldL);
-    p1(ctx, 32, 8, C.white);
-    px(ctx, 24, 48, 16, 20, C.ink);
-    px(ctx, 25, 49, 14, 18, C.woodX);
-    px(ctx, 26, 50, 4, 16, C.wood);
-    p1(ctx, 36, 60, C.goldL);
+    const { c, ctx } = make(80, 88);
+    px(ctx, 8, 85, 64, 2, "rgba(0,0,0,0.28)");
+    px(ctx, 6, 36, 68, 50, C.ink);
+    px(ctx, 8, 38, 64, 46, C.terra);
+    for (let y = 44; y < 78; y += 5) px(ctx, 10, y, 60, 1, C.terraD);
+    px(ctx, 8, 78, 64, 6, C.terraD);
+    px(ctx, 10, 40, 14, 6, C.terraL);
+    px(ctx, 22, 4, 36, 34, C.ink);
+    px(ctx, 24, 6, 32, 32, C.goldD);
+    px(ctx, 30, 4, 20, 10, C.gold);
+    px(ctx, 36, 16, 8, 6, C.goldL);
+    p1(ctx, 40, 6, C.white);
+    px(ctx, 28, 60, 24, 24, C.ink);
+    px(ctx, 30, 62, 20, 22, C.woodX);
+    px(ctx, 32, 64, 6, 18, C.wood);
+    p1(ctx, 46, 76, C.goldL);
     function win(x, y) {
-      px(ctx, x, y, 12, 12, C.ink);
-      px(ctx, x + 1, y + 1, 10, 10, C.blueX);
-      px(ctx, x + 1, y + 1, 10, 4, C.blueL);
-      px(ctx, x + 6, y + 1, 1, 10, C.white);
+      px(ctx, x, y, 14, 14, C.ink);
+      px(ctx, x + 1, y + 1, 12, 12, C.blueX);
+      px(ctx, x + 1, y + 1, 12, 5, C.blueL);
+      px(ctx, x + 7, y + 1, 1, 12, C.white);
     }
-    win(8, 40);
-    win(44, 40);
+    win(10, 46);
+    win(56, 46);
     return c;
   }
 
