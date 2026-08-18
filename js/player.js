@@ -37,7 +37,8 @@ const Player = (() => {
     }
     p.ride = false;
     const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
-    let speed = p.baseSpeed * (1 + p.stats.moveBonus) * (1 - loaded * 0.2);
+    const cafe = typeof Progress !== "undefined" ? Progress.cafeBonus() : 0;
+    let speed = p.baseSpeed * (1 + p.stats.moveBonus + cafe) * (1 - loaded * 0.2);
     if (p.swim) speed *= 0.52;
 
     let ix = input.x;
@@ -75,8 +76,6 @@ const Player = (() => {
       if (p.attackTimer <= 0) p.attacking = false;
     }
     if (p.cooldown > 0) p.cooldown -= dt;
-
-    if (!world.inside) World.followBin(world, p);
   }
 
   function action(p, world, mode) {
@@ -141,14 +140,21 @@ const Player = (() => {
       }
     }
 
-    const rec = World.tryRecycle(world, p, p.stats);
-    if (rec && !rec.empty) return { type: "recycle", ...rec };
+    const glued = World.nearestBin(world, p, 40);
+    if (glued && p.inventory.length > 0) {
+      const dump = World.tryRecycle(world, p, p.stats);
+      if (dump && !dump.empty) return { type: "recycle", ...dump };
+    }
 
     const npc = Npc.nearest(world, p, 36);
     if (npc && mode !== "balai") {
       const nd = Math.hypot(npc.x - p.x, npc.y - p.y);
       let trashD = Infinity;
       for (const t of World.living(world)) {
+        const d = Math.hypot(t.x + 8 - (p.x + 16), t.y + 10 - (p.y + 20));
+        if (d < trashD) trashD = d;
+      }
+      for (const t of World.livingRares(world)) {
         const d = Math.hypot(t.x + 8 - (p.x + 16), t.y + 10 - (p.y + 20));
         if (d < trashD) trashD = d;
       }
@@ -165,7 +171,11 @@ const Player = (() => {
       world.score += pick.points;
       return { type: "pickup", ...pick };
     }
-    if (npc) {
+
+    const rec = World.tryRecycle(world, p, p.stats);
+    if (rec && !rec.empty) return { type: "recycle", ...rec };
+
+    if (npc && mode !== "balai") {
       p.attacking = false;
       p.attackTimer = 0;
       return Npc.talk(npc, p);

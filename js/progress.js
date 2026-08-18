@@ -9,7 +9,8 @@ const Progress = (() => {
       icon: "P",
       cost: 500,
       maxLevel: 5,
-      desc: (lv) => `+PORTEE +VITESSE  LV.${lv}`,
+      equip: true,
+      desc: (lv) => `Portee ${40 + lv * 8}px · action x${(1 + lv * 0.25).toFixed(2)}`,
       range: (lv) => 40 + lv * 8,
       speed: (lv) => 1 + lv * 0.25,
     },
@@ -19,7 +20,8 @@ const Progress = (() => {
       icon: "S",
       cost: 700,
       maxLevel: 5,
-      desc: (lv) => `+CAPACITE +RESIST  LV.${lv}`,
+      equip: false,
+      desc: (lv) => `Capacite ${8 + lv * 4} · tri +${Math.round(0.05 * lv * 100)}%`,
       capacity: (lv) => 8 + lv * 4,
       resistance: (lv) => 0.05 * lv,
     },
@@ -29,7 +31,8 @@ const Progress = (() => {
       icon: "B",
       cost: 300,
       maxLevel: 5,
-      desc: (lv) => `+EFFICACITE  LV.${lv}`,
+      equip: true,
+      desc: (lv) => `Rayon ${28 + lv * 8}px · balayage x${(0.5 + lv * 0.25).toFixed(2)}`,
       radius: (lv) => 28 + lv * 8,
       efficiency: (lv) => 0.5 + lv * 0.25,
     },
@@ -39,16 +42,17 @@ const Progress = (() => {
       icon: "R",
       cost: 600,
       maxLevel: 5,
-      desc: (lv) => `+CAPACITE +VITESSE  LV.${lv}`,
+      equip: false,
+      desc: (lv) => `+${5 + lv * 5} places · marche +${Math.round(0.1 * lv * 100)}%`,
       capacity: (lv) => 5 + lv * 5,
       speedBonus: (lv) => 0.1 * lv,
     },
   };
 
   const SHOP_ITEMS = [
-    { id: "boost_xp", name: "Boost XP x2 (1 run)", icon: "X", cost: 200 },
-    { id: "boost_time", name: "+30s depart", icon: "T", cost: 150 },
-    { id: "hat_gold", name: "Casquette or", icon: "H", cost: 400 },
+    { id: "hat_gold", name: "Casquette or", icon: "H", cost: 400, blurb: "Chapeau dore, tout de suite" },
+    { id: "boost_xp", name: "XP x2 (5 gains)", icon: "X", cost: 200, blurb: "Double les 5 prochains XP" },
+    { id: "cafe", name: "Cafe serre 90s", icon: "C", cost: 180, blurb: "+25% vitesse pendant 90s" },
   ];
 
   const defaultState = () => ({
@@ -59,13 +63,14 @@ const Progress = (() => {
     highScore: 0,
     tools: { pince: 1, sac: 1, balai: 1, brouette: 1 },
     cosmetics: { hat_gold: false },
-    boosts: { xp: false, time: false },
+    boosts: { xpCharges: 0, cafeUntil: 0 },
     daily: {
       day: todayKey(),
-      cleanBeaches: 0,
-      collectObjects: 0,
+      pick: 0,
+      recycle: 0,
+      quests: 0,
       claimed: false,
-      targets: { beaches: 3, objects: 50 },
+      targets: { pick: 40, recycle: 15, quests: 1 },
     },
     totalRecycled: 0,
     campaign: {
@@ -98,6 +103,11 @@ const Progress = (() => {
       state.tools = { ...defaultState().tools, ...(parsed.tools || {}) };
       state.cosmetics = { ...defaultState().cosmetics, ...(parsed.cosmetics || {}) };
       state.boosts = { ...defaultState().boosts, ...(parsed.boosts || {}) };
+      if (parsed.boosts && parsed.boosts.xp === true && !state.boosts.xpCharges) {
+        state.boosts.xpCharges = 5;
+      }
+      delete state.boosts.xp;
+      delete state.boosts.time;
       state.campaign = {
         ...defaultState().campaign,
         ...(parsed.campaign || {}),
@@ -106,10 +116,14 @@ const Progress = (() => {
       };
       state.quests = { ...(parsed.quests || {}) };
       state.qFlags = { ...(parsed.qFlags || {}) };
-      if (!parsed.daily || parsed.daily.day !== todayKey()) {
+      if (!parsed.daily || parsed.daily.day !== todayKey() || parsed.daily.pick == null) {
         state.daily = defaultState().daily;
       } else {
-        state.daily = { ...defaultState().daily, ...parsed.daily };
+        state.daily = {
+          ...defaultState().daily,
+          ...parsed.daily,
+          targets: { ...defaultState().daily.targets, ...(parsed.daily.targets || {}) },
+        };
       }
     } catch {
       state = defaultState();
@@ -130,7 +144,10 @@ const Progress = (() => {
   }
 
   function addXp(amount) {
-    if (state.boosts.xp) amount = Math.floor(amount * 2);
+    if ((state.boosts.xpCharges || 0) > 0) {
+      amount = Math.floor(amount * 2);
+      state.boosts.xpCharges -= 1;
+    }
     state.xp += amount;
     let leveled = 0;
     while (state.xp >= state.xpToNext) {
@@ -175,43 +192,70 @@ const Progress = (() => {
       return { ok: false, reason: "Déjà acheté" };
     }
     if (!spendCoins(item.cost)) return { ok: false, reason: "Pas assez de pièces" };
-    if (id === "boost_xp") state.boosts.xp = true;
-    if (id === "boost_time") state.boosts.time = true;
+    if (id === "boost_xp") state.boosts.xpCharges = (state.boosts.xpCharges || 0) + 5;
+    if (id === "cafe") state.boosts.cafeUntil = Date.now() + 90000;
     if (id === "hat_gold") state.cosmetics.hat_gold = true;
     save();
     return { ok: true };
   }
 
   function consumeBoostsOnStart() {
-    const used = { time: state.boosts.time, xp: state.boosts.xp };
-    // XP boost lasts one full run; cleared after result. Time boost applied once at start.
-    state.boosts.time = false;
-    save();
-    return used;
+    return { time: false, xp: (state.boosts.xpCharges || 0) > 0 };
   }
 
   function clearXpBoost() {
-    state.boosts.xp = false;
+    state.boosts.xpCharges = 0;
     save();
   }
 
-  function recordRun({ score, recycled, beachClean, missionId, starsEarned }) {
-    if (score > state.highScore) state.highScore = score;
-    state.totalRecycled += recycled;
-    state.daily.collectObjects += recycled;
-    if (beachClean) state.daily.cleanBeaches += 1;
-    if (missionId) {
-      const key = String(missionId);
-      const prev = state.campaign.stars[key] || 0;
-      if (starsEarned > prev) state.campaign.stars[key] = starsEarned;
-      const best = state.campaign.bestScore[key] || 0;
-      if (score > best) state.campaign.bestScore[key] = score;
-      // unlock next if at least 1 star OR beach clean enough
-      if (starsEarned >= 1 || beachClean) {
-        const next = missionId + 1;
-        if (next > state.campaign.unlocked) state.campaign.unlocked = Math.min(8, next);
-      }
+  function cafeBonus() {
+    return Date.now() < (state.boosts.cafeUntil || 0) ? 0.25 : 0;
+  }
+
+  function cafeLeft() {
+    const left = (state.boosts.cafeUntil || 0) - Date.now();
+    return left > 0 ? left : 0;
+  }
+
+  function dailyList() {
+    const d = state.daily;
+    const t = d.targets;
+    return [
+      { id: "pick", label: "Ramasser 40 dechets", cur: d.pick || 0, need: t.pick },
+      { id: "recycle", label: "Recycler 15 sacs", cur: d.recycle || 0, need: t.recycle },
+      { id: "quests", label: "Finir 1 quete", cur: d.quests || 0, need: t.quests },
+    ];
+  }
+
+  function bumpDaily(key, n) {
+    if (state.daily.day !== todayKey() || state.daily.pick == null) {
+      state.daily = defaultState().daily;
     }
+    state.daily[key] = (state.daily[key] || 0) + n;
+    save();
+  }
+
+  function notePickup(n) {
+    if (n > 0) bumpDaily("pick", n);
+  }
+
+  function noteRecycle(n) {
+    if (n > 0) {
+      state.totalRecycled += n;
+      bumpDaily("recycle", n);
+    }
+  }
+
+  function noteQuest() {
+    bumpDaily("quests", 1);
+  }
+
+  function questsDone() {
+    return Object.values(state.quests || {}).filter((v) => v === "done").length;
+  }
+
+  function recordRun({ score }) {
+    if (score > state.highScore) state.highScore = score;
     save();
   }
 
@@ -235,11 +279,9 @@ const Progress = (() => {
 
   function canClaimDaily() {
     const d = state.daily;
-    return (
-      !d.claimed &&
-      d.cleanBeaches >= d.targets.beaches &&
-      d.collectObjects >= d.targets.objects
-    );
+    const t = d && d.targets;
+    if (!t) return false;
+    return !d.claimed && (d.pick || 0) >= t.pick && (d.recycle || 0) >= t.recycle && (d.quests || 0) >= t.quests;
   }
 
   function claimDaily() {
@@ -280,6 +322,13 @@ const Progress = (() => {
     buyShopItem,
     consumeBoostsOnStart,
     clearXpBoost,
+    cafeBonus,
+    cafeLeft,
+    dailyList,
+    notePickup,
+    noteRecycle,
+    noteQuest,
+    questsDone,
     recordRun,
     canClaimDaily,
     claimDaily,
