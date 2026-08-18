@@ -324,6 +324,7 @@
     player = Player.create(Progress.toolStats());
     Npc.spawn(world);
     if (typeof Traffic !== "undefined") Traffic.spawn(world);
+    if (typeof Quests !== "undefined") Quests.spawn(world);
     window.__player = player;
     AudioSys.unlock();
     AudioSys.setTheme(playMusicTheme());
@@ -457,6 +458,7 @@
         FX.floatText(res.item.x, res.item.y - 6, `+${res.points}`);
         if (res.combo >= 2) UI.showCombo(res.combo);
       }
+      if (typeof Quests !== "undefined") Quests.onTrash(world);
     } else if (res.type === "recycle") {
       AudioSys.sfx("recycle");
       FX.recycle(world.bin.x + 6, world.bin.y + 4);
@@ -476,6 +478,18 @@
       if (res.coins) {
         Progress.addCoins(res.coins);
         FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
+      }
+      if (res.quest === "start") {
+        UI.toast(`QUETE<br/>${res.questTitle || ""}`, 2200);
+        UI.toggleObjectives(true);
+      } else if (res.quest === "step") {
+        UI.toast((res.questTitle || "QUETE") + "<br/>etape suivante", 1800);
+        UI.toggleObjectives(true);
+      } else if (res.quest === "done") {
+        AudioSys.sfx("super");
+        FX.stars(player.x + 8, player.y);
+        UI.toast(`QUETE OK!<br/>${res.questTitle || ""}`, 2600);
+        UI.toggleObjectives(true);
       }
     } else if (res.type === "door") {
       AudioSys.sfx("click");
@@ -567,6 +581,13 @@
     if (typeof Traffic !== "undefined" && !world.inside) Traffic.update(world, dt, player);
     Player.update(player, dt, input, world);
     Npc.update(world, dt, player, animTime);
+    if (world.qToast) {
+      const t = world.qToast;
+      world.qToast = null;
+      UI.toast(t.html, 2000);
+      if (t.kind === "step") AudioSys.sfx("click");
+      UI.toggleObjectives(true);
+    }
     if (!world.inside) World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
@@ -593,11 +614,12 @@
     const nearTaxi = !world.inside && typeof Traffic !== "undefined" ? Traffic.nearestTaxi(world, player, 36) : null;
     const taxiD = nearTaxi ? Math.hypot(nearTaxi.px - (player.x + 16), nearTaxi.py - (player.y + 20)) : 999;
     const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
+    const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1 && world.ride.bubble > 0;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
-    else if (nearTaxi && taxiD <= npcD + 6) UI.setToolLabel("TAXI");
+    else if (nearTaxi && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
       UI.setToolLabel(more && nearNpc.bubble > 0 ? "SUITE" : "PARLER");

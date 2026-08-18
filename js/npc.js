@@ -178,7 +178,7 @@ const Npc = (() => {
   };
 
   function attachRoutine(n) {
-    if (n.routine || n.indoor || n.partner || STAY[n.style] || n.zone === "holy" || n.zone === "inside") return;
+    if (n.questNpc || n.routine || n.indoor || n.partner || STAY[n.style] || n.zone === "holy" || n.zone === "inside") return;
     const r = ROUTINES[n.style];
     if (!r) return;
     n.routine = r;
@@ -410,7 +410,7 @@ const Npc = (() => {
       n.actT -= dt;
       if (n.actT <= 0) n.acting = false;
 
-      if (n.routine && n.job !== "commute") {
+      if (n.routine && n.job !== "commute" && !n.questNpc) {
         n.jobT -= dt;
         if (n.jobT <= 0) beginCommute(n);
       }
@@ -604,6 +604,25 @@ const Npc = (() => {
 
     if (n.bubble > 0) {
       return { type: "talk", who, text: n.bubbleText, coins: 0, more: false };
+    }
+
+    if (typeof Quests !== "undefined" && n.qRole) {
+      const q = Quests.talk(n, player, window.__world);
+      if (q && q.text) {
+        const qWho = q.who || `${n.name}`;
+        const more = startSpeech(n, q.text, qWho);
+        n.talkCd = 2;
+        n.talked = true;
+        return {
+          type: "talk",
+          who: qWho,
+          text: n.bubbleText,
+          coins: q.coins || 0,
+          more,
+          quest: q.quest,
+          questTitle: q.title,
+        };
+      }
     }
 
     if (n.talkCd > 0 && n.talked) {

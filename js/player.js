@@ -95,7 +95,8 @@ const Player = (() => {
         const nd = npc
           ? Math.hypot(npc.x + 16 - (p.x + 16), npc.y + 20 - (p.y + 20))
           : 999;
-        if (td < 36 && td <= nd + 6) {
+        const qHere = npc && npc.qRole && typeof Quests !== "undefined" && Quests.mark(npc) && nd < 36;
+        if (td < 36 && td <= nd + 6 && !qHere) {
           p.cooldown = 0.35;
           return Traffic.board(world, p, taxi);
         }

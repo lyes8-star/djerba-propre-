@@ -750,7 +750,7 @@ const Sprites = (() => {
     const animal = n.style === "dog" || n.style === "cat" || n.style === "catGinger";
     const aw = animal ? 24 : Atlas.PW;
     const ah = animal ? 16 : Atlas.PH;
-    if (cam && !Atlas.inView(cam, n.x, n.y, aw, ah)) return;
+    if (cam && !Atlas.inView(cam, n.x, n.y - 14, aw, ah + 14)) return;
     const moving = Math.hypot(n.vx || 0, n.vy || 0) > 6;
     const idle = !moving && Math.sin(t * 3 + n.y) > 0.82 ? 2 : 0;
     const walk = moving ? Math.floor(t * 10) % 4 : idle;
@@ -777,7 +777,19 @@ const Sprites = (() => {
         }
       }
     }
-    if (n.prompt && !(n.bubble > 0)) {
+    const qMark = typeof Quests !== "undefined" ? Quests.mark(n) : null;
+    if (qMark && !(n.bubble > 0)) {
+      const bx = n.x + (animal ? 8 : 12);
+      const by = n.y - 14;
+      const flash = Math.sin(t * 8) > 0;
+      ctx.fillStyle = "#140c1c";
+      ctx.fillRect(bx, by, 9, 12);
+      ctx.fillStyle = flash ? "#fff46c" : "#fcbc14";
+      ctx.fillRect(bx + 1, by + 1, 7, 10);
+      ctx.fillStyle = "#140c1c";
+      ctx.fillRect(bx + 4, by + 2, 2, 5);
+      ctx.fillRect(bx + 4, by + 8, 2, 2);
+    } else if (n.prompt && !(n.bubble > 0)) {
       const bx = n.x + (animal ? 8 : 12);
       const by = n.y - 12;
       ctx.fillStyle = "#140c1c";

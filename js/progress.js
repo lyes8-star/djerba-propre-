@@ -75,6 +75,8 @@ const Progress = (() => {
       stars: {},
       bestScore: {},
     },
+    quests: {},
+    qFlags: {},
   });
 
   function todayKey() {
@@ -102,6 +104,8 @@ const Progress = (() => {
         stars: { ...(parsed.campaign && parsed.campaign.stars) },
         bestScore: { ...(parsed.campaign && parsed.campaign.bestScore) },
       };
+      state.quests = { ...(parsed.quests || {}) };
+      state.qFlags = { ...(parsed.qFlags || {}) };
       if (!parsed.daily || parsed.daily.day !== todayKey()) {
         state.daily = defaultState().daily;
       } else {
