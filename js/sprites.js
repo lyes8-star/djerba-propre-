@@ -1073,58 +1073,143 @@ const Sprites = (() => {
   function drawIslandMap(ctx, W, H, t, unlocked, starsMap, selectedId, player) {
     Atlas.bake();
     Island.bake();
+    const C = Atlas.C;
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = Atlas.C.sea2;
+    ctx.fillStyle = C.sea1;
     ctx.fillRect(0, 0, W, H);
     tileFill(ctx, seaFrame(1, t), 0, 0, W, H);
     const g = Island.groundCanvas();
-    const mw = Math.round(Math.min(W - 16, H * (Island.W / Island.H)));
+    const mw = Math.round(Math.min(W - 8, (H - 8) * (Island.W / Island.H)));
     const mh = Math.round(mw * (Island.H / Island.W));
     const ox = ((W - mw) / 2) | 0;
     const oy = ((H - mh) / 2) | 0;
     if (g) ctx.drawImage(g, ox, oy, mw, mh);
 
-    const foam = Atlas.C.foam;
-    ctx.fillStyle = foam;
+    function mx(x) { return ox + (x / Island.W) * mw; }
+    function my(y) { return oy + (y / Island.H) * mh; }
+
     const n = Island.poly.length;
+    ctx.fillStyle = C.foam;
     for (let i = 0; i < n; i++) {
       const a = Island.poly[i];
-      const x = ox + (a.x / Island.W) * mw;
-      const y = oy + (a.y / Island.H) * mh;
-      if (Math.sin(t * 6 + i) > 0) ctx.fillRect(x | 0, y | 0, 2, 2);
+      if (Math.sin(t * 6 + i) > 0) ctx.fillRect(mx(a.x) | 0, my(a.y) | 0, 2, 2);
     }
+
+    const aj = Island.xy("ajim");
+    ctx.save();
+    ctx.strokeStyle = C.foam;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.lineDashOffset = -((t * 10) % 6);
+    ctx.beginPath();
+    ctx.moveTo(mx(aj.x - 40), my(aj.y + 20));
+    ctx.lineTo(ox + 8, oy + mh - 18);
+    ctx.stroke();
+    ctx.restore();
+
+    function pin(x, y, col) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect((x - 3) | 0, (y - 3) | 0, 7, 7);
+      ctx.fillStyle = col;
+      ctx.fillRect((x - 2) | 0, (y - 2) | 0, 5, 5);
+    }
+    function dome(x, y) {
+      ctx.fillStyle = C.ink;
+      ctx.fillRect((x - 4) | 0, (y - 2) | 0, 9, 6);
+      ctx.fillStyle = C.white;
+      ctx.fillRect((x - 3) | 0, (y - 1) | 0, 7, 4);
+      ctx.fillStyle = C.blueL;
+      ctx.fillRect((x - 2) | 0, (y - 4) | 0, 5, 3);
+    }
+
+    (Island.MAP_ICONS || []).forEach(([name, kind]) => {
+      const p = Island.xy(name);
+      const x = mx(p.x);
+      const y = my(p.y);
+      if (kind === "ville") dome(x, y);
+      else if (kind === "fort") pin(x, y, C.sandC);
+      else if (kind === "market") pin(x, y, C.red);
+      else if (kind === "holy") pin(x, y, C.blue);
+      else if (kind === "beach") pin(x, y, C.gold);
+      else if (kind === "pottery") pin(x, y, C.terra);
+      else if (kind === "port") pin(x, y, C.navyL);
+    });
 
     ctx.font = "6px monospace";
     ctx.textAlign = "left";
     (Island.MAP_LABELS || []).forEach(([name, label]) => {
       const p = Island.xy(name);
-      const x = ox + (p.x / Island.W) * mw;
-      const y = oy + (p.y / Island.H) * mh;
-      ctx.fillStyle = "rgba(20,12,28,0.7)";
-      ctx.fillRect((x - 2) | 0, (y - 9) | 0, 4 + label.length * 4, 8);
+      const x = mx(p.x) + 6;
+      const y = my(p.y) - 4;
+      ctx.fillStyle = "rgba(20,12,28,0.75)";
+      ctx.fillRect((x - 2) | 0, (y - 7) | 0, 4 + label.length * 4, 8);
       ctx.fillStyle = "#fce46c";
-      ctx.fillText(label, x, y - 3);
+      ctx.fillText(label, x, y - 1);
+    });
+
+    const cx = W - 28;
+    const cy = 22;
+    ctx.fillStyle = "rgba(20,12,28,0.55)";
+    ctx.fillRect(cx - 16, cy - 16, 32, 32);
+    ctx.strokeStyle = C.gold;
+    ctx.strokeRect(cx - 16, cy - 16, 32, 32);
+    ctx.fillStyle = C.goldL;
+    ctx.fillText("N", cx - 2, cy - 8);
+    ctx.fillText("S", cx - 2, cy + 14);
+    ctx.fillText("E", cx + 8, cy + 2);
+    ctx.fillText("O", cx - 14, cy + 2);
+    ctx.fillStyle = C.gold;
+    ctx.fillRect(cx - 1, cy - 6, 2, 12);
+    ctx.fillRect(cx - 6, cy - 1, 12, 2);
+
+    const lx = 8;
+    const ly = H - 52;
+    ctx.fillStyle = "rgba(20,12,28,0.72)";
+    ctx.fillRect(lx, ly, 118, 46);
+    ctx.strokeStyle = C.goldD;
+    ctx.strokeRect(lx, ly, 118, 46);
+    ctx.fillStyle = C.goldL;
+    ctx.fillText("LEGENDE", lx + 4, ly + 9);
+    const legend = [
+      [C.white, "VILLE"],
+      [C.sandC, "FORT"],
+      [C.red, "MARCHE"],
+      [C.gold, "PLAGE"],
+      [C.terra, "POTERIE"],
+      [C.navyL, "PORT / BAC"],
+    ];
+    legend.forEach((row, i) => {
+      const x = lx + 4 + (i % 2) * 58;
+      const y = ly + 16 + ((i / 2) | 0) * 10;
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x, y - 5, 6, 6);
+      ctx.fillStyle = row[0];
+      ctx.fillRect(x + 1, y - 4, 4, 4);
+      ctx.fillStyle = C.white;
+      ctx.fillText(row[1], x + 8, y);
     });
 
     if (player) {
-      const m = {
-        x: ox + (player.x / Island.W) * mw,
-        y: oy + (player.y / Island.H) * mh,
-      };
+      const px = mx(player.x);
+      const py = my(player.y);
       ctx.fillStyle = "#140c1c";
       ctx.beginPath();
-      ctx.moveTo(m.x, m.y - 8);
-      ctx.lineTo(m.x + 7, m.y + 7);
-      ctx.lineTo(m.x - 7, m.y + 7);
+      ctx.moveTo(px, py - 9);
+      ctx.lineTo(px + 7, py + 6);
+      ctx.lineTo(px - 7, py + 6);
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = Math.sin(t * 8) > 0 ? "#3cbc3c" : "#fff";
       ctx.beginPath();
-      ctx.moveTo(m.x, m.y - 6);
-      ctx.lineTo(m.x + 5, m.y + 5);
-      ctx.lineTo(m.x - 5, m.y + 5);
+      ctx.moveTo(px, py - 7);
+      ctx.lineTo(px + 5, py + 4);
+      ctx.lineTo(px - 5, py + 4);
       ctx.closePath();
       ctx.fill();
+      ctx.fillStyle = "rgba(20,12,28,0.8)";
+      ctx.fillRect((px + 8) | 0, (py - 12) | 0, 52, 9);
+      ctx.fillStyle = "#fff";
+      ctx.fillText("TU ES ICI", px + 10, py - 5);
     }
   }
 
