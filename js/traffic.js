@@ -8,15 +8,15 @@ const Traffic = (() => {
   const HAIL_RANGE = 54;
 
   const STANDS = [
-    { id: "sidi", label: "SIDI MAHREZ", ox: 8, oy: 104, side: "s" },
-    { id: "houmt", label: "HOUMT SOUK", ox: 268, oy: 88, side: "s" },
-    { id: "midoun", label: "MIDOUN", ox: -36, oy: 168, side: "s" },
-    { id: "ajim", label: "AJIM", ox: 16, oy: 96, side: "s" },
-    { id: "guellala", label: "GUELLALA", ox: 72, oy: 36, side: "s" },
-    { id: "elmay", label: "EL MAY", ox: 28, oy: 48, side: "s" },
-    { id: "aghir", label: "AGHIR", ox: -64, oy: 44, side: "s" },
-    { id: "airport", label: "AEROPORT", ox: 108, oy: 76, side: "s" },
-    { id: "erriadh", label: "ERRIADH", ox: 44, oy: 86, side: "s" },
+    { id: "sidi", label: "SIDI MAHREZ", ox: 8, oy: 120, side: "s" },
+    { id: "houmt", label: "HOUMT SOUK", ox: 48, oy: 500, side: "s" },
+    { id: "midoun", label: "MIDOUN", ox: 20, oy: 540, side: "s" },
+    { id: "ajim", label: "AJIM", ox: 16, oy: 380, side: "s" },
+    { id: "guellala", label: "GUELLALA", ox: 80, oy: 360, side: "s" },
+    { id: "elmay", label: "EL MAY", ox: 40, oy: 360, side: "s" },
+    { id: "aghir", label: "AGHIR", ox: -80, oy: 280, side: "s" },
+    { id: "airport", label: "AEROPORT", ox: 108, oy: 90, side: "s" },
+    { id: "erriadh", label: "ERRIADH", ox: 40, oy: 200, side: "s" },
   ];
 
   function densify(pts, step, closed) {
@@ -233,15 +233,15 @@ const Traffic = (() => {
       ["sidi", -48, 70, "red"],
       ["sidi", 96, 58, "blue"],
       ["sidi", 132, 78, "louage"],
-      ["houmt", -80, 50, "white"],
-      ["houmt", 140, 70, "blue"],
-      ["midoun", 60, 40, "red"],
-      ["ajim", -20, 36, "louage"],
-      ["elmay", 40, 24, "white"],
+      ["houmt", -80, 160, "white"],
+      ["houmt", 80, 160, "blue"],
+      ["midoun", 60, -20, "red"],
+      ["ajim", -20, 48, "louage"],
+      ["elmay", 40, -10, "white"],
       ["erriadh", -30, 40, "blue"],
       ["airport", 80, 20, "white"],
-      ["aghir", -20, 30, "red"],
-      ["guellala", -50, 30, "white"],
+      ["aghir", -40, 20, "red"],
+      ["guellala", -40, 20, "white"],
     ];
     parked.forEach(([name, ox, oy, kind], i) => {
       const p = Island.xy(name);
