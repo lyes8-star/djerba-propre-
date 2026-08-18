@@ -840,12 +840,102 @@ const Atlas = (() => {
   }
 
   function bakeBanner(label, bg) {
-    const { c, ctx } = make(52, 14);
-    px(ctx, 0, 0, 52, 14, C.ink);
-    px(ctx, 1, 1, 50, 12, bg);
+    const w = Math.max(48, 10 + String(label).length * 6);
+    const { c, ctx } = make(w, 40);
+    const mid = (w / 2) | 0;
+    px(ctx, mid - 1, 18, 3, 20, C.woodX);
+    px(ctx, mid, 18, 1, 20, C.woodL);
+    px(ctx, mid - 5, 36, 11, 3, C.ink);
+    px(ctx, mid - 4, 36, 9, 2, C.woodD);
+    px(ctx, 1, 1, w - 2, 18, C.ink);
+    px(ctx, 2, 2, w - 4, 16, bg);
+    px(ctx, 3, 3, 3, 14, C.white);
+    px(ctx, w - 6, 3, 2, 14, "rgba(255,255,255,0.25)");
     ctx.fillStyle = C.white;
     ctx.font = "8px monospace";
-    ctx.fillText(label, 4, 10);
+    ctx.fillText(label, 8, 13);
+    return c;
+  }
+
+  function bakeHotel() {
+    const { c, ctx } = make(88, 64);
+    px(ctx, 4, 61, 80, 2, "rgba(0,0,0,0.28)");
+    px(ctx, 6, 18, 76, 44, C.ink);
+    px(ctx, 7, 19, 74, 42, C.wall);
+    px(ctx, 7, 19, 8, 42, C.white);
+    px(ctx, 7, 56, 74, 4, C.navy);
+    px(ctx, 8, 10, 72, 10, C.ink);
+    px(ctx, 9, 11, 70, 8, C.navy);
+    px(ctx, 11, 12, 66, 6, C.navyL);
+    ctx.fillStyle = C.goldL;
+    ctx.font = "8px monospace";
+    ctx.fillText("HOTEL", 28, 17);
+    function win(x, y) {
+      px(ctx, x, y, 10, 10, C.ink);
+      px(ctx, x + 1, y + 1, 8, 8, C.blueX);
+      px(ctx, x + 1, y + 1, 8, 3, C.blueL);
+      px(ctx, x + 5, y + 1, 1, 8, C.white);
+    }
+    for (let r = 0; r < 2; r++) {
+      for (let i = 0; i < 5; i++) win(12 + i * 14, 24 + r * 14);
+    }
+    px(ctx, 36, 48, 16, 14, C.ink);
+    px(ctx, 37, 49, 14, 12, C.woodD);
+    px(ctx, 38, 50, 4, 10, C.woodL);
+    p1(ctx, 48, 56, C.gold);
+    return c;
+  }
+
+  function bakeAirport() {
+    const { c, ctx } = make(88, 56);
+    px(ctx, 4, 53, 80, 2, "rgba(0,0,0,0.28)");
+    px(ctx, 8, 16, 72, 38, C.ink);
+    px(ctx, 9, 17, 70, 36, C.metal);
+    px(ctx, 9, 17, 70, 8, C.navy);
+    px(ctx, 10, 18, 68, 6, C.navyL);
+    ctx.fillStyle = C.white;
+    ctx.font = "8px monospace";
+    ctx.fillText("DJE", 36, 23);
+    for (let i = 0; i < 4; i++) {
+      px(ctx, 14 + i * 16, 28, 12, 10, C.ink);
+      px(ctx, 15 + i * 16, 29, 10, 8, C.blueL);
+      px(ctx, 15 + i * 16, 29, 10, 3, C.white);
+    }
+    px(ctx, 36, 40, 16, 14, C.ink);
+    px(ctx, 37, 41, 14, 12, C.navyD);
+    px(ctx, 38, 42, 4, 10, C.blueL);
+    p1(ctx, 48, 48, C.gold);
+    px(ctx, 68, 4, 12, 18, C.ink);
+    px(ctx, 69, 5, 10, 16, C.white);
+    px(ctx, 71, 0, 6, 8, C.red);
+    px(ctx, 72, 8, 8, 4, C.navy);
+    return c;
+  }
+
+  function bakePlane() {
+    const { c, ctx } = make(48, 18);
+    px(ctx, 4, 16, 40, 2, "rgba(0,0,0,0.2)");
+    px(ctx, 8, 8, 32, 6, C.ink);
+    px(ctx, 9, 9, 30, 4, C.white);
+    px(ctx, 36, 6, 8, 8, C.ink);
+    px(ctx, 37, 7, 6, 6, C.navy);
+    px(ctx, 18, 4, 10, 4, C.ink);
+    px(ctx, 19, 5, 8, 3, C.white);
+    px(ctx, 18, 12, 10, 4, C.ink);
+    px(ctx, 4, 9, 6, 4, C.red);
+    p1(ctx, 14, 10, C.blue);
+    p1(ctx, 20, 10, C.blue);
+    p1(ctx, 26, 10, C.blue);
+    return c;
+  }
+
+  function bakeLounge() {
+    const { c, ctx } = make(20, 12);
+    px(ctx, 2, 10, 16, 2, "rgba(0,0,0,0.22)");
+    px(ctx, 2, 4, 16, 6, C.ink);
+    px(ctx, 3, 5, 14, 4, C.white);
+    px(ctx, 3, 2, 10, 4, C.ink);
+    px(ctx, 4, 3, 8, 3, C.blueL);
     return c;
   }
 
@@ -1374,14 +1464,6 @@ const Atlas = (() => {
     frames.zlebia = bakeZlebia();
     frames.merguez = bakeMerguez();
     frames.baklawa = bakeBaklawa();
-    frames.signHarissa = bakeBanner("HARISSA", C.redD);
-    frames.signThe = bakeBanner("THE", C.greenD);
-    frames.signYallah = bakeBanner("YALLAH", C.goldD);
-    frames.signSahit = bakeBanner("SAHIT", C.navy);
-    frames.signInchallah = bakeBanner("MELA", C.terraD);
-    frames.signLouage = bakeBanner("LOUAGE", C.blueD);
-    frames.signDirect = bakeBanner("DIRECT", C.woodD);
-    frames.signBrik = bakeBanner("BRIK", C.goldD);
     frames.bin = bakeBin();
     frames.palm0 = bakePalm(0);
     frames.palm1 = bakePalm(2);
@@ -1390,6 +1472,10 @@ const Atlas = (() => {
     frames.shop = bakeShop();
     frames.stall = bakeStall();
     frames.cabaret = bakeCabaret();
+    frames.hotel = bakeHotel();
+    frames.airport = bakeAirport();
+    frames.plane = bakePlane();
+    frames.lounge = bakeLounge();
     frames.signCabaret = bakeBanner("CABARET", C.redD);
     frames.minaret = bakeMinaret();
     frames.lamp = bakeLamp();
@@ -1398,6 +1484,9 @@ const Atlas = (() => {
     frames.signSouk = bakeBanner("SOUK", C.terraD);
     frames.signVille = bakeBanner("VILLE", C.navy);
     frames.signPort = bakeBanner("PORT", C.navyD);
+    frames.signHotel = bakeBanner("HOTEL", C.navy);
+    frames.signPool = bakeBanner("PISCINE", C.blue);
+    frames.signAirport = bakeBanner("AEROPORT", C.navyD);
     frames.lhOn = bakeLighthouse(true);
     frames.lhOff = bakeLighthouse(false);
     frames.boat = bakeBoat();

@@ -39,8 +39,14 @@ const Player = (() => {
     if (ix > 0.1) p.facing = 1;
     if (ix < -0.1) p.facing = -1;
 
-    p.x = Math.max(8, Math.min(world.W - PW, p.x));
-    p.y = Math.max(330, Math.min(world.H - PH, p.y));
+    if (world.inside) {
+      Places.collide(p, world);
+    } else {
+      p.x = Math.max(8, Math.min(world.W - PW, p.x));
+      p.y = Math.max(330, Math.min(world.H - PH, p.y));
+      Places.collide(p, world);
+    }
+    Places.tick(world, p, dt);
 
     if (p.attackTimer > 0) {
       p.attackTimer -= dt;
@@ -48,14 +54,29 @@ const Player = (() => {
     }
     if (p.cooldown > 0) p.cooldown -= dt;
 
-    World.followBin(world, p);
+    if (!world.inside) World.followBin(world, p);
   }
 
   function action(p, world, mode) {
     if (p.cooldown > 0) return null;
+    const door = Places.tryDoor(p, world);
+    if (door) {
+      p.attacking = false;
+      return door;
+    }
     p.cooldown = 0.3 / p.stats.pinceSpeed;
     p.attacking = true;
     p.attackTimer = 0.22;
+
+    if (world.inside) {
+      const inn = Npc.nearest(world, p, 40);
+      if (inn && mode !== "balai") {
+        p.attacking = false;
+        p.attackTimer = 0;
+        return Npc.talk(inn, p);
+      }
+      return { type: "miss" };
+    }
 
     if (mode === "balai") {
       const r = World.trySweep(world, p, p.stats);

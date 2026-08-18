@@ -65,6 +65,8 @@ const World = (() => {
       missionName: m.name || "Plage",
       bin: { x: 430, y: 448 },
       npcs: [],
+      inside: null,
+      doorCd: 0,
     };
   }
 

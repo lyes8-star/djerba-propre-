@@ -270,6 +270,40 @@ const NpcTalk = {
         "Miaou. Le bas-côté est chaud. Je m'y allonge. Les louages évitent. Les plaques de l'ouest, moins. J'ai perdu une vie sur cette route. Il m'en reste. Ramasse. Les sacs bougent comme des proies. Je me fais avoir à chaque fois.",
       ],
     },
+    hotel: {
+      tourF: [
+        "La piscine est nickel. Enfin, presque: un cousin de l'ouest a laissé un slip et une clope dans le skimmer. J'ai choisi Djerba pour le calme. J'ai eu le sermon Fitna en prime, et je m'en plains pas. Les chaises longues, ça existe. Chez eux, on s'accroupit même au buffet. Je bronze. Toi tu ramasses. On se complète.",
+      ],
+      tourM: [
+        "All-inclusive, they said. They forgot the Algeria DLC: honking at the pool, arguing with the toaster, and a towel that looks like it survived a war. The hotel is pretty. The neighbors' playlist is not. I'm on team lounge chair. Pick up their bottles. I'll keep the sunbed.",
+      ],
+      tourF2: [
+        "Pool selfie without a western plate, please. The receptionist already gave me the chairs-versus-squat briefing. Five stars, extra mean. I'm converting. If the west wants a holiday, they can discover soap first.",
+      ],
+      merchF: [
+        "Réception. Check-in, sourire, et zéro WESH dans le hall, règlement maison. Ils veulent négocier la chambre comme un tapis. Calme-toi. C'est un hôtel, pas un souk d'Alger. La piscine a une eau. Les WC ont une porte. Si ça choque, le ferry est par là. Toi tu nettoies le deck. Sahit. Tu as plus de classe que leurs valises.",
+      ],
+      localF: [
+        "Je viens pour la piscine le vendredi. Eux viennent pour le volume. On n'est pas le même tarif. Djerba a un hôtel. L'ouest a un complexe. Devine qui a des transats. Ramasse les mégots au bord de l'eau. Les enfants nagent. Eux crachent. Diagnostic.",
+      ],
+    },
+    airport: {
+      tourM: [
+        "DJE. Cute terminal. The captain of the joke already boarded: someone asked if the toilets were Turkish. The agent pointed at a door, a seat, and a flush. Educational. I'm flying out with sand in my shoes and a Fitna master's. Don't litter the runway. That's a new low, and yet...",
+      ],
+      tourF: [
+        "Aéroport Djerba. File calme, jusqu'à ce qu'un WESH discute le poids du sac comme si c'était le PIB. J'ai mon boarding. Eux ont un hymne. Devine qui décolle sans s'accroupir. Ramasse près des sièges. Ils laissent tout, même la honte.",
+      ],
+      localM: [
+        "DJE, c'est un aéroport. Pas un hall de gare à fosse. Ils arrivent en clics-clacs, ils cherchent l'Europe, ils trouvent Djerba. On tamponne. On sourit. On range leurs canettes sous les sièges. Fitna d'escale, version kerosène. Toi tu ramasses la piste. Le contrôle aérien te remercie, et le phare aussi, au passage.",
+      ],
+      localM2: [
+        "Visa: tampon. Klaxon: interdit dans le terminal, ils ont pas lu. Pipi accroupi: on a des WC, miracle. Le CV de l'ouest passe mal au security. Moi je bosse ici. Toi tu nettoies. Ensemble on empêche DJE de devenir leur salle d'attente accroupie.",
+      ],
+      tourM2: [
+        "Gate A. I whispered. A radio answered from a suitcase. That's the whole trip. Beautiful island, educational neighbors, airport still standing. I'm picking up a bottle that isn't mine. Peer pressure, tarmac edition.",
+      ],
+    },
   },
 
   WINKS: [

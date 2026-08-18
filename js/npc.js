@@ -9,8 +9,11 @@ const Npc = (() => {
     souk: { x0: 12, y0: 536, x1: 390, y1: 848 },
     ville: { x0: 548, y0: 536, x1: 940, y1: 848 },
     plaza: { x0: 404, y0: 536, x1: 536, y1: 712 },
-    lagoon: { x0: 24, y0: 892, x1: 930, y1: 1150 },
+    lagoon: { x0: 300, y0: 892, x1: 540, y1: 1150 },
     road: { x0: 24, y0: 472, x1: 930, y1: 536 },
+    hotel: { x0: 540, y0: 890, x1: 940, y1: 1160 },
+    airport: { x0: 16, y0: 980, x1: 340, y1: 1180 },
+    inside: { x0: 12, y0: 40, x1: 288, y1: 210 },
   };
 
   const NAMES = {
@@ -89,6 +92,9 @@ const Npc = (() => {
       plaza: ["localM", "localF", "elder", "elderF", "tourF", "tourF2", "cafe"],
       lagoon: ["localM", "tourM", "tourF", "tourF2", "kidM", "kidF", "localM2", "tourM2"],
       road: ["localM", "localF", "tourM", "cafe", "localM2"],
+      hotel: ["tourM", "tourF", "tourF2", "tourM2", "localF", "merchF"],
+      airport: ["tourM", "tourF", "tourM2", "localM", "localM2"],
+      inside: ["localM"],
     }[zone] || ["localM"];
     style = style || pick(pool);
     const names = NAMES[style] || ["Djerbien"];
@@ -208,10 +214,14 @@ const Npc = (() => {
     npcs.push(place(spawnOne("plaza", npcs.length, "stand", "cafe"), 490, 560));
     spawnFill(npcs, "plaza", 3, "wander", ["localM", "localF", "tourF"]);
 
-    spawnFill(npcs, "lagoon", 7, "wander", ["localM", "localM2", "tourF"]);
-    spawnFill(npcs, "lagoon", 4, "photo", ["tourM", "tourF2", "tourM2"]);
-    spawnFill(npcs, "lagoon", 4, "run", ["kidM", "kidF"]);
-    spawnFill(npcs, "lagoon", 3, "lounge", ["tourF", "localF", "tourM2"]);
+    spawnFill(npcs, "lagoon", 4, "wander", ["localM", "localM2", "tourF"]);
+    spawnFill(npcs, "lagoon", 2, "photo", ["tourM", "tourF2"]);
+    spawnFill(npcs, "lagoon", 2, "run", ["kidM", "kidF"]);
+
+    spawnFill(npcs, "hotel", 4, "lounge", ["tourF", "tourM2", "localF"]);
+    spawnFill(npcs, "hotel", 3, "wander", ["tourM", "tourF2", "merchF"]);
+    spawnFill(npcs, "airport", 4, "wander", ["tourM", "tourF", "localM", "tourM2"]);
+    spawnFill(npcs, "airport", 2, "stand", ["localM2", "tourF2"]);
 
     spawnFill(npcs, "road", 8, "pace", ["localM", "localF", "tourM", "cafe", "localM2"]);
 
@@ -272,6 +282,7 @@ const Npc = (() => {
   function update(world, dt, player) {
     const npcs = world.npcs || [];
     for (const n of npcs) {
+      if (world.inside ? !n.indoor : n.indoor) continue;
       if (n.talkCd > 0) n.talkCd -= dt;
       if (n.bubble > 0) n.bubble -= dt;
       n.actT -= dt;
@@ -329,7 +340,9 @@ const Npc = (() => {
   function nearest(world, player, range) {
     let best = null;
     let bestD = range;
+    const indoor = !!(world && world.inside);
     for (const n of world.npcs || []) {
+      if (indoor !== !!n.indoor) continue;
       const d = Math.hypot(n.x + 16 - (player.x + 16), n.y + 20 - (player.y + 20));
       if (d < bestD) {
         best = n;
