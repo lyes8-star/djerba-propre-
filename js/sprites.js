@@ -795,15 +795,19 @@ const Sprites = (() => {
       const img = pack && (pack[`${face}_${walk}_${act}`] || pack[`${face}_0_0`]);
       if (img) Atlas.blit(ctx, img, n.x, n.y);
       const st = Atlas.NPC_STYLES && Atlas.NPC_STYLES[n.style];
-      if (st && st.tool === "smoke" && !st.kid) {
-        const puff = n.acting || Math.sin(t * 4 + n.y) > 0.55;
-        if (puff) {
-          const side = (n.facing || 1) >= 0 ? 1 : -1;
-          const px = n.x + (side > 0 ? 26 : 4);
-          const py = n.y + 8 - ((t * 18 + n.x) % 8);
-          ctx.fillStyle = "rgba(220,220,220,0.7)";
-          ctx.fillRect(px, py, 2, 2);
-          ctx.fillRect(px + side, py - 3, 1, 1);
+      const holyNo = n.zone === "holy" || (window.__world && window.__world.inside &&
+        (window.__world.inside.room === "mosque" || window.__world.inside.room === "synagogue" || window.__world.inside.room === "cemetery"));
+      if (st && st.tool === "smoke" && !st.kid && !holyNo) {
+        const side = (n.facing || 1) >= 0 ? 1 : -1;
+        const baseX = n.x + (side > 0 ? 27 : 2);
+        const baseY = n.y + (n.acting ? 5 : 12);
+        for (let i = 0; i < 3; i++) {
+          const rise = ((t * 16 + n.x * 0.3 + i * 4) % 14);
+          const px = baseX + side * (i * 0.6 + rise * 0.12);
+          const py = baseY - rise;
+          const sz = i === 0 ? 3 : 2;
+          ctx.fillStyle = `rgba(232,232,232,${Math.max(0.2, 0.8 - rise * 0.05)})`;
+          ctx.fillRect(px | 0, py | 0, sz, sz);
         }
       }
     }

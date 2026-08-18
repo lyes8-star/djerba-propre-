@@ -263,6 +263,7 @@ const Npc = (() => {
     spawnFill(npcs, "beach", 4, "photo", ["tourM", "tourF2", "tourM2"]);
     spawnFill(npcs, "beach", 3, "sit", ["elder", "elderF"]);
     spawnFill(npcs, "beach", 4, "pace", ["localM", "tourF", "localF", "tourM2"]);
+    spawnFill(npcs, "beach", 5, "sit", ["localF", "tourF", "localF2", "tourF2", "localF"]);
 
     quay.forEach(([x, y], i) => {
       npcs.push(place(spawnOne("port", npcs.length, i < 4 ? "fish" : "stand", i < 4 ? "fisher" : "tourM"), x, y));
@@ -291,6 +292,7 @@ const Npc = (() => {
     spawnFill(npcs, "ville", 6, "wander", ["localM", "localF", "localF2", "cafe"]);
     spawnFill(npcs, "ville", 3, "run", ["kidM", "kidF"]);
     spawnFill(npcs, "ville", 2, "sit", ["elderF"]);
+    spawnFill(npcs, "ville", 5, "sit", ["localF", "localF2", "tourF", "localF", "localF2"]);
     npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), hv.x + 170, hv.y + 200));
     npcs.push(place(spawnOne("ville", npcs.length, "stand", "cabaret"), hv.x + 194, hv.y + 196));
     npcs.push(place(spawnOne("ville", npcs.length, "stand", "escort"), hv.x + 146, hv.y + 208));
@@ -302,6 +304,30 @@ const Npc = (() => {
     npcs.push(place(spawnOne("plaza", npcs.length, "sit", "elder"), pl.x + 20, pl.y + 20));
     npcs.push(place(spawnOne("plaza", npcs.length, "stand", "cafe"), pl.x + 40, pl.y - 20));
     spawnFill(npcs, "plaza", 3, "wander", ["localM", "localF", "tourF"]);
+    spawnFill(npcs, "plaza", 4, "sit", ["localF", "localF2", "tourF", "tourF2"]);
+
+    const hot = Island.xy("hotel");
+    const mid = Island.xy("midoun");
+    const air = Island.xy("airport");
+    [
+      ["beach", sidi.x - 8, sidi.y + 22, "sit", "localF"],
+      ["beach", sidi.x + 20, sidi.y + 26, "sit", "tourF"],
+      ["beach", sidi.x + 72, sidi.y + 14, "lounge", "localF2"],
+      ["ville", hv.x + 28, hv.y + 48, "sit", "localF"],
+      ["ville", hv.x + 54, hv.y + 50, "sit", "localF2"],
+      ["ville", hv.x - 36, hv.y + 96, "stand", "localF"],
+      ["plaza", pl.x + 52, pl.y + 6, "sit", "tourF"],
+      ["plaza", pl.x + 78, pl.y + 8, "sit", "localF2"],
+      ["hotel", hot.x + 18, hot.y + 78, "lounge", "tourF"],
+      ["hotel", hot.x + 46, hot.y + 82, "sit", "localF"],
+      ["midounv", mid.x + 8, mid.y + 38, "sit", "localF"],
+      ["midounv", mid.x + 34, mid.y + 40, "sit", "localF2"],
+      ["airport", air.x + 36, air.y + 28, "sit", "tourF"],
+      ["port", ajim.x + 6, ajim.y + 38, "sit", "localF"],
+      ["port", ajim.x + 32, ajim.y + 42, "sit", "tourF"],
+    ].forEach(([zone, x, y, job, st]) => {
+      npcs.push(place(spawnOne(zone, npcs.length, job, st), x, y));
+    });
 
     spawnFill(npcs, "lagoon", 4, "wander", ["localM", "localM2", "tourF"]);
     spawnFill(npcs, "lagoon", 2, "photo", ["tourM", "tourF2"]);
@@ -382,6 +408,13 @@ const Npc = (() => {
     n.wait = 0;
   }
 
+  function isSmoker(n) {
+    const st = typeof Atlas !== "undefined" && Atlas.NPC_STYLES && Atlas.NPC_STYLES[n.style];
+    if (!st || st.kid || st.tool !== "smoke") return false;
+    if (n.zone === "holy") return false;
+    return true;
+  }
+
   function stayHome(n, dt) {
     n.vx = 0;
     n.vy = 0;
@@ -393,10 +426,10 @@ const Npc = (() => {
     if (n.wait <= 0) {
       if (!n.partner) n.facing = Math.random() < 0.5 ? 1 : -1;
       n.wait = 1.4 + Math.random() * 2.8;
-      const smoker = Atlas.NPC_STYLES[n.style] && Atlas.NPC_STYLES[n.style].tool === "smoke";
+      const smoker = isSmoker(n);
       if (n.job === "fish" || n.job === "chat" || smoker || Math.random() < 0.35) {
         n.acting = true;
-        n.actT = smoker ? 0.85 + Math.random() * 0.7 : 0.45 + Math.random() * 0.4;
+        n.actT = smoker ? 1.2 + Math.random() * 0.9 : 0.45 + Math.random() * 0.4;
       }
     } else n.wait -= dt;
   }
@@ -417,14 +450,14 @@ const Npc = (() => {
 
       const near = player && Math.hypot(n.x - player.x, n.y - player.y) < 44;
       n.prompt = near;
-      const smoker = Atlas.NPC_STYLES[n.style] && Atlas.NPC_STYLES[n.style].tool === "smoke";
+      const smoker = isSmoker(n);
       if (near && Math.random() < 0.012) {
         n.acting = true;
-        n.actT = smoker ? 1.1 : 0.7;
+        n.actT = smoker ? 1.3 : 0.7;
         n.facing = player.x >= n.x ? 1 : -1;
-      } else if (smoker && !n.acting && Math.random() < 0.01) {
+      } else if (smoker && !n.acting && Math.random() < 0.035) {
         n.acting = true;
-        n.actT = 0.8 + Math.random() * 0.6;
+        n.actT = 1.1 + Math.random() * 0.8;
       }
 
       if (n.job === "commute") {
@@ -518,16 +551,9 @@ const Npc = (() => {
   }
 
   function paginate(text) {
+    if (typeof NpcTalk !== "undefined" && NpcTalk.paginate) return NpcTalk.paginate(text, 96);
     const raw = String(text || "").trim();
-    if (!raw) return [""];
-    const parts = raw.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean);
-    const pages = [];
-    for (const p of parts) {
-      if (pages.length && (p.length < 18 || pages[pages.length - 1].length < 32)) {
-        pages[pages.length - 1] += " " + p;
-      } else pages.push(p);
-    }
-    return pages.length ? pages : [raw];
+    return raw ? [raw] : [""];
   }
 
   function whoFor(n) {
@@ -547,7 +573,7 @@ const Npc = (() => {
     n.pages = paginate(text);
     n.page = 0;
     n.bubbleText = n.pages[0];
-    n.bubble = 7;
+    n.bubble = 24;
     n.whoLabel = who;
     n.acting = true;
     n.actT = 1.2;
@@ -581,7 +607,7 @@ const Npc = (() => {
       });
       if (extra.length) return pick(extra);
     }
-    if (Math.random() < (n.style.startsWith("tour") ? 0.22 : 0.32)) return pick(WINKS);
+    if (n.talked && Math.random() < 0.08) return pick(WINKS);
     const pack = LINES[n.zone] && LINES[n.zone][n.style];
     if (pack && pack.length) return pick(pack);
     const zoneLines = Object.values(LINES[n.zone] || {}).flat();
@@ -596,7 +622,7 @@ const Npc = (() => {
     if (n.pages && n.page < n.pages.length - 1) {
       n.page += 1;
       n.bubbleText = n.pages[n.page];
-      n.bubble = 7;
+      n.bubble = 24;
       n.acting = true;
       n.actT = 1.1;
       return { type: "talk", who, text: n.bubbleText, coins: 0, more: n.page < n.pages.length - 1 };

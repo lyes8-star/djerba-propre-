@@ -608,31 +608,36 @@ button.hud-chip {
   right: 8px;
   width: auto;
   z-index: 18;
-  background: #fcfcfc;
+  background: #fff8e8;
   border: 3px solid #140c1c;
   color: #140c1c;
-  padding: 8px 10px 8px;
+  padding: 10px 12px 8px;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.4);
   pointer-events: none;
+  max-height: 38%;
 }
 .hud-talk.hidden { display: none; }
 .hud-talk .talk-who {
   color: #8a4a10;
   font-size: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   letter-spacing: 0.4px;
   border-bottom: 2px solid #140c1c;
-  padding-bottom: 4px;
+  padding-bottom: 5px;
 }
 .hud-talk .talk-text {
-  font-size: 8px;
-  line-height: 1.55;
+  font-family: "Courier New", Courier, "Lucida Console", monospace;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 700;
+  letter-spacing: 0;
   color: #140c1c;
   margin: 0;
+  overflow-wrap: anywhere;
 }
 .hud-talk .talk-hint {
-  margin-top: 6px;
-  font-size: 5px;
+  margin-top: 8px;
+  font-size: 7px;
   color: #8a4a10;
 }
 .hud-talk .talk-hint.hidden { display: none; }

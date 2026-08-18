@@ -612,9 +612,19 @@
     if (state !== "play") return;
     render(animTime);
     UI.updateHud(Progress.get(), world, timeLeft);
-    const speaking = (world.npcs || []).some((n) => n.bubble > 0 && (world.inside ? n.indoor : !n.indoor))
-      || (world.ride && world.ride.bubble > 0);
-    if (!speaking && UI.hideTalk) UI.hideTalk();
+    const indoor = !!world.inside;
+    const speaker = (world.npcs || []).find((n) => n.pages && (indoor ? n.indoor : !n.indoor));
+    const rideTalk = world.ride && world.ride.pages;
+    if (rideTalk) {
+      /* keep taxi box */
+    } else if (speaker && player) {
+      const d = Math.hypot(speaker.x - player.x, speaker.y - player.y);
+      if (d > 78) {
+        speaker.pages = null;
+        speaker.bubble = 0;
+        if (UI.hideTalk) UI.hideTalk();
+      }
+    } else if (UI.hideTalk) UI.hideTalk();
     const door = Places.nearDoor(player, world);
     const nearNpc = Npc.nearest(world, player, 34);
     const taxiRange = (typeof Traffic !== "undefined" && Traffic.BOARD_RANGE) || 52;
@@ -623,14 +633,14 @@
     const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
     const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
     if (world.ride) {
-      const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1 && world.ride.bubble > 0;
+      const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
     else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
-      UI.setToolLabel(more && nearNpc.bubble > 0 ? "SUITE" : "PARLER");
+      UI.setToolLabel(more ? "SUITE" : "PARLER");
     } else UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
     if ((ts / 200 | 0) % 2 === 0) UI.drawAvatar(animTime);
     raf = requestAnimationFrame(loop);

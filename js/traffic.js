@@ -56,16 +56,9 @@ const Traffic = (() => {
   }
 
   function paginate(text) {
+    if (typeof NpcTalk !== "undefined" && NpcTalk.paginate) return NpcTalk.paginate(text, 96);
     const raw = String(text || "").trim();
-    if (!raw) return [""];
-    const parts = raw.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean);
-    const pages = [];
-    for (const p of parts) {
-      if (pages.length && (p.length < 18 || pages[pages.length - 1].length < 32)) {
-        pages[pages.length - 1] += " " + p;
-      } else pages.push(p);
-    }
-    return pages.length ? pages : [raw];
+    return raw ? [raw] : [""];
   }
 
   function syncSprite(car) {
@@ -389,7 +382,7 @@ const Traffic = (() => {
     car.pages = paginate(text);
     car.page = 0;
     car.bubbleText = car.pages[0];
-    car.bubble = 8;
+    car.bubble = 24;
     return car.pages.length > 1;
   }
 
@@ -470,7 +463,7 @@ const Traffic = (() => {
     if (!car || !car.pages || car.page >= car.pages.length - 1) return null;
     car.page += 1;
     car.bubbleText = car.pages[car.page];
-    car.bubble = 7;
+    car.bubble = 24;
     return {
       type: "talk",
       who: car.whoLabel,

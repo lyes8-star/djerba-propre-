@@ -1677,12 +1677,16 @@ const Atlas = (() => {
       bar(24, y0 + 20, 7, 3, C.blueL);
       bar(30, y0 + 20, 2, 2, C.gold);
     } else if (st.tool === "smoke") {
-      const cx = acting ? 19 : 23;
-      const cy = y0 + (acting ? 11 : 21) + rArm;
-      bar(cx, cy, 6, 2, "#e8dcc8");
-      bar(cx + 5, cy, 2, 2, C.gold);
-      bar(cx + 6, cy, 1, 2, acting ? C.red : C.goldD);
-      if (acting) bar(cx + 7, cy - 1, 1, 1, C.redL);
+      const cx = acting ? 17 : 21;
+      const cy = y0 + (acting ? 10 : 20) + rArm;
+      bar(cx, cy, 9, 3, "#f4ece0");
+      bar(cx, cy + 1, 9, 1, "#c8c0b4");
+      bar(cx + 8, cy, 2, 3, C.gold);
+      bar(cx + 9, cy, 2, 3, acting ? C.red : C.goldD);
+      if (acting) {
+        bar(cx + 10, cy - 2, 2, 2, C.redL);
+        bar(cx + 11, cy - 3, 2, 2, C.white);
+      }
     }
 
     return c;
@@ -1710,7 +1714,7 @@ const Atlas = (() => {
     tourM: { gender: "m", hat: "cap", hatCol: C.blue, sunglass: true, shirt: C.blueL, shirtL: C.white, shirtD: C.blue, pants: C.sandC, pantsL: C.sandB, shoes: C.white, skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "camera" },
     tourM2: { gender: "m", hat: "cap", hatCol: C.gold, sunglass: true, shirt: C.goldL, shirtL: C.white, shirtD: C.goldD, pants: C.navyL, pantsL: C.blueL, shoes: C.red, skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890" },
     tourF: { gender: "f", dress: true, hat: "sun", shirt: "#f878a0", shirtL: "#ffb0c8", shirtD: "#c04870", shoes: C.gold, hair: "#6a3c18", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "smoke" },
-    tourF2: { gender: "f", dress: true, hat: "sun", shirt: "#40d090", shirtL: "#98f0c0", shirtD: "#1a9060", shoes: C.white, hair: "#c87828", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "camera" },
+    tourF2: { gender: "f", dress: true, hat: "sun", shirt: "#40d090", shirtL: "#98f0c0", shirtD: "#1a9060", shoes: C.white, hair: "#c87828", skin: "#fcd4b0", skinL: "#fff0d8", skinD: "#e0a878", skinM: "#f0b890", tool: "smoke" },
     fisher: { gender: "m", shirt: C.navyL, shirtL: C.white, shirtD: C.navy, pants: C.navyD, pantsL: C.navy, stripe: true, shoes: C.woodX, hair: "#1a1010", tool: "fish" },
     elder: { gender: "m", hat: "chechia", shirt: C.wall, shirtL: C.white, shirtD: C.wallS, pants: C.wallS, pantsL: C.wallD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060" },
     elderF: { gender: "f", dress: true, hat: "scarf", scarf: C.wall, scarfL: C.white, shirt: C.wallS, shirtL: C.wall, shirtD: C.woodD, shoes: C.woodD, hair: C.white, skin: "#d4a074", skinL: "#e8c098", skinD: "#b07848", skinM: "#c49060", tool: "smoke" },

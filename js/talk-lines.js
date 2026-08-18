@@ -437,4 +437,46 @@ const NpcTalk = {
     "Ils se croient plus arabes que le Coran, plus africains que le continent, plus victimes que le siècle. Puis ils jettent le sac. Puis ils crient viva. Puis ils demandent le wifi. Pathos. Djerba n'est pas un tribunal, mais le sable a déjà délibéré. Toi tu exécutes: pince, sac, poubelle. C'est plus propre qu'un discours. C'est plus drôle aussi, parce qu'à la fin il reste une plage, et pas une fosse. Inchallah on garde ça.",
     "Mon père disait: on peut aimer un cousin et fermer la porte. C'est toute la politique de l'île. On ferme la porte, on ouvre le thé, on ramasse le plastique. L'ouest peut garder le volume. On garde Sidi Mahrez, Ajim, Houmt Souk, la lagune, et les chaises. Les chaises, ya sidi. N'oublie jamais les chaises. Toute la Fitna tient dans le refus de s'asseoir comme tout le monde. Toi tu t'assois après le travail. Eux s'accroupissent pendant. Voilà.",
   ],
+
+  paginate(text, maxLen) {
+    const max = maxLen || 96;
+    const raw = String(text || "").trim();
+    if (!raw) return [""];
+    const sentences = raw.split(/(?<=[.!?…])\s+/).map((s) => s.trim()).filter(Boolean);
+    const pages = [];
+
+    function takeWords(s) {
+      const words = String(s || "").split(/\s+/).filter(Boolean);
+      const out = [];
+      let buf = "";
+      for (const w of words) {
+        if (!buf) buf = w;
+        else if ((buf + " " + w).length <= max) buf += " " + w;
+        else {
+          out.push(buf);
+          buf = w;
+        }
+      }
+      if (buf) out.push(buf);
+      return out;
+    }
+
+    function addPiece(s) {
+      if (!s) return;
+      if (s.length <= max) {
+        if (pages.length && pages[pages.length - 1].length + 1 + s.length <= max) {
+          pages[pages.length - 1] += " " + s;
+        } else pages.push(s);
+        return;
+      }
+      const bits = s.split(/(?<=[,;:])\s+/).map((b) => b.trim()).filter(Boolean);
+      for (const b of bits) {
+        if (b.length <= max) addPiece(b);
+        else takeWords(b).forEach((chunk) => pages.push(chunk));
+      }
+    }
+
+    sentences.forEach(addPiece);
+    return pages.length ? pages : [raw];
+  },
 };

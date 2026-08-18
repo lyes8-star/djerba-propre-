@@ -102,7 +102,7 @@ const UI = (() => {
     els.talkWho.textContent = who || "";
     els.talkText.textContent = text || "";
     if (els.talkHint) {
-      els.talkHint.textContent = more ? "PARLER : suite" : "";
+      els.talkHint.textContent = more ? "SUITE  ·  E / PARLER" : "";
       els.talkHint.classList.toggle("hidden", !more);
     }
     els.talkBox.classList.remove("hidden");
