@@ -226,6 +226,7 @@ const Quests = (() => {
       finish(id);
       if (world && d.reward.score) world.score += d.reward.score;
       if (d.reward.xp) Progress.addXp(d.reward.xp);
+      if (typeof Progress !== "undefined" && Progress.noteQuest) Progress.noteQuest();
     }
     return say(text, {
       quest: "done",

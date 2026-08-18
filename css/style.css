@@ -850,6 +850,16 @@ button.hud-chip {
   box-shadow: inset 2px 2px 0 #000;
 }
 
+.tool-row.equipped {
+  border-color: var(--gold);
+}
+.tool-passive {
+  font-size: 6px;
+  color: var(--blue-light);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
 .tool-icon {
   width: 34px;
   height: 34px;

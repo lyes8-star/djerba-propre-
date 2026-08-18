@@ -382,7 +382,6 @@
     });
     const xpRes = Progress.addXp(baseXp);
     Progress.addCoins(baseCoins);
-    Progress.clearXpBoost();
 
     if (xpRes.leveled > 0) {
       AudioSys.sfx("levelup");
@@ -436,6 +435,12 @@
     UI.setToolLabel(selectedTool === "balai" ? "BALAI" : "PINCE");
     AudioSys.sfx("click");
   }
+  window.__getTool = () => selectedTool;
+  window.__setTool = (id) => {
+    if (id !== "pince" && id !== "balai") return;
+    selectedTool = id;
+    UI.setToolLabel(id === "balai" ? "BALAI" : "PINCE");
+  };
 
   function doAction() {
     if (state !== "play" || !player) return;
@@ -458,16 +463,21 @@
       if (typeof Quests !== "undefined") Quests.onTrash(world);
     } else if (res.type === "recycle") {
       AudioSys.sfx("recycle");
-      FX.recycle(world.bin.x + 6, world.bin.y + 4);
-      FX.floatText(world.bin.x, world.bin.y - 10, `+${res.pts}`, "#8dff9c");
+      const bin = res.bin || world.bin;
+      FX.recycle(bin.x + 6, bin.y + 4);
+      FX.floatText(bin.x, bin.y - 10, `+${res.pts}`, "#8dff9c");
       FX.hitShake(0.25);
-      UI.toast(`RECYCLE!<br/>+${res.pts} pts<span class="bonus">${res.count} objets</span>`);
+      if (res.coins) {
+        Progress.addCoins(res.coins);
+        FX.floatText(bin.x + 12, bin.y - 22, `+$${res.coins}`, "#ffd24a");
+      }
+      UI.toast(`RECYCLE!<br/>+${res.pts} pts<span class="bonus">${res.count} objets · poubelle ville</span>`);
     } else if (res.type === "sweep") {
       AudioSys.sfx("sweep");
       FX.sweep(player.x + 8, player.y + 14);
       if (res.pts) FX.floatText(player.x, player.y - 6, `+${res.pts}`);
     } else if (res.type === "full") {
-      UI.toast("SAC PLEIN!<br/>Va recycler");
+      UI.toast("SAC PLEIN!<br/>Va a une poubelle de ville");
       FX.hitShake(0.15);
     } else if (res.type === "talk") {
       AudioSys.sfx("click");
@@ -498,24 +508,7 @@
     }
   }
 
-  function checkObjectives() {
-    const clean = World.cleanliness(world);
-    const ct = world.cleanTarget || 80;
-    if (!cleanToastShown && clean >= ct) {
-      cleanToastShown = true;
-      world.score += 500;
-      timeLeft += 0;
-      AudioSys.sfx("super");
-      FX.stars(player.x + 8, player.y);
-      FX.hitShake(0.35);
-      UI.toast(`SUPER!<br/>Objectif propre! +500<span class="bonus">+25s</span>`, 2200);
-    }
-    if (World.objectives(world).filter((o) => o.id !== "plats").every((o) => o.done) && player.inventory.length === 0) {
-      if (!cleanToastShown) {
-        UI.toast("Ile propre. Continue a te balader.");
-      }
-    }
-  }
+  function checkObjectives() {}
 
   function render(t) {
     fitGameCanvas();
@@ -552,7 +545,9 @@
       Sprites.drawFilth(ctx, world, t, cam);
       for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
       for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
-      Sprites.drawBin(ctx, world.bin.x, world.bin.y, t, cam);
+      for (const b of world.bins || [world.bin]) {
+        if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
+      }
       const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
       for (const car of world.cars || []) actors.push({ car, y: car.y });
       actors.push({ y: player.y, player: true });
@@ -632,12 +627,14 @@
     const taxiD = nearTaxi ? Math.hypot(nearTaxi.px - (player.x + 16), nearTaxi.py - (player.y + 20)) : 999;
     const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
     const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
+    const nearBin = World.nearestBin(world, player, 40);
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
     else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
+    else if (nearBin && player.inventory.length > 0) UI.setToolLabel("VIDER");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "PARLER");

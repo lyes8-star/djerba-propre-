@@ -41,6 +41,7 @@ const World = (() => {
     const trash = spawnClustered(W, H, count, bagRatio);
     const rares = spawnRares(W, H);
     const stains = makeStains(W, H, 90 + count);
+    const bins = makeBins();
     return {
       W,
       H,
@@ -63,11 +64,43 @@ const World = (() => {
       theme: m.theme || "beach",
       missionId: m.id || 1,
       missionName: m.name || "Plage",
-      bin: { x: 430, y: 448 },
+      bins,
+      bin: bins[0],
       npcs: [],
       inside: null,
       doorCd: 0,
     };
+  }
+
+  function makeBins() {
+    const spots = [
+      { town: "sidi", dx: 56, dy: 28 },
+      { town: "plaza", dx: 48, dy: 20 },
+      { town: "midoun", dx: 56, dy: 44 },
+      { town: "ajim", dx: 40, dy: 28 },
+      { town: "elmay", dx: 48, dy: 36 },
+      { town: "aghir", dx: 48, dy: 28 },
+    ];
+    return spots.map((s) => {
+      const p = Island.xy(s.town);
+      const c = Island.clamp(p.x + s.dx, p.y + s.dy);
+      return { x: c.x, y: c.y, town: s.town };
+    });
+  }
+
+  function nearestBin(world, player, maxD) {
+    const px = player.x + 16;
+    const py = player.y + 20;
+    let best = null;
+    let bestD = maxD != null ? maxD : Infinity;
+    for (const b of world.bins || []) {
+      const d = Math.hypot(b.x + 6 - px, b.y + 8 - py);
+      if (d <= bestD) {
+        best = b;
+        bestD = d;
+      }
+    }
+    return best;
   }
 
   function clampPos(W, H, x, y) {
@@ -214,6 +247,7 @@ const World = (() => {
       world.score += pts;
       world.combo += 1;
       world.comboTimer = 2.2;
+      if (typeof Progress !== "undefined") Progress.notePickup(1);
       return { item: best, points: pts, combo: world.combo, rare: true, name: best.name, coins: 35 };
     }
     if (player.inventory.length >= stats.capacity) return { full: true };
@@ -223,6 +257,7 @@ const World = (() => {
     world.combo += 1;
     world.comboTimer = 2.2;
     const mult = 1 + Math.min(4, world.combo - 1) * 0.15;
+    if (typeof Progress !== "undefined") Progress.notePickup(1);
     return { item: best, points: Math.floor((POINTS[best.type] || 40) * 0.4 * mult), combo: world.combo };
   }
 
@@ -244,13 +279,15 @@ const World = (() => {
     if (n > 0) {
       world.combo += n;
       world.comboTimer = 2.2;
+      if (typeof Progress !== "undefined") Progress.notePickup(n);
     }
     return { n, pts };
   }
 
   function tryRecycle(world, player, stats) {
-    if (Math.hypot(player.x - world.bin.x, player.y - world.bin.y) > 40) return null;
-    if (player.inventory.length === 0) return { empty: true };
+    const bin = nearestBin(world, player, 40);
+    if (!bin) return null;
+    if (player.inventory.length === 0) return { empty: true, bin };
     let pts = 0;
     const count = player.inventory.length;
     const mult = 1 + stats.resistance;
@@ -258,30 +295,22 @@ const World = (() => {
     player.inventory = [];
     world.recycled += count;
     world.score += pts;
-    return { count, pts };
+    const coins = count * 2;
+    if (typeof Progress !== "undefined") Progress.noteRecycle(count);
+    return { count, pts, coins, bin };
   }
 
-  function followBin(world, player) {
-    world.bin.x += (player.x - 18 - world.bin.x) * 0.12;
-    world.bin.y += (player.y + 8 - world.bin.y) * 0.12;
-    const c = Island.clamp(world.bin.x, world.bin.y);
-    world.bin.x = c.x;
-    world.bin.y = c.y;
-  }
+  function followBin() {}
 
-  function objectives(world) {
-    const clean = cleanliness(world);
-    const ct = world.cleanTarget || 80;
-    const bt = world.bagTarget || 5;
-    const rt = world.recycleTarget || 12;
-    const found = world.foundRares || 0;
-    const need = world.rareTarget || 0;
-    return [
-      { id: "clean", label: "Proprete", value: `${clean}%/${ct}%`, done: clean >= ct, raw: clean },
-      { id: "bags", label: "Sacs", value: `${world.bagsCollected}/${bt}`, done: world.bagsCollected >= bt, raw: world.bagsCollected },
-      { id: "recycle", label: "Recycle", value: `${world.recycled}/${rt}`, done: world.recycled >= rt, raw: world.recycled },
-      { id: "plats", label: "Plats TN", value: `${found}/${need}`, done: need > 0 && found >= need, raw: found },
-    ];
+  function objectives() {
+    if (typeof Progress === "undefined") return [];
+    return Progress.dailyList().map((o) => ({
+      id: o.id,
+      label: o.label,
+      value: `${Math.min(o.cur, o.need)}/${o.need}`,
+      done: o.cur >= o.need,
+      raw: o.cur,
+    }));
   }
 
   function stars(score, clean, world) {
@@ -295,6 +324,6 @@ const World = (() => {
 
   return {
     create, living, livingRares, cleanliness, tryPickup, trySweep, tryRecycle,
-    followBin, tickSpawn, objectives, stars, POINTS, RARES,
+    nearestBin, followBin, tickSpawn, objectives, stars, POINTS, RARES,
   };
 })();

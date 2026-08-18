@@ -72,7 +72,10 @@ const UI = (() => {
     els.coins.textContent = `$${st.coins}`;
     if (els.bag && window.__player) {
       const p = window.__player;
-      els.bag.textContent = `BAG ${p.inventory.length}/${p.stats.capacity}`;
+      let bagTxt = `BAG ${p.inventory.length}/${p.stats.capacity}`;
+      const cafeMs = Progress.cafeLeft();
+      if (cafeMs > 0) bagTxt += ` · CAFE ${Math.ceil(cafeMs / 1000)}s`;
+      els.bag.textContent = bagTxt;
     }
 
     const missionLabel = document.getElementById("hud-mission");
@@ -81,11 +84,15 @@ const UI = (() => {
     }
 
     const qPanel = typeof Quests !== "undefined" ? Quests.panel() : { active: [], todo: [], done: [], total: 0 };
+    const dailies = Progress.dailyList();
     const qHtml = []
       .concat(qPanel.active.map((o) => `<li class="q-active">[>] ${o.label}<span class="q-hint">${o.value}</span></li>`))
       .concat(qPanel.todo.map((o) => `<li class="q">[  ] ${o.label}</li>`))
       .concat(qPanel.done.length ? [`<li class="done">[OK] ${qPanel.done.length}/${qPanel.total} quetes</li>`] : [])
-      .concat(World.objectives(world).map((o) => `<li class="${o.done ? "done" : ""}">${o.done ? "[OK] " : "[  ] "}${o.label} ${o.value}</li>`))
+      .concat(dailies.map((o) => {
+        const done = o.cur >= o.need;
+        return `<li class="${done ? "done" : ""}">${done ? "[OK] " : "[  ] "}${o.label} ${Math.min(o.cur, o.need)}/${o.need}</li>`;
+      }))
       .join("");
     els.objList.innerHTML = qHtml;
   }
@@ -126,7 +133,8 @@ const UI = (() => {
 
   function refreshTitleStats() {
     const s = Progress.get();
-    els.titleStats.innerHTML = `NV.${s.level} · $*${s.coins}<br>CAMPAGNE ${s.campaign.unlocked}/8<br>ETOILES ${Progress.totalStars()}/24`;
+    const qn = Progress.questsDone();
+    els.titleStats.innerHTML = `NV.${s.level} · $${s.coins}<br>QUETES ${qn}/10`;
   }
 
   function drawAvatar(t) {
@@ -142,15 +150,22 @@ const UI = (() => {
     let html = "";
 
     if (name === "outils") {
+      const equipped = window.__getTool ? window.__getTool() : "pince";
+      const bagNow = window.__player ? window.__player.inventory.length : 0;
+      const stats = Progress.toolStats();
       html = `<h3>OUTILS</h3>`;
       for (const id of ["pince", "sac", "balai", "brouette"]) {
         const d = tools[id];
-        html += `<div class="tool-row">
+        const on = d.equip && equipped === id;
+        html += `<div class="tool-row${on ? " equipped" : ""}">
           <div class="tool-icon">${d.icon}</div>
-          <div class="tool-info"><strong>${d.name}</strong><span>${d.desc(s.tools[id])}</span></div>
+          <div class="tool-info"><strong>${d.name}${on ? " · EQUIPE" : ""}</strong><span>${d.desc(s.tools[id])}</span></div>
+          ${d.equip
+            ? `<button class="btn-buy" data-equip="${id}" ${on ? "disabled" : ""}>${on ? "OK" : "EQUIPER"}</button>`
+            : `<span class="tool-passive">PASSIF</span>`}
         </div>`;
       }
-      html += `<p style="font-size:6px;opacity:.8;margin:8px 0 0;line-height:1.6">PINCE = ramasser<br>Pres poubelle = recycler<br>Q / bouton = balai</p>`;
+      html += `<p style="font-size:6px;opacity:.8;margin:8px 0 0;line-height:1.6">BAG ${bagNow}/${stats.capacity} · marche +${Math.round(stats.moveBonus * 100)}%<br>Pince ramasse · Balai balaye · Vider a une poubelle de ville</p>`;
     }
 
     if (name === "ameliorations") {
@@ -172,30 +187,31 @@ const UI = (() => {
 
     if (name === "defis") {
       const d = s.daily;
-      html = `<h3>DEFIS DU JOUR</h3>
-        <div class="daily-row"><div class="tool-info">
-          <strong>Nettoyer ${d.targets.beaches} plages</strong>
-          <span>${d.cleanBeaches}/${d.targets.beaches}</span>
-        </div></div>
-        <div class="daily-row"><div class="tool-info">
-          <strong>Collecter ${d.targets.objects} objets</strong>
-          <span>${d.collectObjects}/${d.targets.objects}</span>
-        </div></div>
-        <button class="btn-claim" id="btn-claim-daily" ${Progress.canClaimDaily() ? "" : "disabled"}>
+      html = `<h3>DEFIS DU JOUR</h3>`;
+      for (const row of Progress.dailyList()) {
+        const ok = row.cur >= row.need;
+        html += `<div class="daily-row"><div class="tool-info">
+          <strong>${row.label}</strong>
+          <span>${Math.min(row.cur, row.need)}/${row.need}${ok ? " · OK" : ""}</span>
+        </div></div>`;
+      }
+      html += `<button class="btn-claim" id="btn-claim-daily" ${Progress.canClaimDaily() ? "" : "disabled"}>
           ${d.claimed ? "DEJA PRIS" : "RECUPERER"}
         </button>`;
     }
 
     if (name === "boutique") {
       html = `<h3>SHOP</h3>`;
+      const cafeMs = Progress.cafeLeft();
       for (const item of Progress.SHOP_ITEMS) {
+        let extra = item.blurb || "";
         let owned = false;
         if (item.id === "hat_gold") owned = s.cosmetics.hat_gold;
-        if (item.id === "boost_xp") owned = s.boosts.xp;
-        if (item.id === "boost_time") owned = s.boosts.time;
+        if (item.id === "boost_xp" && s.boosts.xpCharges > 0) extra = `${s.boosts.xpCharges} gains restants`;
+        if (item.id === "cafe" && cafeMs > 0) extra = `Encore ${Math.ceil(cafeMs / 1000)}s`;
         html += `<div class="shop-row">
           <div class="tool-icon">${item.icon}</div>
-          <div class="tool-info"><strong>${item.name}</strong><span>$${item.cost}</span></div>
+          <div class="tool-info"><strong>${item.name}</strong><span>$${item.cost} · ${extra}</span></div>
           <button class="btn-buy" data-shop="${item.id}" ${owned || s.coins < item.cost ? "disabled" : ""}>
             ${owned ? "OK" : "BUY"}
           </button>
@@ -212,12 +228,21 @@ const UI = (() => {
         const res = Progress.upgradeTool(id);
         if (res.ok) {
           AudioSys.sfx("upgrade");
-          toast(`UPGRADE!<br/>${tools[id].name} LV.${res.level}`);
+          toast(`UPGRADE!<br/>${tools[id].name} LV.${res.level}<span class="bonus">${tools[id].desc(res.level)}</span>`, 2200);
           if (window.__playerRefresh) window.__playerRefresh();
           openPanel("ameliorations");
           if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
           els.coins.textContent = `$${Progress.get().coins}`;
         } else toast(res.reason || "Impossible");
+      });
+    });
+
+    els.panelContent.querySelectorAll("[data-equip]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-equip");
+        if (window.__setTool) window.__setTool(id);
+        AudioSys.sfx("click");
+        openPanel("outils");
       });
     });
 
@@ -227,9 +252,13 @@ const UI = (() => {
         const res = Progress.buyShopItem(id);
         if (res.ok) {
           AudioSys.sfx("upgrade");
-          toast("ACHAT OK!");
+          if (id === "hat_gold") toast("CASQUETTE OR<br/>equipee");
+          else if (id === "boost_xp") toast("XP x2<br/>5 prochains gains");
+          else if (id === "cafe") toast("CAFE SERRE<br/>+25% vitesse 90s");
+          else toast("ACHAT OK!");
           openPanel("boutique");
           els.coins.textContent = `$${Progress.get().coins}`;
+          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
         } else toast(res.reason || "Impossible");
       });
     });
@@ -242,6 +271,8 @@ const UI = (() => {
           AudioSys.sfx("levelup");
           toast(`RECOMPENSE!<br/>+$${res.coins} +${res.xp} XP`);
           openPanel("defis");
+          els.coins.textContent = `$${Progress.get().coins}`;
+          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
         }
       });
     }
