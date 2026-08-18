@@ -1036,8 +1036,9 @@ button.hud-chip {
 #map-canvas {
   width: 100%;
   max-height: 100%;
-  image-rendering: auto;
-  background: #7ec8e0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #2090dc;
 }
 
 .map-info {
