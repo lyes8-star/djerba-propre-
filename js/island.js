@@ -160,6 +160,47 @@ const Island = (() => {
     return { x: cx, y: cy };
   }
 
+  const SWIM = 260;
+
+  function clampPlay(x, y) {
+    if (contains(x, y)) return { x, y, swim: false };
+    const land = clamp(x, y);
+    const dx = x - land.x;
+    const dy = y - land.y;
+    const d = Math.hypot(dx, dy) || 1;
+    if (d <= SWIM) return { x, y, swim: true };
+    return { x: land.x + (dx / d) * SWIM, y: land.y + (dy / d) * SWIM, swim: true };
+  }
+
+  function snapRoad(x, y) {
+    if (!baked) bake();
+    if (!grid) return { x, y };
+    const tx0 = (x / TS) | 0;
+    const ty0 = (y / TS) | 0;
+    let best = null;
+    let bestD = 1e9;
+    for (let r = 0; r <= 10; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (r && Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+          const tx = tx0 + dx;
+          const ty = ty0 + dy;
+          if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) continue;
+          if (grid[ty * TW + tx] !== ROAD) continue;
+          const px = tx * TS + 8;
+          const py = ty * TS + 8;
+          const dd = (px - x) * (px - x) + (py - y) * (py - y);
+          if (dd < bestD) {
+            bestD = dd;
+            best = { x: px, y: py };
+          }
+        }
+      }
+      if (best) return best;
+    }
+    return { x, y };
+  }
+
   function randLand() {
     for (let i = 0; i < 50; i++) {
       const x = BOX.x + 50 + Math.random() * (BOX.w - 100);
@@ -238,8 +279,8 @@ const Island = (() => {
 
   function loopPts() {
     return poly.map((p) => ({
-      x: p.x + (cx - p.x) * 0.18,
-      y: p.y + (cy - p.y) * 0.18,
+      x: p.x + (cx - p.x) * 0.09,
+      y: p.y + (cy - p.y) * 0.09,
     }));
   }
 
@@ -289,8 +330,8 @@ const Island = (() => {
     const len = Math.hypot(dx, dy) || 1;
     const nx = -dy / len;
     const ny = dx / len;
-    const n = Math.max(2, (len / 6) | 0);
-    const hw = half == null ? 10 : half;
+    const n = Math.max(2, (len / 4) | 0);
+    const hw = half == null ? 14 : half;
     const kind = v == null ? ROAD : v;
     for (let i = 0; i <= n; i++) {
       const t = i / n;
@@ -386,9 +427,9 @@ const Island = (() => {
     for (let i = 0; i < loop.length; i++) {
       const a = loop[i];
       const b = loop[(i + 1) % loop.length];
-      paintSeg(a.x, a.y, b.x, b.y, 10, ROAD);
+      paintSeg(a.x, a.y, b.x, b.y, 16, ROAD);
     }
-    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 10, ROAD));
+    roads().forEach(([x1, y1, x2, y2]) => paintSeg(x1, y1, x2, y2, 14, ROAD));
 
     const isRoad = (tx, ty) => {
       if (tx < 0 || ty < 0 || tx >= TW || ty >= TH) return false;
@@ -532,7 +573,7 @@ const Island = (() => {
   }
 
   return {
-    W, H, BOX, poly, contains, xy, uv, worldToMap, clamp, randLand, path, box,
+    W, H, BOX, poly, contains, xy, uv, worldToMap, clamp, clampPlay, snapRoad, randLand, path, box,
     zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, MAP_ICONS, bake, drawGround,
     props, tileAt,
     groundCanvas: () => mini,

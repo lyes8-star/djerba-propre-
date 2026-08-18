@@ -1,7 +1,7 @@
-/* Circulation NES + taxis : tour de l'île sur la boucle côtière */
+/* Circulation NES + taxis : vraies routes, voitures visibles */
 const Traffic = (() => {
-  const CW = 40;
-  const CH = 20;
+  const CW = 48;
+  const CH = 24;
   const DRIVERS = ["Lotfi", "Sami", "Hedi", "Nabil", "Walid", "Anis"];
 
   function densify(pts, step, closed) {
@@ -20,7 +20,7 @@ const Traffic = (() => {
       }
     }
     if (!closed) out.push(pts[n - 1]);
-    return out;
+    return out.map((p) => Island.snapRoad(p.x, p.y));
   }
 
   function nearestIdx(pts, x, y) {
@@ -60,8 +60,8 @@ const Traffic = (() => {
 
   function makeCar(opts) {
     const car = {
-      kind: opts.kind || "white",
-      sprite: opts.sprite || "carWhite",
+      kind: opts.kind || "blue",
+      sprite: opts.sprite || "carBlue",
       taxi: !!opts.taxi,
       parked: !!opts.parked,
       loop: opts.loop !== false,
@@ -88,44 +88,92 @@ const Traffic = (() => {
 
   function spawn(world) {
     Island.bake();
-    const loop = densify(Island.loopPts(), 42, true);
+    const loop = densify(Island.loopPts(), 36, true);
     const spurs = Island.roads().map(([x1, y1, x2, y2]) =>
-      densify([{ x: x1, y: y1 }, { x: x2, y: y2 }], 48, false)
+      densify([{ x: x1, y: y1 }, { x: x2, y: y2 }], 36, false)
     ).filter((p) => p.length > 4);
     const cars = [];
-    const kinds = [
-      ["white", "carWhite", false],
+    const palette = [
+      ["taxi", "carTaxi", true],
       ["blue", "carBlue", false],
       ["red", "carRed", false],
       ["louage", "carLouage", false],
+      ["taxi", "carTaxi", true],
       ["white", "carWhite", false],
       ["blue", "carBlue", false],
+      ["red", "carRed", false],
       ["taxi", "carTaxi", true],
-      ["taxi", "carTaxi", true],
-      ["taxi", "carTaxi", true],
+      ["louage", "carLouage", false],
+      ["blue", "carBlue", false],
+      ["red", "carRed", false],
     ];
-    kinds.forEach((row, i) => {
+    palette.forEach((row, i) => {
       const [kind, sprite, taxi] = row;
-      const useLoop = i < 7 || !spurs.length;
-      const path = useLoop ? loop : spurs[i % spurs.length];
-      const pi = ((i * 11 + 3) * (path.length / kinds.length)) | 0;
-      const pt = path[pi % path.length];
+      const path = loop.length > 4 ? loop : (spurs[0] || []);
+      if (path.length < 4) return;
+      const pi = ((i * 13 + 5) % path.length);
+      const pt = path[pi];
       cars.push(makeCar({
         kind, sprite, taxi,
         parked: false,
-        loop: useLoop,
+        loop: true,
         path,
-        pi: pi % path.length,
+        pi,
         dir: i % 2 ? 1 : -1,
         px: pt.x,
         py: pt.y,
-        speed: taxi ? 88 + Math.random() * 18 : 64 + Math.random() * 42,
+        speed: taxi ? 92 + Math.random() * 16 : 68 + Math.random() * 40,
+        driver: DRIVERS[i % DRIVERS.length],
+      }));
+    });
+
+    spurs.forEach((path, si) => {
+      const row = palette[si % palette.length];
+      const pi = (si * 7) % path.length;
+      const pt = path[pi];
+      cars.push(makeCar({
+        kind: row[0],
+        sprite: row[1],
+        taxi: row[2],
+        parked: false,
+        loop: false,
+        path,
+        pi,
+        dir: 1,
+        px: pt.x,
+        py: pt.y,
+        speed: 74 + (si % 5) * 8,
+        driver: DRIVERS[si % DRIVERS.length],
+      }));
+    });
+
+    const sidi = Island.xy("sidi");
+    const sidiRoads = Island.roads().filter((r) =>
+      Math.hypot(r[0] - sidi.x, r[1] - sidi.y) < 40 || Math.hypot(r[2] - sidi.x, r[3] - sidi.y) < 40
+    );
+    sidiRoads.forEach((seg, i) => {
+      const path = densify([{ x: seg[0], y: seg[1] }, { x: seg[2], y: seg[3] }], 32, false);
+      if (path.length < 4) return;
+      const kinds = [["taxi", "carTaxi", true], ["red", "carRed", false], ["blue", "carBlue", false]];
+      const k = kinds[i % kinds.length];
+      const pi = Math.min(path.length - 1, 2 + i * 2);
+      cars.push(makeCar({
+        kind: k[0], sprite: k[1], taxi: k[2],
+        parked: false,
+        loop: false,
+        path,
+        pi,
+        dir: 1,
+        px: path[pi].x,
+        py: path[pi].y,
+        speed: 80,
         driver: DRIVERS[i % DRIVERS.length],
       }));
     });
 
     const ranks = [
-      ["sidi", -30, 40],
+      ["sidi", 8, 46],
+      ["sidi", 56, 52],
       ["houmt", 90, 30],
       ["midoun", -40, 36],
       ["ajim", 50, 24],
@@ -133,6 +181,7 @@ const Traffic = (() => {
     ];
     ranks.forEach(([name, ox, oy], i) => {
       const p = Island.xy(name);
+      const snapped = Island.snapRoad(p.x + ox, p.y + oy);
       cars.push(makeCar({
         kind: "taxi",
         sprite: "carTaxi",
@@ -140,9 +189,9 @@ const Traffic = (() => {
         parked: true,
         loop: true,
         path: loop,
-        pi: nearestIdx(loop, p.x + ox, p.y + oy),
-        px: p.x + ox,
-        py: p.y + oy,
+        pi: nearestIdx(loop, snapped.x, snapped.y),
+        px: snapped.x,
+        py: snapped.y,
         facing: i % 2 ? 1 : -1,
         speed: 96,
         driver: DRIVERS[(i + 2) % DRIVERS.length],
@@ -150,6 +199,9 @@ const Traffic = (() => {
     });
 
     const parked = [
+      ["sidi", -24, 58, "red"],
+      ["sidi", 88, 40, "blue"],
+      ["sidi", 120, 62, "louage"],
       ["houmt", -80, 50, "white"],
       ["houmt", 140, 70, "blue"],
       ["midoun", 60, 40, "red"],
@@ -158,23 +210,23 @@ const Traffic = (() => {
       ["erriadh", -30, 40, "blue"],
       ["airport", 80, 20, "white"],
       ["aghir", -20, 30, "red"],
-      ["sidi", 70, 50, "louage"],
       ["guellala", -50, 30, "white"],
     ];
     parked.forEach(([name, ox, oy, kind], i) => {
       const p = Island.xy(name);
+      const snapped = Island.snapRoad(p.x + ox, p.y + oy);
       const sprite = {
         white: "carWhite", blue: "carBlue", red: "carRed", louage: "carLouage", taxi: "carTaxi",
-      }[kind] || "carWhite";
+      }[kind] || "carBlue";
       cars.push(makeCar({
         kind,
         sprite,
-        taxi: false,
+        taxi: kind === "taxi",
         parked: true,
         loop: false,
         path: [],
-        px: p.x + ox,
-        py: p.y + oy,
+        px: snapped.x,
+        py: snapped.y,
         facing: i % 2 ? 1 : -1,
         speed: 0,
       }));
@@ -224,6 +276,7 @@ const Traffic = (() => {
     player.vx = 0;
     player.vy = 0;
     player.ride = true;
+    player.swim = false;
   }
 
   function lineFor(car) {

@@ -10,7 +10,8 @@ const Player = (() => {
       y: start.y,
       vx: 0,
       vy: 0,
-      facing: 1,
+      swim: false,
+      ride: false,
       attacking: false,
       attackTimer: 0,
       cooldown: 0,
@@ -36,7 +37,8 @@ const Player = (() => {
     }
     p.ride = false;
     const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
-    const speed = p.baseSpeed * (1 + p.stats.moveBonus) * (1 - loaded * 0.2);
+    let speed = p.baseSpeed * (1 + p.stats.moveBonus) * (1 - loaded * 0.2);
+    if (p.swim) speed *= 0.52;
 
     let ix = input.x;
     let iy = input.y;
@@ -55,14 +57,16 @@ const Player = (() => {
     if (ix < -0.1) p.facing = -1;
 
     if (world.inside) {
+      p.swim = false;
       Places.collide(p, world);
     } else {
-      const c = Island.clamp(p.x + 16, p.y + 28);
+      const c = Island.clampPlay(p.x + 16, p.y + 28);
       p.x = c.x - 16;
       p.y = c.y - 28;
+      p.swim = !!c.swim;
       p.x = Math.max(8, Math.min(world.W - PW, p.x));
       p.y = Math.max(8, Math.min(world.H - PH, p.y));
-      Places.collide(p, world);
+      if (!p.swim) Places.collide(p, world);
     }
     Places.tick(world, p, dt);
 
@@ -87,7 +91,7 @@ const Player = (() => {
       p.attacking = false;
       return door;
     }
-    if (!world.inside && typeof Traffic !== "undefined") {
+    if (!world.inside && typeof Traffic !== "undefined" && !p.swim) {
       const taxi = Traffic.nearestTaxi(world, p, 36);
       if (taxi) {
         const td = Math.hypot(taxi.px - (p.x + 16), taxi.py - (p.y + 20));

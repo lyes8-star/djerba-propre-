@@ -591,8 +591,11 @@
     if (!world.inside) World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
-    if (!world.ride && Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
+    if (!world.ride && !player.swim && Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
       FX.dust(player.x + 12, player.y + 34);
+    }
+    if (player.swim && Math.hypot(player.vx, player.vy) > 12 && Math.random() < 0.35) {
+      FX.glint(player.x + 8 + Math.random() * 12, player.y + 22);
     }
     if (Math.random() < 0.04) {
       FX.glint(player.x + Math.random() * 20, player.y + Math.random() * 16 - 8);
@@ -619,7 +622,7 @@
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1 && world.ride.bubble > 0;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
-    else if (nearTaxi && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
+    else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
       UI.setToolLabel(more && nearNpc.bubble > 0 ? "SUITE" : "PARLER");

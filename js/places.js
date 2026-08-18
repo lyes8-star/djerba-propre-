@@ -188,6 +188,7 @@ const Places = (() => {
   }
 
   function nearDoor(p, world) {
+    if (p && p.swim) return null;
     if (world.inside) {
       const exit = { x: ROOM.w / 2 - 10, y: ROOM.h - 28, w: 20, h: 24 };
       return overlap(feet(p), exit) ? { exit: true, title: "Sortir" } : null;

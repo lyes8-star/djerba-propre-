@@ -1247,47 +1247,46 @@ const Atlas = (() => {
   }
 
   function bakeCar(kind) {
-    const { c, ctx } = make(40, 20);
+    const { c, ctx } = make(48, 24);
     const pal = {
       taxi: { b: C.gold, l: C.goldL, d: C.goldD, roof: C.goldD },
-      white: { b: C.white, l: C.wall, d: C.wallD, roof: C.wallS },
+      white: { b: C.sandA, l: C.white, d: C.sandC, roof: C.wallS },
       blue: { b: C.blue, l: C.blueL, d: C.blueD, roof: C.blueX },
       red: { b: C.red, l: C.redL, d: C.redD, roof: C.redD },
       louage: { b: C.navy, l: C.navyL, d: C.navyD, roof: C.ink },
-    }[kind] || { b: C.white, l: C.wall, d: C.wallD, roof: C.wallS };
-    px(ctx, 4, 16, 32, 3, "rgba(20,12,28,0.28)");
-    px(ctx, 6, 13, 7, 6, C.ink);
-    px(ctx, 27, 13, 7, 6, C.ink);
-    px(ctx, 7, 14, 5, 4, C.metalD);
-    px(ctx, 28, 14, 5, 4, C.metalD);
-    p1(ctx, 8, 15, C.metalL);
-    p1(ctx, 29, 15, C.metalL);
-    px(ctx, 2, 7, 36, 8, pal.b);
-    px(ctx, 3, 6, 34, 2, pal.l);
-    px(ctx, 2, 14, 36, 2, pal.d);
-    px(ctx, 1, 9, 3, 5, pal.d);
-    px(ctx, 36, 9, 3, 5, pal.d);
-    px(ctx, 10, 2, 18, 7, pal.roof);
-    px(ctx, 11, 3, 16, 5, C.blueX);
-    px(ctx, 12, 4, 6, 3, C.blueL);
-    px(ctx, 20, 4, 6, 3, C.navyD);
-    p1(ctx, 13, 5, C.white);
-    px(ctx, 1, 10, 2, 2, C.goldL);
-    px(ctx, 37, 10, 2, 2, C.red);
-    px(ctx, 0, 11, 2, 3, C.metal);
-    px(ctx, 38, 11, 2, 3, C.metal);
+    }[kind] || { b: C.sandA, l: C.white, d: C.sandC, roof: C.wallS };
+    px(ctx, 4, 19, 40, 4, "rgba(20,12,28,0.35)");
+    px(ctx, 6, 16, 9, 7, C.ink);
+    px(ctx, 33, 16, 9, 7, C.ink);
+    px(ctx, 7, 17, 7, 5, C.metalD);
+    px(ctx, 34, 17, 7, 5, C.metalD);
+    p1(ctx, 9, 18, C.metalL);
+    p1(ctx, 36, 18, C.metalL);
+    px(ctx, 2, 8, 44, 10, pal.b);
+    px(ctx, 3, 7, 42, 3, pal.l);
+    px(ctx, 2, 16, 44, 3, pal.d);
+    px(ctx, 1, 10, 4, 7, pal.d);
+    px(ctx, 43, 10, 4, 7, pal.d);
+    px(ctx, 12, 2, 22, 9, pal.roof);
+    px(ctx, 13, 3, 20, 7, C.blueX);
+    px(ctx, 14, 4, 8, 5, C.blueL);
+    px(ctx, 24, 4, 8, 5, C.navyD);
+    p1(ctx, 16, 5, C.white);
+    px(ctx, 1, 12, 3, 3, C.goldL);
+    px(ctx, 44, 12, 3, 3, C.red);
+    px(ctx, 0, 13, 3, 4, C.metal);
+    px(ctx, 45, 13, 3, 4, C.metal);
     if (kind === "taxi") {
-      px(ctx, 16, 0, 8, 3, C.goldL);
-      outlineRect(ctx, 16, 0, 8, 3, C.ink);
-      p1(ctx, 18, 1, C.ink);
-      p1(ctx, 20, 1, C.ink);
-      p1(ctx, 22, 1, C.ink);
+      px(ctx, 19, 0, 10, 4, C.goldL);
+      outlineRect(ctx, 19, 0, 10, 4, C.ink);
+      px(ctx, 21, 1, 2, 2, C.ink);
+      px(ctx, 25, 1, 2, 2, C.ink);
     }
     if (kind === "louage") {
-      px(ctx, 2, 10, 36, 2, C.red);
-      px(ctx, 2, 11, 36, 1, C.white);
+      px(ctx, 2, 12, 44, 3, C.red);
+      px(ctx, 2, 13, 44, 1, C.white);
     }
-    outlineRect(ctx, 2, 6, 36, 10, C.ink);
+    outlineRect(ctx, 2, 7, 44, 12, C.ink);
     return c;
   }
 
