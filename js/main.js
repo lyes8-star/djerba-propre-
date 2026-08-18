@@ -635,8 +635,8 @@
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
-    } else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
-    else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearNpc && selectedTool !== "balai") {
       const more = nearNpc.pages && nearNpc.page < nearNpc.pages.length - 1;
