@@ -575,18 +575,19 @@ const Island = (() => {
         const x = tx * TS + (h % 7) - 3;
         const y = ty * TS + ((h >> 4) % 7) - 3;
         if (k === GRASS || k === DIRT) {
-          const r = h % 23;
-          if (r === 0) deco.push({ kind: "palm", x, y: y - 18, seed: h });
-          else if (r === 1 || r === 2) deco.push({ kind: "bush", x, y: y + 4, seed: h });
+          const r = h % 19;
+          if (r <= 2) deco.push({ kind: "palm", x, y: y - 18, seed: h });
+          else if (r <= 7) deco.push({ kind: "bush", x, y: y + 4, seed: h });
         } else if (k === BEACH) {
-          const r = h % 29;
-          if (r === 0) deco.push({ kind: "rock", x, y: y + 6, seed: h });
-          else if (r === 1) deco.push({ kind: "palm", x, y: y - 16, seed: h });
-          else if (r === 2) deco.push({ kind: "bush", x, y: y + 2, seed: h });
+          const r = h % 23;
+          if (r <= 1) deco.push({ kind: "rock", x, y: y + 6, seed: h });
+          else if (r <= 3) deco.push({ kind: "palm", x, y: y - 16, seed: h });
+          else if (r <= 6) deco.push({ kind: "bush", x, y: y + 2, seed: h });
         } else if (k === SAND) {
-          const r = h % 31;
-          if (r === 0) deco.push({ kind: "bush", x, y: y + 4, seed: h });
-          else if (r === 1) deco.push({ kind: "rock", x, y: y + 6, seed: h });
+          const r = h % 27;
+          if (r <= 3) deco.push({ kind: "bush", x, y: y + 4, seed: h });
+          else if (r <= 4) deco.push({ kind: "rock", x, y: y + 6, seed: h });
+          else if (r === 5) deco.push({ kind: "palm", x, y: y - 12, seed: h });
         }
       }
     }

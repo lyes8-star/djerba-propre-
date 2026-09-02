@@ -20,16 +20,21 @@ const Engine3D = (() => {
 
   const HGT = {
     [TILE.WATER]: -6,
-    [TILE.SAND]: 0.4,
-    [TILE.GRASS]: 1.8,
-    [TILE.BEACH]: 0.2,
-    [TILE.COBBLE]: 0.8,
-    [TILE.PLAZA]: 0.6,
-    [TILE.ROAD]: 0.5,
-    [TILE.DIRT]: 0.3,
-    [TILE.STONE]: 1.2,
-    [TILE.SHORE]: 0.1,
+    [TILE.SAND]: 10,
+    [TILE.GRASS]: 20,
+    [TILE.BEACH]: 6,
+    [TILE.COBBLE]: 12,
+    [TILE.PLAZA]: 11,
+    [TILE.ROAD]: 12,
+    [TILE.DIRT]: 9,
+    [TILE.STONE]: 16,
+    [TILE.SHORE]: 4,
   };
+
+  const WATER_LEVEL = -22;
+  const BUILD_SCALE = 2.35;
+  const CAR_SCALE = 2.2;
+  const EYE_H = 30;
 
   const TRASH_COL = {
     can: 0xc84830, bottle: 0x48b8e8, bag: 0x303030, butt: 0xd8a060,
@@ -51,6 +56,8 @@ const Engine3D = (() => {
   let binRoot = null;
   let buildingRoot = null;
   let decoRoot = null;
+  let roadRoot = null;
+  let grassRoot = null;
   let active = false;
   let built = false;
   let titleMode = false;
@@ -60,7 +67,6 @@ const Engine3D = (() => {
   let camTarget = new THREE.Vector3();
   let camYaw = Math.PI * 0.22;
   let camHands = null;
-  const EYE_H = 26;
   const FPS_FOV = 74;
   let waterNormalPhase = 0;
   let shakeT = 0;
@@ -71,6 +77,7 @@ const Engine3D = (() => {
   let barkMat = null;
   let leavesMat = null;
   let rockMat = null;
+  let roadMat = null;
   let skyDome = null;
   let hemiLight = null;
   let ambLight = null;
@@ -88,8 +95,39 @@ const Engine3D = (() => {
   function gz(y) { return y; }
 
   function groundY(wx, wy) {
-    const t = Island.tileAt(wx, wy);
-    return HGT[t] != null ? HGT[t] : 0;
+    return sampleHeight(wx, wy);
+  }
+
+  function sampleHeight(wx, wz) {
+    if (typeof Island === "undefined") return 0;
+    if (!Island.contains(wx, wz)) return WATER_LEVEL - 8;
+    const t = Island.tileAt(wx, wz);
+    if (t === TILE.WATER) return WATER_LEVEL - 6;
+    let h = HGT[t] != null ? HGT[t] : 8;
+    const n1 = Math.sin(wx * 0.0075) * Math.cos(wz * 0.0068);
+    const n2 = Math.sin(wx * 0.017 + 0.8) * Math.cos(wz * 0.014 + 0.5);
+    const n3 = Math.sin(wx * 0.032 + wz * 0.021) * 0.45;
+    if (t === TILE.GRASS || t === TILE.DIRT) {
+      h += n1 * 7 + n2 * 4 + n3 * 3;
+    } else if (t === TILE.SAND || t === TILE.BEACH || t === TILE.SHORE) {
+      h += n1 * 2.2 + n2 * 1.2;
+      if (t === TILE.BEACH || t === TILE.SHORE) {
+        let nearWater = false;
+        for (let a = 0; a < 6; a++) {
+          const ang = a * Math.PI / 3;
+          const nx = wx + Math.cos(ang) * 48;
+          const nz = wz + Math.sin(ang) * 48;
+          if (!Island.contains(nx, nz) || Island.tileAt(nx, nz) === TILE.WATER) {
+            nearWater = true;
+            break;
+          }
+        }
+        if (nearWater) h = Math.min(h, 5 + n1 * 1.5);
+      }
+    } else if (t === TILE.STONE || t === TILE.COBBLE) {
+      h += n1 * 2.5 + n2 * 1.5;
+    }
+    return h;
   }
 
   function mat(color, opts = {}) {
@@ -117,6 +155,7 @@ const Engine3D = (() => {
     barkMat = Textures.surfaceMaterial("bark", 2);
     leavesMat = Textures.surfaceMaterial("leaves", 2);
     rockMat = Textures.surfaceMaterial("rock", 2);
+    roadMat = Textures.surfaceMaterial("road", 8);
     if (terrain) {
       const tm = Textures.terrainMaterial();
       if (tm) terrain.material = tm;
@@ -272,8 +311,8 @@ const Engine3D = (() => {
   function buildTerrain() {
     const W = Island.W;
     const H = Island.H;
-    const segX = 96;
-    const segZ = 72;
+    const segX = 128;
+    const segZ = 96;
     const geo = new THREE.PlaneGeometry(W, H, segX, segZ);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
@@ -282,17 +321,17 @@ const Engine3D = (() => {
       const x = pos.getX(i) + W / 2;
       const z = pos.getZ(i) + H / 2;
       const t = Island.tileAt(x, z);
-      const h = HGT[t] != null ? HGT[t] : 0;
-      const n = (Math.sin(x * 0.018) + Math.cos(z * 0.015)) * (t === TILE.GRASS ? 0.8 : 0.2);
-      pos.setY(i, h + n);
+      const h = sampleHeight(x, z);
+      pos.setY(i, h);
       const c = (COL[t] || COL[TILE.SAND]).clone();
-      c.offsetHSL(0, 0, (Math.random() - 0.5) * 0.04);
+      if (t === TILE.GRASS) c.offsetHSL(0, 0.02, (Math.sin(x * 0.02 + z * 0.015) * 0.06));
+      else c.offsetHSL(0, 0, (Math.random() - 0.5) * 0.04);
       colors.push(c.r, c.g, c.b);
     }
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
     terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-      vertexColors: true, flatShading: true, roughness: 0.9, metalness: 0,
+      vertexColors: true, flatShading: false, roughness: 0.92, metalness: 0,
     }));
     terrain.receiveShadow = true;
     islandOx = W / 2;
@@ -308,7 +347,7 @@ const Engine3D = (() => {
     } else {
       water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78, roughness: 0.1 }));
     }
-    water.position.set(islandOx, -5.5, islandOz);
+    water.position.set(islandOx, WATER_LEVEL, islandOz);
     root.add(water);
   }
 
@@ -319,14 +358,24 @@ const Engine3D = (() => {
     const gy = groundY(cx, cz);
     const wall = plasterMat || mat(0xf5efe0, { texKey: "plaster", smooth: true });
     const roof = roofMat || mat(0xc85838, { texKey: "roof", smooth: true });
-    const h = Math.max(14, b.h * 0.42);
-    const w = b.w * 0.92;
-    const d = b.h * 0.88;
+    const wood = woodMat || mat(0x6a5030, { texKey: "wood", repeat: 2 });
+    const h = Math.max(42, b.h * 1.05 * BUILD_SCALE);
+    const w = b.w * 0.98;
+    const d = b.h * 0.95;
     g.add(box(w, h, d, wall, 0, gy + h / 2, 0));
-    g.add(box(w * 1.06, h * 0.22, d * 1.06, roof, 0, gy + h + h * 0.08, 0));
+    g.add(box(w * 1.08, h * 0.2, d * 1.08, roof, 0, gy + h + h * 0.1, 0));
+    const doorW = (b.doorW || 20) * 1.1;
+    const doorH = (b.doorH || 22) * BUILD_SCALE * 0.55;
+    const doorLocalX = (b.doorX || 28) + (b.doorW || 20) / 2 - b.w / 2;
+    const doorZ = d * 0.48;
+    g.add(box(doorW, doorH, 2.5, wood, doorLocalX, gy + doorH / 2 + 1, doorZ));
+    g.add(box(doorW * 0.85, doorH * 0.92, 1.2, mat(0x1a1410), doorLocalX, gy + doorH / 2 + 1, doorZ + 1.8));
     if (b.room === "cafe") {
-      const aw = box(w * 0.35, 2, d * 0.5, 0xe04040, 0, gy + h + 4, d * 0.28);
+      const aw = box(w * 0.35, 3, d * 0.5, 0xe04040, 0, gy + h + 6, d * 0.28);
       g.add(aw);
+    }
+    if (b.room === "hotel" || b.room === "airport") {
+      g.add(box(w * 0.15, h * 0.65, d * 0.12, mat(0x88c8e8, { transparent: true, opacity: 0.55 }), 0, gy + h * 0.45, d * 0.44));
     }
     g.position.set(gx(cx), 0, gz(cz));
     g.castShadow = true;
@@ -339,29 +388,35 @@ const Engine3D = (() => {
     const cz = b.y + b.h / 2;
     const gy = groundY(cx, cz);
     const sprite = b.sprite || "shop";
+    const S = BUILD_SCALE;
     if (sprite === "mosque") {
       const baseCol = plasterMat || mat(0xf0ece4, { texKey: "plaster", smooth: true });
-      const base = box(b.w, 10, b.h, baseCol, 0, gy + 5, 0);
+      const bh = Math.max(24, b.h * 0.55 * S);
+      const base = box(b.w * 1.05, bh, b.h * 1.05, baseCol, 0, gy + bh / 2, 0);
       g.add(base);
       const dome = new THREE.Mesh(
-        new THREE.SphereGeometry(b.w * 0.35, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+        new THREE.SphereGeometry(b.w * 0.38, 14, 12, 0, Math.PI * 2, 0, Math.PI / 2),
         plasterMat || mat(0xf8f4ec, { texKey: "plaster", smooth: true })
       );
-      dome.position.set(0, gy + 10, 0);
+      dome.position.set(0, gy + bh, 0);
       g.add(dome);
-      g.add(box(6, 28, 6, plasterMat || mat(0xf0ece4, { texKey: "plaster" }), b.w * 0.3, gy + 14, 0));
-      const minTop = new THREE.Mesh(new THREE.ConeGeometry(5, 8, 4), mat(0x48a8d8));
-      minTop.position.set(b.w * 0.3, gy + 32, 0);
+      g.add(box(8, 52 * S * 0.35, 8, plasterMat || mat(0xf0ece4, { texKey: "plaster" }), b.w * 0.3, gy + bh + 26 * S * 0.35, 0));
+      const minTop = new THREE.Mesh(new THREE.ConeGeometry(7, 14, 4), mat(0x48a8d8));
+      minTop.position.set(b.w * 0.3, gy + bh + 52 * S * 0.35, 0);
       g.add(minTop);
     } else if (sprite === "fort") {
       const stoneM = rockMat || mat(0xd8d0c0, { texKey: "stone", smooth: true });
-      g.add(box(b.w, b.h * 0.55, b.h, stoneM, 0, gy + b.h * 0.28, 0));
-      g.add(box(b.w * 0.7, b.h * 0.35, b.h * 0.7, stoneM, 0, gy + b.h * 0.72, 0));
+      g.add(box(b.w * 1.1, b.h * 0.6 * S, b.h * 1.1, stoneM, 0, gy + b.h * 0.3 * S, 0));
+      g.add(box(b.w * 0.75, b.h * 0.4 * S, b.h * 0.75, stoneM, 0, gy + b.h * 0.78 * S, 0));
     } else if (sprite === "synagogue") {
-      g.add(box(b.w, 12, b.h, plasterMat || mat(0xf8f0e0, { texKey: "plaster" }), 0, gy + 6, 0));
-      g.add(box(b.w * 0.5, 8, b.h * 0.5, mat(0x48a8d8), 0, gy + 16, 0));
+      g.add(box(b.w * 1.05, 28 * S * 0.35, b.h * 1.05, plasterMat || mat(0xf8f0e0, { texKey: "plaster" }), 0, gy + 14 * S * 0.35, 0));
+      g.add(box(b.w * 0.5, 18 * S * 0.35, b.h * 0.5, mat(0x48a8d8), 0, gy + 32 * S * 0.35, 0));
     } else {
-      g.add(box(b.w, Math.max(12, b.h * 0.5), b.h, plasterMat || mat(0xe8e0d0, { texKey: "plaster" }), 0, gy + b.h * 0.25, 0));
+      const sh = Math.max(28, b.h * 0.65 * S);
+      g.add(box(b.w * 1.02, sh, b.h * 1.02, plasterMat || mat(0xe8e0d0, { texKey: "plaster" }), 0, gy + sh / 2, 0));
+      if (b.doorW) {
+        g.add(box(b.doorW * 1.1, b.doorH * S * 0.5, 2, mat(0x2a2018), 0, gy + b.doorH * S * 0.25, b.h * 0.48));
+      }
     }
     g.position.set(gx(cx), 0, gz(cz));
     return g;
@@ -402,7 +457,7 @@ const Engine3D = (() => {
     const props = Island.props();
     let n = 0;
     for (const p of props) {
-      if (n++ > 420) break;
+      if (n++ > 900) break;
       if (p.kind === "palm") decoRoot.add(buildPalm(p.x, p.y, p.seed || 0));
       else if (p.kind === "rock") decoRoot.add(buildRock(p.x, p.y, p.seed || 0));
       else if (p.kind === "bush") decoRoot.add(buildBush(p.x, p.y));
@@ -413,28 +468,116 @@ const Engine3D = (() => {
   function rebuildTexturedWorld() {
     applyTexturePack();
     buildBuildings();
+    buildRoads();
+    buildGrass();
     buildDeco();
+  }
+
+  function disposeGroup(grp) {
+    if (!grp) return;
+    grp.traverse((o) => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) {
+        if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose());
+        else o.material.dispose();
+      }
+    });
+  }
+
+  function buildRoads() {
+    if (roadRoot) {
+      root.remove(roadRoot);
+      disposeGroup(roadRoot);
+      roadRoot = null;
+    }
+    roadRoot = new THREE.Group();
+    const asphalt = roadMat || mat(0x2a2a32, { texKey: "road", repeat: 6 });
+    const roads = Island.roads();
+    const rw = 46;
+    const rh = 1.6;
+    for (let ri = 0; ri < roads.length; ri++) {
+      const [x1, y1, x2, y2] = roads[ri];
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      const steps = Math.max(1, Math.ceil(len / 28));
+      const dx = (x2 - x1) / steps;
+      const dy = (y2 - y1) / steps;
+      for (let i = 0; i <= steps; i++) {
+        const wx = x1 + dx * i;
+        const wy = y1 + dy * i;
+        const gy = sampleHeight(wx, wy);
+        const seg = new THREE.Mesh(new THREE.BoxGeometry(rw, rh, rw), asphalt);
+        seg.position.set(gx(wx), gy + rh * 0.55, gz(wy));
+        seg.receiveShadow = true;
+        roadRoot.add(seg);
+        if (i % 4 === 2) {
+          const mark = new THREE.Mesh(
+            new THREE.BoxGeometry(rw * 0.12, 0.25, rw * 0.35),
+            mat(0xf0e040)
+          );
+          mark.position.set(gx(wx), gy + rh + 0.15, gz(wy));
+          roadRoot.add(mark);
+        }
+      }
+    }
+    root.add(roadRoot);
+  }
+
+  function buildGrass() {
+    if (grassRoot) {
+      root.remove(grassRoot);
+      disposeGroup(grassRoot);
+      grassRoot = null;
+    }
+    grassRoot = new THREE.Group();
+    const tuftM = leavesMat || mat(0x3a9a48, { texKey: "grass", repeat: 2 });
+    const TS = Island.TS || 16;
+    const tw = (Island.W / TS) | 0;
+    const th = (Island.H / TS) | 0;
+    let count = 0;
+    for (let ty = 2; ty < th - 2; ty++) {
+      for (let tx = 2; tx < tw - 2; tx++) {
+        const wx = tx * TS + ((tx * 7 + ty * 11) % 9);
+        const wy = ty * TS + ((tx * 13 + ty * 5) % 9);
+        if (Island.tileAt(wx, wy) !== TILE.GRASS) continue;
+        const roll = (tx * 17 + ty * 31) % 11;
+        if (roll > 4) continue;
+        const gy = sampleHeight(wx, wy);
+        const tuft = new THREE.Mesh(new THREE.ConeGeometry(3.2, 9, 4), tuftM);
+        tuft.position.set(gx(wx), gy + 4.5, gz(wy));
+        tuft.rotation.y = (tx + ty) * 0.4;
+        grassRoot.add(tuft);
+        if (roll <= 1) {
+          const tuft2 = tuft.clone();
+          tuft2.position.x += 6;
+          tuft2.position.z += 4;
+          grassRoot.add(tuft2);
+        }
+        if (++count > 720) break;
+      }
+      if (count > 720) break;
+    }
+    root.add(grassRoot);
   }
 
   function buildPalm(x, y, seed) {
     const g = new THREE.Group();
     const gy = groundY(x, y);
     const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.2, 1.8, 14, 6),
-      barkMat || mat(0x8a6030, { texKey: "bark", repeat: 1 })
+      new THREE.CylinderGeometry(2.8, 4.2, 42, 8),
+      barkMat || mat(0x8a6030, { texKey: "bark", repeat: 2 })
     );
-    trunk.position.set(0, gy + 7, 0);
+    trunk.position.set(0, gy + 21, 0);
     trunk.castShadow = true;
     g.add(trunk);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const leaf = new THREE.Mesh(
-        new THREE.ConeGeometry(5, 12, 5),
-        leavesMat || mat(0x2d9a40, { texKey: "leaves", repeat: 1 })
+        new THREE.ConeGeometry(11, 26, 6),
+        leavesMat || mat(0x2d9a40, { texKey: "leaves", repeat: 2 })
       );
-      const a = (i / 5) * Math.PI * 2 + seed * 0.01;
-      leaf.position.set(Math.cos(a) * 3, gy + 16, Math.sin(a) * 3);
-      leaf.rotation.z = Math.cos(a) * 0.5;
-      leaf.rotation.x = Math.sin(a) * 0.5;
+      const a = (i / 6) * Math.PI * 2 + seed * 0.01;
+      leaf.position.set(Math.cos(a) * 6, gy + 48, Math.sin(a) * 6);
+      leaf.rotation.z = Math.cos(a) * 0.55;
+      leaf.rotation.x = Math.sin(a) * 0.55;
       g.add(leaf);
     }
     g.position.set(gx(x), 0, gz(y));
@@ -444,20 +587,20 @@ const Engine3D = (() => {
   function buildRock(x, y, seed) {
     const gy = groundY(x, y);
     const m = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(3 + (seed % 3), 0),
-      rockMat || mat(0x9a9088, { texKey: "rock", repeat: 1 })
+      new THREE.DodecahedronGeometry(5 + (seed % 4), 0),
+      rockMat || mat(0x9a9088, { texKey: "rock", repeat: 2 })
     );
-    m.position.set(gx(x), gy + 2, gz(y));
-    m.scale.set(1.2, 0.7, 1.1);
+    m.position.set(gx(x), gy + 3, gz(y));
+    m.scale.set(1.4, 0.85, 1.2);
     m.castShadow = true;
     return m;
   }
 
   function buildBush(x, y) {
     const gy = groundY(x, y);
-    const m = new THREE.Mesh(new THREE.SphereGeometry(3.5, 8, 6), leavesMat || mat(0x3a9048, { texKey: "leaves" }));
-    m.position.set(gx(x), gy + 2, gz(y));
-    m.scale.y = 0.7;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(7, 10, 8), leavesMat || mat(0x3a9048, { texKey: "leaves", repeat: 2 }));
+    m.position.set(gx(x), gy + 4, gz(y));
+    m.scale.y = 0.75;
     return m;
   }
 
@@ -540,15 +683,19 @@ const Engine3D = (() => {
   }
 
   function makeCarMesh(car) {
+    const S = CAR_SCALE;
     const g = new THREE.Group();
     const bodyCol = car && car.taxi ? 0xf0c020 : 0xe84838;
-    g.add(box(22, 8, 12, bodyCol, 0, 6, 0));
-    g.add(box(12, 6, 10, 0x88c8e8, 0, 12, -1));
+    g.add(box(22 * S, 9 * S, 13 * S, bodyCol, 0, 7 * S, 0));
+    g.add(box(13 * S, 7 * S, 11 * S, 0x88c8e8, 0, 14 * S, -1.5 * S));
     for (const sx of [-7, 7]) {
-      const w = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 1.5, 8), mat(0x202020));
+      const w = new THREE.Mesh(new THREE.CylinderGeometry(3 * S, 3 * S, 2 * S, 10), mat(0x202020));
       w.rotation.z = Math.PI / 2;
-      w.position.set(sx, 2.5, 0);
+      w.position.set(sx * S, 3 * S, 0);
       g.add(w);
+    }
+    if (car && car.taxi) {
+      g.add(box(4 * S, 2 * S, 4 * S, 0xfff46c, 0, 16 * S, 0));
     }
     return g;
   }
@@ -586,7 +733,7 @@ const Engine3D = (() => {
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x5eb8ff);
-    scene.fog = new THREE.Fog(0xb8e0f8, 900, 3400);
+    scene.fog = new THREE.Fog(0xb8e0f8, 1200, 4800);
     clock = new THREE.Clock();
     root = new THREE.Group();
     scene.add(root);
@@ -601,10 +748,14 @@ const Engine3D = (() => {
       }).catch((err) => {
         console.warn("Textures:", err);
         buildBuildings();
+        buildRoads();
+        buildGrass();
         buildDeco();
       });
     } else {
       buildBuildings();
+      buildRoads();
+      buildGrass();
       buildDeco();
     }
 
@@ -669,10 +820,14 @@ const Engine3D = (() => {
       if (typeof Textures !== "undefined") {
         Textures.loadAll().then(() => rebuildTexturedWorld()).catch(() => {
           buildBuildings();
+          buildRoads();
+          buildGrass();
           buildDeco();
         });
       } else {
         buildBuildings();
+        buildRoads();
+        buildGrass();
         buildDeco();
       }
 
@@ -720,7 +875,7 @@ const Engine3D = (() => {
     if (water) {
       water.position.x = islandOx;
       water.position.z = islandOz;
-      water.position.y = -5.5 + Math.sin(t * 0.5) * 0.3;
+      water.position.y = WATER_LEVEL + Math.sin(t * 0.5) * 0.35;
     }
     if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
     renderer.render(scene, camera);
@@ -772,6 +927,7 @@ const Engine3D = (() => {
       let m = npcMesh.get(n.id);
       if (!m) {
         m = makeNpcMesh(n);
+        m.scale.setScalar(1.12);
         npcRoot.add(m);
         npcMesh.set(n.id, m);
       }
@@ -924,7 +1080,7 @@ const Engine3D = (() => {
     if (water) {
       water.position.x = islandOx;
       water.position.z = islandOz;
-      water.position.y = -5.5 + Math.sin(t * 0.6) * 0.25;
+      water.position.y = WATER_LEVEL + Math.sin(t * 0.6) * 0.35;
     }
     if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
     renderer.render(scene, camera);
