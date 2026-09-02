@@ -1,6 +1,18 @@
 /* Pack de textures PBR réalistes — Poly Haven + AmbientCG (CC0) */
 const Textures = (() => {
-  const BASE = "textures";
+  function resolveBase() {
+    if (typeof document !== "undefined") {
+      const link = document.querySelector('link[href*="css/style.css"]');
+      if (link && link.href) {
+        const u = new URL(link.href);
+        return u.pathname.replace(/css\/[^/]+$/, "textures");
+      }
+    }
+    const path = (typeof window !== "undefined" && window.location && window.location.pathname) || "/";
+    const root = path.endsWith("/") ? path : path.replace(/\/[^/]*$/, "/");
+    return `${root}textures`.replace(/\/+/g, "/");
+  }
+  const BASE = resolveBase();
   const TILE = {
     WATER: 0, SAND: 1, GRASS: 2, BEACH: 3, COBBLE: 4, PLAZA: 5,
     ROAD: 6, DIRT: 7, STONE: 8, SHORE: 9,
@@ -80,6 +92,7 @@ const Textures = (() => {
   function loadImage(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         try {
           resolve(downscaleImage(img, /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 512 : 1024));
@@ -93,7 +106,8 @@ const Textures = (() => {
   }
 
   async function loadSet(folder, name) {
-    const diff = await loadImage(`${BASE}/${folder}/${name}_diff.jpg`).catch(() => null);
+    const diffUrl = `${BASE}/${folder}/${name}_diff.jpg`;
+    const diff = await loadImage(diffUrl).catch(() => null);
     const nor = await loadImage(`${BASE}/${folder}/${name}_nor.jpg`).catch(() => null);
     const rough = await loadImage(`${BASE}/${folder}/${name}_rough.jpg`).catch(() => null);
     const fallback = !diff ? makeFallback(name) : null;
@@ -222,11 +236,9 @@ const Textures = (() => {
       propNames.forEach((n, i) => { pack.props[n] = pRes[i]; });
 
       pack.water.normalCanvas = makeWaterNormal(512);
-      ready = loadedDiffs > 0;
-      if (ready) {
-        bakeTerrainAtlases();
-        injectAtlasTiles();
-      }
+      ready = true;
+      bakeTerrainAtlases();
+      injectAtlasTiles();
       return pack;
     })();
     return loading;
@@ -269,18 +281,29 @@ const Textures = (() => {
   }
 
   function terrainMaterial() {
-    if (!ready || !terrainAtlas || !atlasHasPixels(terrainAtlas) || typeof THREE === "undefined") return null;
-    const map = threeFromCanvas(terrainAtlas, 1, 1);
-    const normalMap = terrainNormalAtlas ? threeFromCanvas(terrainNormalAtlas, 1, 1) : null;
-    if (normalMap) normalMap.colorSpace = THREE.LinearSRGBColorSpace;
-    return new THREE.MeshStandardMaterial({
-      map,
-      normalMap,
-      normalScale: new THREE.Vector2(0.35, 0.35),
-      roughness: 0.88,
-      metalness: 0.02,
-      flatShading: false,
-    });
+    if (!ready || typeof THREE === "undefined") return null;
+    if (terrainAtlas && atlasHasPixels(terrainAtlas)) {
+      const map = threeFromCanvas(terrainAtlas, 1, 1);
+      const normalMap = terrainNormalAtlas ? threeFromCanvas(terrainNormalAtlas, 1, 1) : null;
+      if (normalMap) normalMap.colorSpace = THREE.LinearSRGBColorSpace;
+      return new THREE.MeshStandardMaterial({
+        map,
+        normalMap,
+        normalScale: new THREE.Vector2(0.35, 0.35),
+        roughness: 0.88,
+        metalness: 0.02,
+        flatShading: false,
+      });
+    }
+    const sand = pack.terrain.sand;
+    if (sand && sand.diff) {
+      return new THREE.MeshStandardMaterial({
+        map: threeFromImage(sand.diff, 24, 18),
+        roughness: 0.9,
+        metalness: 0.02,
+      });
+    }
+    return null;
   }
 
   function waterMaterial() {
