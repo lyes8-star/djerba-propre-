@@ -1177,6 +1177,17 @@ button.hud-chip { cursor: pointer; }
 
 #btn-quick { margin-top: 0; }
 
+.hud-weather {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 58px;
+  text-align: center;
+  letter-spacing: 0.04em;
+  color: rgba(200, 220, 255, 0.9);
+  pointer-events: none;
+}
+
 /* —— MARCHÉ D'EAU —— */
 .market-overlay {
   position: absolute;

@@ -29,6 +29,7 @@ const UI = (() => {
     els.bag = document.getElementById("hud-bag");
     els.objPopup = document.getElementById("hud-objectives");
     els.water = document.getElementById("hud-water");
+    els.weather = document.getElementById("hud-weather");
     els.marketOverlay = document.getElementById("market-overlay");
     els.marketTitle = document.getElementById("market-title");
     els.marketSub = document.getElementById("market-sub");
@@ -93,6 +94,9 @@ const UI = (() => {
       els.water.title = `Soif ${thirst}% · ${bottles} bouteille(s)`;
       els.water.classList.toggle("low", thirst <= 25);
       els.water.classList.toggle("crit", thirst <= 10);
+    }
+    if (els.weather && typeof WorldSim !== "undefined") {
+      els.weather.textContent = WorldSim.label();
     }
 
     const missionLabel = document.getElementById("hud-mission");
