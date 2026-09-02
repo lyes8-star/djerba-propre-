@@ -1,4 +1,4 @@
-/* Campagne DJERBA PROPRE — niveaux + histoire */
+/* Campagne DJERBA 2 · EAU PROPRE — niveaux + histoire */
 const Campaign = (() => {
   const LEVELS = [
     {
@@ -207,7 +207,7 @@ const Campaign = (() => {
         { who: "OBJECTIF", text: "90% propre. Le challenge ultime." },
       ],
       storyAfter: [
-        { who: "FOULE", text: "DJERBA PROPRE ! DJERBA PROPRE !" },
+        { who: "FOULE", text: "DJERBA 2 ! EAU PROPRE !" },
         { who: "MAIRIE", text: "Tu es le heros de l'ile. Merci, Nettoyeur." },
         { who: "TOI", text: "Ce n'est que le debut. On garde Djerba belle." },
       ],

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0b2a4a" />
-  <title>DJERBA PROPRE</title>
+  <title>DJERBA 2 · EAU PROPRE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
@@ -26,17 +26,19 @@
         </div>
         <div id="intro-logo-cine" class="intro-card hidden">
           <h1 class="logo">
-            <span class="logo-main">DJERBA</span>
-            <span class="logo-sub">PROPRE</span>
+            <span class="logo-main">DJERBA 2</span>
+            <span class="logo-sub">EAU PROPRE</span>
           </h1>
+          <p class="tagline">Monde ouvert · Île GTA · Pénurie d'eau</p>
         </div>
         <p class="intro-skip blink hidden" id="intro-skip">APPUIE</p>
       </div>
       <div id="title-menu" class="title-menu hidden">
         <h1 class="logo">
-          <span class="logo-main">DJERBA</span>
-          <span class="logo-sub">PROPRE</span>
+          <span class="logo-main">DJERBA 2</span>
+          <span class="logo-sub">EAU PROPRE</span>
         </h1>
+        <p class="tagline">Monde ouvert · Île détaillée · Marchés d'eau</p>
         <p class="press-start blink">APPUIE POUR JOUER</p>
         <button id="btn-quick" class="title-quiet" type="button">monde libre</button>
         <div class="title-stats-quiet" id="title-stats"></div>
@@ -99,6 +101,7 @@
             <span class="value" id="hud-timer">DJERBA</span>
           </div>
           <div class="hud-right">
+            <div class="hud-chip hud-water" id="hud-water" title="Soif">💧100</div>
             <div class="hud-chip"><span class="score" id="hud-score">0</span></div>
             <div class="hud-chip coins" id="hud-coins">$0</div>
             <button type="button" class="hud-chip hud-pause" id="btn-pause">||</button>
@@ -133,6 +136,25 @@
             <button id="btn-action" class="btn-action" aria-label="Action">
               <span id="btn-action-label">PINCE</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="market-overlay" class="market-overlay hidden">
+        <div class="market-sheet pixel-frame">
+          <div class="market-head">
+            <div>
+              <div class="market-title" id="market-title">MARCHÉ DE L'EAU</div>
+              <div class="market-sub" id="market-sub">Houmt Souk</div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-mini" id="btn-market-close">X</button>
+          </div>
+          <div class="market-crisis" id="market-crisis">Pénurie CRITIQUE — prix x1.8</div>
+          <div class="market-stock" id="market-stock">Sac à eau : 0 bouteille</div>
+          <div class="market-list" id="market-list"></div>
+          <div class="market-drink">
+            <div class="market-drink-title">BOIRE (inventaire)</div>
+            <div class="market-drink-row" id="market-drink-row"></div>
           </div>
         </div>
       </div>
@@ -201,6 +223,7 @@
   <script src="js/sprites.js?v=39"></script>
   <script src="js/world.js?v=39"></script>
   <script src="js/places.js?v=39"></script>
+  <script src="js/market.js?v=39"></script>
   <script src="js/player.js?v=39"></script>
   <script src="js/talk-lines.js?v=39"></script>
   <script src="js/npc.js?v=39"></script>
