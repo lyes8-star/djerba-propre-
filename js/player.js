@@ -10,6 +10,8 @@ const Player = (() => {
       y: start.y,
       vx: 0,
       vy: 0,
+      angle: -Math.PI / 2,
+      pitch: 0,
       swim: false,
       ride: false,
       attacking: false,
@@ -41,21 +43,31 @@ const Player = (() => {
     let speed = p.baseSpeed * (1 + p.stats.moveBonus + cafe) * (1 - loaded * 0.2);
     if (p.swim) speed *= 0.52;
 
-    let ix = input.x;
-    let iy = input.y;
-    const mag = Math.hypot(ix, iy);
-    if (mag > 1) {
-      ix /= mag;
-      iy /= mag;
+    const camX = input.camX || 0;
+    const camY = input.camY || 0;
+    if (Math.abs(camX) > 0.04 || Math.abs(camY) > 0.04) {
+      p.angle += camX * 2.6 * dt;
+      p.pitch = Math.max(-0.45, Math.min(0.45, (p.pitch || 0) + camY * 1.4 * dt));
     }
 
-    p.vx = ix * speed;
-    p.vy = iy * speed;
+    let mx = input.moveX != null ? input.moveX : input.x;
+    let my = input.moveY != null ? input.moveY : input.y;
+    const mag = Math.hypot(mx, my);
+    if (mag > 1) {
+      mx /= mag;
+      my /= mag;
+    }
+
+    const fwd = -my;
+    const str = mx;
+    const cos = Math.cos(p.angle);
+    const sin = Math.sin(p.angle);
+    p.vx = (cos * fwd - sin * str) * speed;
+    p.vy = (sin * fwd + cos * str) * speed;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
 
-    if (ix > 0.1) p.facing = 1;
-    if (ix < -0.1) p.facing = -1;
+    if (Math.abs(p.vx) > 0.1) p.facing = p.vx >= 0 ? 1 : -1;
 
     if (world.inside) {
       p.swim = false;

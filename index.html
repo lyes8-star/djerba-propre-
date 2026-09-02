@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a6bb5'/%3E%3Crect x='4' y='4' width='8' height='8' fill='%232db84a'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="css/style.css?v=38" />
+  <link rel="stylesheet" href="css/style.css?v=39" />
 </head>
 <body>
   <div id="app">
@@ -122,17 +122,26 @@
         <div id="toast" class="toast hidden"></div>
 
         <div class="controls overlay-controls">
-          <div id="joystick" class="joystick">
+          <div class="joystick joystick-move" id="joystick-move" aria-label="Déplacement">
             <div class="joy-base"></div>
-            <div class="joy-pad" id="joy-pad"></div>
-            <div class="joy-stick" id="joy-stick"></div>
+            <div class="joy-pad"></div>
+            <div class="joy-stick" id="joy-stick-move"></div>
+            <span class="joy-label">MOVE</span>
           </div>
           <button type="button" class="btn-menu-hud" id="btn-menu-hud">MENU</button>
-          <div class="action-cluster">
-            <button id="btn-tool" class="btn-tool" type="button">Q</button>
-            <button id="btn-action" class="btn-action" aria-label="Action">
-              <span id="btn-action-label">PINCE</span>
-            </button>
+          <div class="controls-right">
+            <div class="action-cluster">
+              <button id="btn-tool" class="btn-tool" type="button">Q</button>
+              <button id="btn-action" class="btn-action" aria-label="Action">
+                <span id="btn-action-label">PINCE</span>
+              </button>
+            </div>
+            <div class="joystick joystick-cam" id="joystick-cam" aria-label="Caméra">
+              <div class="joy-base"></div>
+              <div class="joy-pad"></div>
+              <div class="joy-stick joy-stick-cam" id="joy-stick-cam"></div>
+              <span class="joy-label">CAM</span>
+            </div>
           </div>
         </div>
       </div>
@@ -191,21 +200,22 @@
     </section>
   </div>
 
-  <script src="js/progress.js?v=38"></script>
-  <script src="js/campaign.js?v=38"></script>
-  <script src="js/audio.js?v=38"></script>
-  <script src="js/fx.js?v=38"></script>
-  <script src="js/atlas.js?v=38"></script>
-  <script src="js/island.js?v=38"></script>
-  <script src="js/sprites.js?v=38"></script>
-  <script src="js/world.js?v=38"></script>
-  <script src="js/places.js?v=38"></script>
-  <script src="js/player.js?v=38"></script>
-  <script src="js/talk-lines.js?v=38"></script>
-  <script src="js/npc.js?v=38"></script>
-  <script src="js/traffic.js?v=38"></script>
-  <script src="js/quests.js?v=38"></script>
-  <script src="js/ui.js?v=38"></script>
-  <script src="js/main.js?v=38"></script>
+  <script src="js/progress.js?v=39"></script>
+  <script src="js/campaign.js?v=39"></script>
+  <script src="js/audio.js?v=39"></script>
+  <script src="js/fx.js?v=39"></script>
+  <script src="js/atlas.js?v=39"></script>
+  <script src="js/island.js?v=39"></script>
+  <script src="js/sprites.js?v=39"></script>
+  <script src="js/world.js?v=39"></script>
+  <script src="js/places.js?v=39"></script>
+  <script src="js/player.js?v=39"></script>
+  <script src="js/talk-lines.js?v=39"></script>
+  <script src="js/npc.js?v=39"></script>
+  <script src="js/traffic.js?v=39"></script>
+  <script src="js/quests.js?v=39"></script>
+  <script src="js/fps-view.js?v=39"></script>
+  <script src="js/ui.js?v=39"></script>
+  <script src="js/main.js?v=39"></script>
 </body>
 </html>

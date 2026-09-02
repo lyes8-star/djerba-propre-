@@ -21,7 +21,8 @@ const UI = (() => {
     els.panelOverlay = document.getElementById("panel-overlay");
     els.panelContent = document.getElementById("panel-content");
     els.titleStats = document.getElementById("title-stats");
-    els.joyStick = document.getElementById("joy-stick");
+    els.joyStickMove = document.getElementById("joy-stick-move");
+    els.joyStickCam = document.getElementById("joy-stick-cam");
     els.btnAction = document.getElementById("btn-action");
     els.actionLabel = document.getElementById("btn-action-label");
     els.avatar = document.getElementById("hud-avatar");
@@ -292,9 +293,10 @@ const UI = (() => {
     }
   }
 
-  function setupJoystick(input) {
-    const root = document.getElementById("joystick");
-    const stick = els.joyStick;
+  function setupJoystick(rootId, stickId, out, onActive) {
+    const root = document.getElementById(rootId);
+    const stick = document.getElementById(stickId);
+    if (!root || !stick) return;
     let active = false;
     let pid = null;
 
@@ -305,11 +307,11 @@ const UI = (() => {
       const nx = (dx / m) * cl * max;
       const ny = (dy / m) * cl * max;
       stick.style.transform = `translate(${nx}px, ${ny}px)`;
-      input.x = (dx / m) * cl;
-      input.y = (dy / m) * cl;
+      out.x = (dx / m) * cl;
+      out.y = (dy / m) * cl;
       if (Math.hypot(dx, dy) < 6) {
-        input.x = 0;
-        input.y = 0;
+        out.x = 0;
+        out.y = 0;
         stick.style.transform = "translate(0,0)";
       }
     }
@@ -317,6 +319,7 @@ const UI = (() => {
     function onStart(e) {
       e.preventDefault();
       active = true;
+      if (onActive) onActive(true);
       const t = e.changedTouches ? e.changedTouches[0] : e;
       pid = t.identifier ?? "mouse";
       const rect = root.getBoundingClientRect();
@@ -336,9 +339,10 @@ const UI = (() => {
       if (e.changedTouches && !Array.from(e.changedTouches).some((x) => x.identifier === pid)) return;
       active = false;
       pid = null;
-      input.x = 0;
-      input.y = 0;
+      out.x = 0;
+      out.y = 0;
       stick.style.transform = "translate(0,0)";
+      if (onActive) onActive(false);
     }
 
     root.addEventListener("touchstart", onStart, { passive: false });
@@ -348,6 +352,23 @@ const UI = (() => {
     root.addEventListener("mousedown", onStart);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onEnd);
+  }
+
+  function setupControls(input) {
+    const moveOut = {
+      get x() { return input.moveX; },
+      set x(v) { input.moveX = v; },
+      get y() { return input.moveY; },
+      set y(v) { input.moveY = v; },
+    };
+    const camOut = {
+      get x() { return input.camX; },
+      set x(v) { input.camX = v; },
+      get y() { return input.camY; },
+      set y(v) { input.camY = v; },
+    };
+    setupJoystick("joystick-move", "joy-stick-move", moveOut, (on) => { input._joyMoveActive = on; });
+    setupJoystick("joystick-cam", "joy-stick-cam", camOut, (on) => { input._joyCamActive = on; });
   }
 
   function showResult({ score, stars, xp, coins, title }) {
@@ -379,7 +400,7 @@ const UI = (() => {
     openPanel,
     closePanel,
     toggleObjectives,
-    setupJoystick,
+    setupControls,
     showResult,
     drawAvatar,
     setToolLabel,
