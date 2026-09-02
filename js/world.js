@@ -202,6 +202,9 @@ const World = (() => {
     } else {
       world.trash.push(spawnOne(world.W, world.H, world.trash.length, 0.35));
     }
+    if (world.trash.length > world.initial + 24) {
+      world.trash = world.trash.filter((t) => t.alive);
+    }
   }
 
   function living(world) {

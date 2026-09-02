@@ -642,6 +642,15 @@ const Island = (() => {
         if (img) Atlas.drawSprite(ctx, img, tx * TS, ty * TS);
       }
     }
+    ctx.fillStyle = "rgba(20,12,28,0.06)";
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        const k = grid[ty * TW + tx];
+        if (!k || k === WATER) continue;
+        if ((tx + ty) & 3) continue;
+        ctx.fillRect(tx * TS + 12, ty * TS + 12, 3, 3);
+      }
+    }
   }
 
   return {

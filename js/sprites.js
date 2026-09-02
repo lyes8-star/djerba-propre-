@@ -30,15 +30,59 @@ const Sprites = (() => {
     return sea[depth][f];
   }
 
+  function drawGroundShadow(ctx, cx, cy, rx, ry, alpha) {
+    const a = alpha == null ? 0.28 : alpha;
+    if (a <= 0) return;
+    ctx.fillStyle = `rgba(20,12,28,${a})`;
+    ctx.beginPath();
+    ctx.ellipse(cx | 0, cy | 0, Math.max(2, rx), Math.max(1, ry), 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawSky(ctx, cam, W, H, sky, t) {
+    const x = cam ? cam.x - 8 : 0;
+    const y = cam ? cam.y - 8 : 0;
+    const w = cam ? cam.vw + 16 : W;
+    const h = cam ? cam.vh + 16 : H;
+    const horizon = y + h * 0.42;
+    const grad = ctx.createLinearGradient(0, y, 0, horizon);
+    grad.addColorStop(0, sky[0]);
+    grad.addColorStop(0.55, sky[1]);
+    grad.addColorStop(1, sky[2]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+    if (Atlas.frames.cloud && cam) {
+      const par = 0.12;
+      const span = w + 240;
+      for (let i = 0; i < 6; i++) {
+        const seed = i * 97 + 13;
+        const cx = x + ((seed * 41 - cam.x * par + t * 10 + i * 88) % span) - 80;
+        const cy = y + 14 + (i % 3) * 26 + Math.sin(t * 0.28 + i * 1.7) * 5;
+        if (cy > y + h * 0.55) continue;
+        ctx.globalAlpha = 0.72 + (i % 2) * 0.18;
+        Atlas.blit(ctx, Atlas.frames.cloud, cx, cy);
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (cam && (t * 0.05 % 24) < 12) {
+      ctx.fillStyle = "rgba(255,252,236,0.08)";
+      ctx.fillRect(x + w * 0.62, y + 8, w * 0.22, h * 0.18);
+    }
+  }
+
   function drawPalm(ctx, x, y, t, seed, cam) {
     if (cam && !Atlas.inView(cam, x, y, 32, 48)) return;
+    drawGroundShadow(ctx, x + 16, y + 44, 11, 4, 0.22);
     const img = Math.sin(t * 2.4 + seed) > 0 ? Atlas.frames.palm1 : Atlas.frames.palm0;
     Atlas.blit(ctx, img, x, y);
   }
 
   function drawHouse(ctx, x, y, cam) {
     if (cam && !Atlas.inView(cam, x, y, 80, 88)) return;
+    drawGroundShadow(ctx, x + 40, y + 86, 34, 6, 0.24);
     Atlas.blit(ctx, Atlas.frames.house, x, y);
+    ctx.fillStyle = "rgba(20,12,28,0.12)";
+    ctx.fillRect(x + 62, y + 38, 16, 48);
   }
 
   function drawShop(ctx, x, y, cam) {
@@ -612,6 +656,7 @@ const Sprites = (() => {
   function drawBin(ctx, x, y, t, cam) {
     const wob = Math.sin(t * 10) * 0.4;
     if (cam && !Atlas.inView(cam, x, y, 20, 24)) return;
+    drawGroundShadow(ctx, x + 10 + wob, y + 22, 9, 3, 0.26);
     Atlas.blit(ctx, Atlas.frames.bin, x + wob, y);
   }
 
@@ -710,8 +755,7 @@ const Sprites = (() => {
     if (cam && !Atlas.inView(cam, car.x, car.y, 48, 24)) return;
     const img = Atlas.frames[car.sprite] || Atlas.frames.carBlue || Atlas.frames.carTaxi;
     if (!img) return;
-    ctx.fillStyle = "rgba(20,12,28,0.28)";
-    ctx.fillRect((car.x + 4) | 0, (car.y + 20) | 0, 40, 5);
+    drawGroundShadow(ctx, car.x + 24, car.y + 22, 20, 5, 0.3);
     if ((car.facing || 1) < 0) {
       ctx.save();
       ctx.translate((car.x + 48) | 0, car.y | 0);
@@ -762,6 +806,7 @@ const Sprites = (() => {
     if (cam && !Atlas.inView(cam, p.x, p.y, Atlas.PW, Atlas.PH)) return;
     if (p.swim && !p.ride) {
       const bob = Math.sin(t * 7) * 2;
+      drawGroundShadow(ctx, p.x + 16, p.y + 34 + bob, 12, 3, 0.18);
       ctx.save();
       ctx.beginPath();
       ctx.rect(p.x, p.y + bob, Atlas.PW, 26);
@@ -774,6 +819,7 @@ const Sprites = (() => {
       ctx.fillRect((p.x + 8 + (Math.sin(t * 9) * 4)) | 0, (p.y + 20 + bob) | 0, 6, 2);
       ctx.fillRect((p.x + 18) | 0, (p.y + 24 + bob) | 0, 5, 1);
     } else {
+      drawGroundShadow(ctx, p.x + 16, p.y + 38, 11, 4, p.ride ? 0.16 : 0.26);
       Atlas.blit(ctx, img, p.x, p.y);
     }
   }
@@ -787,6 +833,8 @@ const Sprites = (() => {
     const idle = !moving && Math.sin(t * 3 + n.y) > 0.82 ? 2 : 0;
     const walk = moving ? Math.floor(t * 10) % 4 : idle;
     const face = (n.facing || 1) >= 0 ? 1 : -1;
+    const footY = animal ? n.y + 14 : n.y + 38;
+    drawGroundShadow(ctx, n.x + (animal ? 12 : 16), footY, animal ? 8 : 10, animal ? 3 : 4, 0.22);
     if (animal) {
       const pack = Atlas.frames.stray && Atlas.frames.stray[n.style];
       const img = pack && (pack[`${face}_${walk}`] || pack[`${face}_0`]);
@@ -915,9 +963,7 @@ const Sprites = (() => {
     Atlas.bake();
     Island.bake();
     const sky = themeSky(theme);
-    ctx.fillStyle = sky[2];
-    if (cam) ctx.fillRect(cam.x - 8, cam.y - 8, cam.vw + 16, cam.vh + 16);
-    else ctx.fillRect(0, 0, W, H);
+    drawSky(ctx, cam, W, H, sky, t);
 
     const seaA = seaFrame(1, t);
     const seaB = seaFrame(2, t + 0.5);
@@ -1028,16 +1074,17 @@ const Sprites = (() => {
       drawBush(ctx, p.x + ox, p.y + oy, cam);
     });
     if (Atlas.frames.hill) {
+      const par = cam ? cam.x * 0.016 : 0;
       const lg = Island.xy("lagoon");
-      Atlas.blit(ctx, Atlas.frames.hill, lg.x - 40, lg.y - 10);
-      Atlas.blit(ctx, Atlas.frames.hill, lg.x + 80, lg.y + 40);
+      Atlas.blit(ctx, Atlas.frames.hill, lg.x - 40 + par, lg.y - 10);
+      Atlas.blit(ctx, Atlas.frames.hill, lg.x + 80 - par * 0.5, lg.y + 40);
       const em = Island.xy("elmay");
-      Atlas.blit(ctx, Atlas.frames.hill, em.x - 90, em.y + 20);
-      Atlas.blit(ctx, Atlas.frames.hill, em.x + 70, em.y - 30);
+      Atlas.blit(ctx, Atlas.frames.hill, em.x - 90 + par * 0.8, em.y + 20);
+      Atlas.blit(ctx, Atlas.frames.hill, em.x + 70 - par * 0.4, em.y - 30);
       const gu = Island.xy("guellala");
-      Atlas.blit(ctx, Atlas.frames.hill, gu.x - 70, gu.y - 40);
+      Atlas.blit(ctx, Atlas.frames.hill, gu.x - 70 + par * 0.6, gu.y - 40);
       const md = Island.xy("midoun");
-      Atlas.blit(ctx, Atlas.frames.hill, md.x - 110, md.y + 90);
+      Atlas.blit(ctx, Atlas.frames.hill, md.x - 110 + par, md.y + 90);
     }
     const houmt = Island.xy("houmt");
     [[-40, 40], [80, 40], [240, 88], [400, 88], [560, 264], [720, 264],
