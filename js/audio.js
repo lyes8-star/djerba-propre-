@@ -4,6 +4,7 @@ const AudioSys = (() => {
   const MUSIC_VOL = 0.48;
   const SFX_VOL = 0.48;
   const FADE_MS = 900;
+  const SETTINGS_KEY = "djerba2-audio";
 
   const TRACKS = {
     intro: "audio/music/medina.mp3",
@@ -71,8 +72,68 @@ const AudioSys = (() => {
   let current = null;
   let fadeTimer = null;
   let fadeFrom = null;
+  let musicEnabled = true;
+  let sfxEnabled = true;
   const pool = {};
   const oneShots = {};
+
+  (function loadAudioSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.music === "boolean") musicEnabled = s.music;
+      if (typeof s.sfx === "boolean") sfxEnabled = s.sfx;
+    } catch (_) {}
+  })();
+
+  function saveAudioSettings() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ music: musicEnabled, sfx: sfxEnabled }));
+    } catch (_) {}
+  }
+
+  function musicTargetVol() {
+    return musicEnabled ? MUSIC_VOL * MASTER_VOL : 0;
+  }
+
+  function applyAudioSettings() {
+    if (sfxGain) sfxGain.gain.value = sfxEnabled ? SFX_VOL * MASTER_VOL : 0;
+    if (!musicEnabled) {
+      clearFade();
+      if (current) {
+        current.pause();
+        current.currentTime = 0;
+        current.volume = 0;
+      }
+      if (fadeFrom) {
+        fadeFrom.pause();
+        fadeFrom.currentTime = 0;
+        fadeFrom.volume = 0;
+        fadeFrom = null;
+      }
+      return;
+    }
+    if (current && playing) current.volume = musicTargetVol();
+  }
+
+  function setMusicEnabled(on) {
+    musicEnabled = !!on;
+    saveAudioSettings();
+    applyAudioSettings();
+    if (musicEnabled && playing && current && current.paused) {
+      current.play().catch(() => {});
+    }
+  }
+
+  function setSfxEnabled(on) {
+    sfxEnabled = !!on;
+    saveAudioSettings();
+    applyAudioSettings();
+  }
+
+  function isMusicEnabled() { return musicEnabled; }
+  function isSfxEnabled() { return sfxEnabled; }
 
   function resolveTheme(name) {
     const key = ALIAS[name] || name;
@@ -89,7 +150,7 @@ const AudioSys = (() => {
     if (!AC) return false;
     ctx = new AC();
     sfxGain = ctx.createGain();
-    sfxGain.gain.value = SFX_VOL * MASTER_VOL;
+    sfxGain.gain.value = sfxEnabled ? SFX_VOL * MASTER_VOL : 0;
     sfxGain.connect(ctx.destination);
     return true;
   }
@@ -113,6 +174,17 @@ const AudioSys = (() => {
   }
 
   function fadeTo(next) {
+    if (!musicEnabled) {
+      clearFade();
+      if (current) {
+        current.pause();
+        current.currentTime = 0;
+        current.volume = 0;
+      }
+      current = next;
+      fadeFrom = null;
+      return;
+    }
     clearFade();
     if (current === next) {
       if (next && next.paused) next.play().catch(() => {});
@@ -128,9 +200,9 @@ const AudioSys = (() => {
     next.play().catch(() => {});
     const start = performance.now();
     const fromStart = fadeFrom ? fadeFrom.volume : 0;
+    const targetVol = musicTargetVol();
     fadeTimer = setInterval(() => {
       const t = Math.min(1, (performance.now() - start) / FADE_MS);
-      const targetVol = MUSIC_VOL * MASTER_VOL;
       if (fadeFrom) fadeFrom.volume = fromStart * (1 - t);
       next.volume = targetVol * t;
       if (t >= 1) {
@@ -154,6 +226,10 @@ const AudioSys = (() => {
   function startMusic(newTheme) {
     unlock();
     if (newTheme) theme = resolveTheme(newTheme);
+    if (!musicEnabled) {
+      playing = true;
+      return;
+    }
     const path = trackPath(theme);
     if (playing && current === pool[path] && !current.paused) return;
     playing = true;
@@ -168,6 +244,7 @@ const AudioSys = (() => {
       startMusic(next);
       return;
     }
+    if (!musicEnabled) return;
     fadeTo(getLoop(trackPath(next)));
   }
 
@@ -206,6 +283,7 @@ const AudioSys = (() => {
   }
 
   function playFile(name) {
+    if (!sfxEnabled) return;
     const spec = SFX_FILES[name];
     if (!spec) return;
     if (!oneShots[name]) oneShots[name] = new Audio(spec.path);
@@ -215,6 +293,7 @@ const AudioSys = (() => {
   }
 
   function sfx(name) {
+    if (!sfxEnabled) return;
     if (!ensureSfx()) return;
     unlock();
     const t = ctx.currentTime;
@@ -274,5 +353,16 @@ const AudioSys = (() => {
     }
   }
 
-  return { unlock, startMusic, stopMusic, setTheme, sfx, ensure: ensureSfx };
+  return {
+    unlock,
+    startMusic,
+    stopMusic,
+    setTheme,
+    sfx,
+    ensure: ensureSfx,
+    setMusicEnabled,
+    setSfxEnabled,
+    isMusicEnabled,
+    isSfxEnabled,
+  };
 })();
