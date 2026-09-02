@@ -140,6 +140,10 @@ const Traffic = (() => {
       ["louage", "carLouage", false],
       ["blue", "carBlue", false],
       ["red", "carRed", false],
+      ["louage", "carLouage", false],
+      ["white", "carWhite", false],
+      ["blue", "carBlue", false],
+      ["red", "carRed", false],
     ];
     palette.forEach((row, i) => {
       const [kind, sprite, taxi] = row;
