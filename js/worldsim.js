@@ -76,10 +76,6 @@ const WorldSim = (() => {
     rainIntensity = weather === "rain" ? 0.55 + Math.sin(weatherT * 0.4) * 0.2 : rainIntensity * 0.92;
     sandIntensity = weather === "sandstorm" ? 0.7 : sandIntensity * 0.9;
     cloudCover = weather === "clear" ? 0.15 : weather === "cloudy" ? 0.55 : weather === "rain" ? 0.75 : 0.35;
-    if (typeof AudioSys !== "undefined" && player) {
-      const zone = typeof Sprites !== "undefined" ? Sprites.zoneAt(player.x, player.y) : "beach";
-      AudioSys.updateAmbience({ weather, hour: hour(), zone, swim: player.swim });
-    }
   }
 
   function moveFactor(p) {
