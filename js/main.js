@@ -35,6 +35,8 @@
   let mapRaf = 0;
   let animTime = 0;
   let lastTickSecond = 999;
+  let fxAmbient = 0;
+  let hiddenPause = false;
 
   let currentMissionId = 1;
   let selectedMapId = 1;
@@ -334,6 +336,7 @@
     window.__timeLeft = timeLeft;
     cleanToastShown = false;
     lastTickSecond = 999;
+    fxAmbient = 0;
     selectedTool = "pince";
     UI.setToolLabel("PINCE");
     UI.closePanel();
@@ -511,7 +514,7 @@
   function checkObjectives() {}
 
   function render(t) {
-    fitGameCanvas();
+    if (!world || !player) return;
     const inside = world.inside;
     const W = inside ? inside.w : world.W;
     const H = inside ? inside.h : world.H;
@@ -566,6 +569,7 @@
 
   function loop(ts) {
     if (state !== "play") return;
+    if (!world || !player) return;
     const dt = Math.min(0.05, (ts - lastTs) / 1000);
     lastTs = ts;
     animTime = ts / 1000;
@@ -589,14 +593,18 @@
     if (!world.inside) World.tickSpawn(world, dt);
     FX.update(dt);
     AudioSys.setTheme(playMusicTheme());
-    if (!world.ride && !player.swim && Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
+    fxAmbient += dt;
+    if (!world.ride && !player.swim && Math.hypot(player.vx, player.vy) > 20 && fxAmbient > 0.12) {
       FX.dust(player.x + 12, player.y + 34);
+      fxAmbient = 0;
     }
-    if (player.swim && Math.hypot(player.vx, player.vy) > 12 && Math.random() < 0.35) {
+    if (player.swim && Math.hypot(player.vx, player.vy) > 12 && fxAmbient > 0.14) {
       FX.glint(player.x + 8 + Math.random() * 12, player.y + 22);
+      fxAmbient = 0;
     }
-    if (Math.random() < 0.04) {
+    if (fxAmbient > 0.55 && Math.random() < 0.35) {
       FX.glint(player.x + Math.random() * 20, player.y + Math.random() * 16 - 8);
+      fxAmbient = 0;
     }
 
     if (holdAction && selectedTool === "balai" && player.cooldown <= 0) doAction();
@@ -882,6 +890,20 @@
     };
     window.addEventListener("pointerdown", unlock);
     window.addEventListener("resize", fitGameCanvas);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        if (state === "play") {
+          hiddenPause = true;
+          cancelAnimationFrame(raf);
+        }
+        return;
+      }
+      if (hiddenPause && state === "play") {
+        hiddenPause = false;
+        lastTs = performance.now();
+        raf = requestAnimationFrame(loop);
+      }
+    });
   }
 
   function init() {
