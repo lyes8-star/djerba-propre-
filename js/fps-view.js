@@ -62,15 +62,13 @@ const FPSView = (() => {
     return best || { dist: MAX_DIST, h: 0, color: null, kind: "open" };
   }
 
+  const TS = () => (typeof Island !== "undefined" && Island.TS) || 16;
+  const paletteCache = new WeakMap();
+
   function floorCol(tile, wx, wy) {
     const C = Atlas.C;
     if (tile === 0) return "#1a6bb5";
-    if (tile === 6) {
-      const stripe = (((wx / 10) | 0) + ((wy / 10) | 0)) % 2;
-      if (stripe === 0) return C.road || "#3a3c48";
-      const center = Math.abs(((wx + wy) / 14) % 2 - 1) < 0.15;
-      return center ? (C.roadY || "#fcbc14") : (C.roadD || "#24262e");
-    }
+    if (tile === 6) return C.road || "#3a3c48";
     if (tile === 1 || tile === 3) return C.sandB || "#f0cc84";
     if (tile === 2) return C.green || "#3cbc3c";
     if (tile === 4 || tile === 5) return C.cobbleA || "#c4a878";
@@ -80,11 +78,85 @@ const FPSView = (() => {
     return C.sandB || "#e8c878";
   }
 
+  function tilePalette(img) {
+    if (!img) return null;
+    let pal = paletteCache.get(img);
+    if (pal) return pal;
+    const size = TS();
+    let data;
+    if (img.sheet) {
+      const c = document.createElement("canvas");
+      c.width = size;
+      c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img.sheet, img.sx, img.sy, img.sw, img.sh, 0, 0, size, size);
+      data = ctx.getImageData(0, 0, size, size).data;
+    } else if (img.tagName === "CANVAS") {
+      data = img.getContext("2d").getImageData(0, 0, size, size).data;
+    } else {
+      const c = document.createElement("canvas");
+      c.width = size;
+      c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, size, size);
+      data = ctx.getImageData(0, 0, size, size).data;
+    }
+    pal = new Uint8Array(size * size * 3);
+    for (let i = 0; i < size * size; i++) {
+      const j = i * 4;
+      const o = i * 3;
+      pal[o] = data[j];
+      pal[o + 1] = data[j + 1];
+      pal[o + 2] = data[j + 2];
+    }
+    paletteCache.set(img, pal);
+    return pal;
+  }
+
+  function sampleTileRgb(img, wx, wy) {
+    const pal = tilePalette(img);
+    if (!pal) return null;
+    const size = TS();
+    const lx = ((wx | 0) % size + size) % size;
+    const ly = ((wy | 0) % size + size) % size;
+    const i = (ly * size + lx) * 3;
+    return [pal[i], pal[i + 1], pal[i + 2]];
+  }
+
+  function floorRgb(wx, wy) {
+    const tile = Island.tileAt(wx, wy);
+    if (tile === 0) {
+      const hex = floorCol(tile, wx, wy);
+      return [
+        parseInt(hex.slice(1, 3), 16),
+        parseInt(hex.slice(3, 5), 16),
+        parseInt(hex.slice(5, 7), 16),
+      ];
+    }
+    const tx = (wx / TS()) | 0;
+    const ty = (wy / TS()) | 0;
+    const img = typeof Island.tileImage === "function" ? Island.tileImage(tx, ty) : null;
+    const rgb = img ? sampleTileRgb(img, wx, wy) : null;
+    if (rgb) return rgb;
+    const hex = floorCol(tile, wx, wy);
+    return [
+      parseInt(hex.slice(1, 3), 16),
+      parseInt(hex.slice(3, 5), 16),
+      parseInt(hex.slice(5, 7), 16),
+    ];
+  }
+
   function shadeRgb(hex, shade) {
     const r = parseInt(hex.slice(1, 3), 16) * shade | 0;
     const g = parseInt(hex.slice(3, 5), 16) * shade | 0;
     const b = parseInt(hex.slice(5, 7), 16) * shade | 0;
     return `rgb(${r},${g},${b})`;
+  }
+
+  function shadeRgbArr(rgb, shade) {
+    return `rgb(${rgb[0] * shade | 0},${rgb[1] * shade | 0},${rgb[2] * shade | 0})`;
   }
 
   function projectH(worldH, dist, ch) {
@@ -249,9 +321,8 @@ const FPSView = (() => {
         const rayAng = player.angle - halfFov + (i / numRays) * FOV;
         const wx = e.x + Math.cos(rayAng) * rowDist;
         const wy = e.y + Math.sin(rayAng) * rowDist;
-        const tile = Island.tileAt(wx, wy);
         const shade = Math.max(0.42, 1 - rowDist / MAX_DIST);
-        ctx.fillStyle = shadeRgb(floorCol(tile, wx, wy), shade);
+        ctx.fillStyle = shadeRgbArr(floorRgb(wx, wy), shade);
         ctx.fillRect(i * rayStep, row, rayStep + 1, 2);
       }
     }

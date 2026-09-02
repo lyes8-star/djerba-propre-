@@ -656,7 +656,7 @@ const Island = (() => {
   return {
     W, H, BOX, LOT, poly, contains, xy, uv, worldToMap, clamp, clampPlay, snapRoad, randLand, path, box,
     zoneAt, zoneLabel, roads, loopPts, ANCHORS, MAP_LABELS, MAP_ICONS, bake, drawGround,
-    props, tileAt,
+    props, tileAt, tileImage,
     groundCanvas: () => mini,
     mapCanvas: () => mini,
     MW: TW, MH: TH, cx, cy, TS,
