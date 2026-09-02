@@ -18,14 +18,16 @@ const Sprites = (() => {
     const ey = cam ? Math.min(y1, cam.y + cam.vh + TILE) : y1;
     for (let ty = sy; ty < ey; ty += TILE) {
       for (let tx = sx; tx < ex; tx += TILE) {
-        ctx.drawImage(img, tx, ty);
+        Atlas.drawSprite(ctx, img, tx, ty);
       }
     }
   }
 
   function seaFrame(depth, t) {
     const f = Math.floor(t * 7) % 3;
-    return Atlas.tiles.sea[depth][f];
+    const sea = Atlas.tiles.sea;
+    if (!sea || !sea[depth] || !sea[depth][f]) return null;
+    return sea[depth][f];
   }
 
   function drawPalm(ctx, x, y, t, seed, cam) {
@@ -57,7 +59,7 @@ const Sprites = (() => {
     ctx.fillRect(x + 2, y + 2, 92, 52);
     const water = seaFrame(1, t);
     for (let ty = y + 6; ty < y + 50; ty += 16) {
-      for (let tx = x + 6; tx < x + 88; tx += 16) ctx.drawImage(water, tx, ty);
+      for (let tx = x + 6; tx < x + 88; tx += 16) Atlas.drawSprite(ctx, water, tx, ty);
     }
     ctx.fillStyle = "rgba(255,255,255,0.35)";
     ctx.fillRect(x + 10, y + 10 + Math.sin(t * 2) * 2, 28, 2);
@@ -105,7 +107,7 @@ const Sprites = (() => {
     function floorTiles(tile, y0) {
       if (!tile) return;
       for (let y = y0; y < h - 4; y += 16) {
-        for (let x = 4; x < w - 4; x += 16) ctx.drawImage(tile, x, y);
+        for (let x = 4; x < w - 4; x += 16) Atlas.drawSprite(ctx, tile, x, y);
       }
     }
     function window_(x, y, night) {
@@ -425,7 +427,7 @@ const Sprites = (() => {
       rect(80, 70, 140, 90, C.ink);
       for (let y = 74; y < 156; y += 16) {
         for (let x = 84; x < 216; x += 16) {
-          if (Atlas.tiles.plaza) ctx.drawImage(Atlas.tiles.plaza, x, y);
+          if (Atlas.tiles.plaza) Atlas.drawSprite(ctx, Atlas.tiles.plaza, x, y);
         }
       }
       rect(80, 70, 140, 4, C.wallS);
@@ -506,16 +508,16 @@ const Sprites = (() => {
   function hRoad(ctx, x, y, w, cam) {
     for (let tx = x; tx < x + w; tx += 16) {
       if (cam && (tx + 16 < cam.x || tx > cam.x + cam.vw)) continue;
-      ctx.drawImage(Atlas.tiles.roadH, tx, y);
-      ctx.drawImage(Atlas.tiles.roadH, tx, y + 16);
+      Atlas.drawSprite(ctx, Atlas.tiles.roadH, tx, y);
+      Atlas.drawSprite(ctx, Atlas.tiles.roadH, tx, y + 16);
     }
   }
 
   function vRoad(ctx, x, y, h, cam) {
     for (let ty = y; ty < y + h; ty += 16) {
       if (cam && (ty + 16 < cam.y || ty > cam.y + cam.vh)) continue;
-      ctx.drawImage(Atlas.tiles.roadV, x, ty);
-      ctx.drawImage(Atlas.tiles.roadV, x + 16, ty);
+      Atlas.drawSprite(ctx, Atlas.tiles.roadV, x, ty);
+      Atlas.drawSprite(ctx, Atlas.tiles.roadV, x + 16, ty);
     }
   }
 
@@ -526,7 +528,7 @@ const Sprites = (() => {
     const y1 = cam ? Math.min(y + h, cam.y + cam.vh + TILE) : y + h;
     for (let ty = y0; ty < y1; ty += TILE) {
       for (let tx = x0; tx < x1; tx += TILE) {
-        ctx.drawImage(((tx + ty) / 16 | 0) % 2 ? Atlas.tiles.cobble0 : Atlas.tiles.cobble1, tx, ty);
+        Atlas.drawSprite(ctx, ((tx + ty) / 16 | 0) % 2 ? Atlas.tiles.cobble0 : Atlas.tiles.cobble1, tx, ty);
       }
     }
   }
@@ -714,7 +716,7 @@ const Sprites = (() => {
       ctx.save();
       ctx.translate((car.x + 48) | 0, car.y | 0);
       ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0);
+      Atlas.drawSprite(ctx, img, 0, 0);
       ctx.restore();
     } else {
       Atlas.blit(ctx, img, car.x, car.y);
@@ -925,7 +927,8 @@ const Sprites = (() => {
     const sy1 = cam ? Math.min(H, cam.y + cam.vh + TILE) : H;
     for (let ty = sy0; ty < sy1; ty += TILE) {
       for (let tx = sx0; tx < sx1; tx += TILE) {
-        ctx.drawImage(((tx + ty) >> 4) & 1 ? seaA : seaB, tx, ty);
+        const tile = ((tx + ty) >> 4) & 1 ? seaA : seaB;
+        if (tile) Atlas.drawSprite(ctx, tile, tx, ty);
       }
     }
 
@@ -1161,8 +1164,8 @@ const Sprites = (() => {
     ctx.clearRect(0, 0, 40, 40);
     ctx.fillStyle = "#3aacfc";
     ctx.fillRect(0, 0, 40, 40);
-    ctx.drawImage(Atlas.tiles.sand1, 0, 24);
-    ctx.drawImage(Atlas.tiles.sand1, 16, 24);
+    Atlas.drawSprite(ctx, Atlas.tiles.sand1, 0, 24);
+    Atlas.drawSprite(ctx, Atlas.tiles.sand1, 16, 24);
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     const gold = goldHat ? 1 : 0;
