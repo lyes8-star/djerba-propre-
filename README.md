@@ -57,6 +57,7 @@ Debloque les niveaux en gagnant des etoiles. Carte interactive + **monde libre**
 - FX : particules, combos, anneaux, shake
 - Musiques titre / gameplay (Web Audio orientale retro)
 - Habitants et touristes dans chaque quartier (plage, souk, ville, port) : parle-leur
+- **Textures PBR réalistes** (CC0) : sable, herbe, pavé, routes, bâtiments, végétation — voir `textures/README.md`
 
 ## Stack
 

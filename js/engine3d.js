@@ -49,13 +49,20 @@ const Engine3D = (() => {
   let npcRoot = null;
   let carRoot = null;
   let binRoot = null;
+  let buildingRoot = null;
+  let decoRoot = null;
   let active = false;
   let built = false;
   let camPos = new THREE.Vector3();
   let camTarget = new THREE.Vector3();
   let camYaw = Math.PI * 0.22;
-  let shakeT = 0;
-  let shakeAmp = 0;
+  let waterNormalPhase = 0;
+  let plasterMat = null;
+  let roofMat = null;
+  let woodMat = null;
+  let barkMat = null;
+  let leavesMat = null;
+  let rockMat = null;
   const trashMesh = new Map();
   const npcMesh = new Map();
   const carMesh = new Map();
@@ -70,10 +77,14 @@ const Engine3D = (() => {
   }
 
   function mat(color, opts = {}) {
+    if (opts.texKey && typeof Textures !== "undefined" && Textures.isReady()) {
+      const tm = Textures.surfaceMaterial(opts.texKey, opts.repeat || 3);
+      if (tm) return tm;
+    }
     return new THREE.MeshStandardMaterial({
       color,
-      flatShading: true,
-      roughness: 0.82,
+      flatShading: !opts.smooth,
+      roughness: opts.roughness != null ? opts.roughness : 0.82,
       metalness: opts.metal || 0,
       emissive: opts.emissive || 0x000000,
       emissiveIntensity: opts.emissiveI || 0,
@@ -82,8 +93,32 @@ const Engine3D = (() => {
     });
   }
 
-  function box(w, h, d, color, x, y, z) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(color));
+  function applyTexturePack() {
+    if (typeof Textures === "undefined" || !Textures.isReady()) return;
+    plasterMat = Textures.surfaceMaterial("plaster", 4);
+    roofMat = Textures.surfaceMaterial("roof", 3);
+    woodMat = Textures.surfaceMaterial("wood", 2);
+    barkMat = Textures.surfaceMaterial("bark", 2);
+    leavesMat = Textures.surfaceMaterial("leaves", 2);
+    rockMat = Textures.surfaceMaterial("rock", 2);
+    if (terrain) {
+      const tm = Textures.terrainMaterial();
+      if (tm) terrain.material = tm;
+    }
+    if (water) {
+      const wm = Textures.waterMaterial();
+      if (wm) {
+        water.material = wm;
+        if (wm.normalMap) Textures.bindWaterNormal(wm.normalMap);
+      }
+    }
+  }
+
+  function box(w, h, d, colorOrMat, x, y, z) {
+    const material = (colorOrMat && colorOrMat.isMaterial)
+      ? colorOrMat
+      : mat(colorOrMat);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
     m.position.set(x, y, z);
     m.castShadow = true;
     m.receiveShadow = true;
@@ -157,9 +192,9 @@ const Engine3D = (() => {
     terrain.receiveShadow = true;
     root.add(terrain);
 
-    const wGeo = new THREE.PlaneGeometry(W + 800, H + 800, 1, 1);
+    const wGeo = new THREE.PlaneGeometry(W + 800, H + 800, 32, 24);
     wGeo.rotateX(-Math.PI / 2);
-    water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78 }));
+    water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78, roughness: 0.1 }));
     water.position.y = -5.5;
     root.add(water);
   }
@@ -169,8 +204,8 @@ const Engine3D = (() => {
     const cx = b.x + b.w / 2;
     const cz = b.y + b.h / 2;
     const gy = groundY(cx, cz);
-    const wall = 0xf5efe0;
-    const roof = 0xc85838;
+    const wall = plasterMat || mat(0xf5efe0, { texKey: "plaster", smooth: true });
+    const roof = roofMat || mat(0xc85838, { texKey: "roof", smooth: true });
     const h = Math.max(14, b.h * 0.42);
     const w = b.w * 0.92;
     const d = b.h * 0.88;
@@ -192,53 +227,97 @@ const Engine3D = (() => {
     const gy = groundY(cx, cz);
     const sprite = b.sprite || "shop";
     if (sprite === "mosque") {
-      const base = box(b.w, 10, b.h, 0xf0ece4, 0, gy + 5, 0);
+      const baseCol = plasterMat || mat(0xf0ece4, { texKey: "plaster", smooth: true });
+      const base = box(b.w, 10, b.h, baseCol, 0, gy + 5, 0);
       g.add(base);
       const dome = new THREE.Mesh(
-        new THREE.SphereGeometry(b.w * 0.35, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-        mat(0xf8f4ec)
+        new THREE.SphereGeometry(b.w * 0.35, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+        plasterMat || mat(0xf8f4ec, { texKey: "plaster", smooth: true })
       );
       dome.position.set(0, gy + 10, 0);
       g.add(dome);
-      g.add(box(6, 28, 6, 0xf0ece4, b.w * 0.3, gy + 14, 0));
+      g.add(box(6, 28, 6, plasterMat || mat(0xf0ece4, { texKey: "plaster" }), b.w * 0.3, gy + 14, 0));
       const minTop = new THREE.Mesh(new THREE.ConeGeometry(5, 8, 4), mat(0x48a8d8));
       minTop.position.set(b.w * 0.3, gy + 32, 0);
       g.add(minTop);
     } else if (sprite === "fort") {
-      g.add(box(b.w, b.h * 0.55, b.h, 0xd8d0c0, 0, gy + b.h * 0.28, 0));
-      g.add(box(b.w * 0.7, b.h * 0.35, b.h * 0.7, 0xc8c0b0, 0, gy + b.h * 0.72, 0));
+      const stoneM = rockMat || mat(0xd8d0c0, { texKey: "stone", smooth: true });
+      g.add(box(b.w, b.h * 0.55, b.h, stoneM, 0, gy + b.h * 0.28, 0));
+      g.add(box(b.w * 0.7, b.h * 0.35, b.h * 0.7, stoneM, 0, gy + b.h * 0.72, 0));
     } else if (sprite === "synagogue") {
-      g.add(box(b.w, 12, b.h, 0xf8f0e0, 0, gy + 6, 0));
-      g.add(box(b.w * 0.5, 8, b.h * 0.5, 0x48a8d8, 0, gy + 16, 0));
+      g.add(box(b.w, 12, b.h, plasterMat || mat(0xf8f0e0, { texKey: "plaster" }), 0, gy + 6, 0));
+      g.add(box(b.w * 0.5, 8, b.h * 0.5, mat(0x48a8d8), 0, gy + 16, 0));
     } else {
-      g.add(box(b.w, Math.max(12, b.h * 0.5), b.h, 0xe8e0d0, 0, gy + b.h * 0.25, 0));
+      g.add(box(b.w, Math.max(12, b.h * 0.5), b.h, plasterMat || mat(0xe8e0d0, { texKey: "plaster" }), 0, gy + b.h * 0.25, 0));
     }
     g.position.set(gx(cx), 0, gz(cz));
     return g;
   }
 
   function buildBuildings() {
-    const grp = new THREE.Group();
+    if (buildingRoot) {
+      root.remove(buildingRoot);
+      buildingRoot.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) {
+          if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose());
+          else o.material.dispose();
+        }
+      });
+    }
+    buildingRoot = new THREE.Group();
     for (const b of Places.BUILDINGS) {
       const isSite = b.sprite && b.sprite !== "shop";
       const m = (b.w >= 70 && !isSite) ? buildHouse(b) : buildSite(b);
-      grp.add(m);
+      buildingRoot.add(m);
     }
-    root.add(grp);
+    root.add(buildingRoot);
+  }
+
+  function buildDeco() {
+    if (decoRoot) {
+      root.remove(decoRoot);
+      decoRoot.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) {
+          if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose());
+          else o.material.dispose();
+        }
+      });
+    }
+    decoRoot = new THREE.Group();
+    const props = Island.props();
+    let n = 0;
+    for (const p of props) {
+      if (n++ > 420) break;
+      if (p.kind === "palm") decoRoot.add(buildPalm(p.x, p.y, p.seed || 0));
+      else if (p.kind === "rock") decoRoot.add(buildRock(p.x, p.y, p.seed || 0));
+      else if (p.kind === "bush") decoRoot.add(buildBush(p.x, p.y));
+    }
+    root.add(decoRoot);
+  }
+
+  function rebuildTexturedWorld() {
+    applyTexturePack();
+    buildBuildings();
+    buildDeco();
   }
 
   function buildPalm(x, y, seed) {
     const g = new THREE.Group();
     const gy = groundY(x, y);
     const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.2, 1.8, 14, 5),
-      mat(0x8a6030)
+      new THREE.CylinderGeometry(1.2, 1.8, 14, 6),
+      barkMat || mat(0x8a6030, { texKey: "bark", repeat: 1 })
     );
     trunk.position.set(0, gy + 7, 0);
     trunk.castShadow = true;
     g.add(trunk);
     for (let i = 0; i < 5; i++) {
-      const leaf = new THREE.Mesh(new THREE.ConeGeometry(5, 12, 4), mat(0x2d9a40));
+      const leaf = new THREE.Mesh(
+        new THREE.ConeGeometry(5, 12, 5),
+        leavesMat || mat(0x2d9a40, { texKey: "leaves", repeat: 1 })
+      );
       const a = (i / 5) * Math.PI * 2 + seed * 0.01;
       leaf.position.set(Math.cos(a) * 3, gy + 16, Math.sin(a) * 3);
       leaf.rotation.z = Math.cos(a) * 0.5;
@@ -253,7 +332,7 @@ const Engine3D = (() => {
     const gy = groundY(x, y);
     const m = new THREE.Mesh(
       new THREE.DodecahedronGeometry(3 + (seed % 3), 0),
-      mat(0x9a9088)
+      rockMat || mat(0x9a9088, { texKey: "rock", repeat: 1 })
     );
     m.position.set(gx(x), gy + 2, gz(y));
     m.scale.set(1.2, 0.7, 1.1);
@@ -263,23 +342,10 @@ const Engine3D = (() => {
 
   function buildBush(x, y) {
     const gy = groundY(x, y);
-    const m = new THREE.Mesh(new THREE.SphereGeometry(3.5, 6, 5), mat(0x3a9048));
+    const m = new THREE.Mesh(new THREE.SphereGeometry(3.5, 8, 6), leavesMat || mat(0x3a9048, { texKey: "leaves" }));
     m.position.set(gx(x), gy + 2, gz(y));
     m.scale.y = 0.7;
     return m;
-  }
-
-  function buildDeco() {
-    const grp = new THREE.Group();
-    const props = Island.props();
-    let n = 0;
-    for (const p of props) {
-      if (n++ > 420) break;
-      if (p.kind === "palm") grp.add(buildPalm(p.x, p.y, p.seed || 0));
-      else if (p.kind === "rock") grp.add(buildRock(p.x, p.y, p.seed || 0));
-      else if (p.kind === "bush") grp.add(buildBush(p.x, p.y));
-    }
-    root.add(grp);
   }
 
   function buildBins(world) {
@@ -395,8 +461,18 @@ const Engine3D = (() => {
     buildSky();
     buildLights();
     buildTerrain();
-    buildBuildings();
-    buildDeco();
+    if (typeof Textures !== "undefined") {
+      Textures.loadAll().then(() => {
+        rebuildTexturedWorld();
+      }).catch((err) => {
+        console.warn("Textures:", err);
+        buildBuildings();
+        buildDeco();
+      });
+    } else {
+      buildBuildings();
+      buildDeco();
+    }
 
     playerGrp = makePlayerMesh();
     root.add(playerGrp);
@@ -583,6 +659,7 @@ const Engine3D = (() => {
     syncPlayer(player, t, gold);
     updateCamera(player, dt || 0.016);
     if (water) water.position.y = -5.5 + Math.sin(t * 0.6) * 0.25;
+    if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
     renderer.render(scene, camera);
   }
 
