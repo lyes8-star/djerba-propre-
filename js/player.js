@@ -39,54 +39,77 @@ const Player = (() => {
       return;
     }
     p.ride = false;
-    const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
-    const cafe = typeof Progress !== "undefined" ? Progress.cafeBonus() : 0;
-    let speed = p.baseSpeed * (1 + p.stats.moveBonus + cafe) * (1 - loaded * 0.2);
-    if (p.swim) speed *= 0.52;
 
     const camX = input.camX || 0;
     const camY = input.camY || 0;
     if (Math.abs(camX) > 0.04 || Math.abs(camY) > 0.04) {
-      p.angle += camX * 2.6 * dt;
+      p.angle = (p.angle != null ? p.angle : -Math.PI / 2) + camX * 2.6 * dt;
       p.pitch = Math.max(-0.45, Math.min(0.45, (p.pitch || 0) + camY * 1.4 * dt));
+    }
+
+    if (typeof Interactions !== "undefined" && Interactions.isSitting()) {
+      p.vx *= Math.exp(-10 * dt);
+      p.vy *= Math.exp(-10 * dt);
+      p.animState = "idle";
+      if (p.attackTimer > 0) {
+        p.attackTimer -= dt;
+        if (p.attackTimer <= 0) p.attacking = false;
+      }
+      if (p.cooldown > 0) p.cooldown -= dt;
+      Places.tick(world, p, dt);
+      return;
     }
 
     let mx = input.moveX != null ? input.moveX : input.x;
     let my = input.moveY != null ? input.moveY : input.y;
-    const mag = Math.hypot(mx, my);
-    if (mag > 1) {
-      mx /= mag;
-      my /= mag;
+    const joyMag = Math.hypot(mx, my);
+    if (joyMag > 1) {
+      mx /= joyMag;
+      my /= joyMag;
     }
-
+    const ang = p.angle != null ? p.angle : -Math.PI / 2;
     const fwd = -my;
     const str = mx;
-    const cos = Math.cos(p.angle);
-    const sin = Math.sin(p.angle);
-    p.vx = (cos * fwd - sin * str) * speed;
-    p.vy = (sin * fwd + cos * str) * speed;
+    const cos = Math.cos(ang);
+    const sin = Math.sin(ang);
+    input.x = cos * fwd - sin * str;
+    input.y = sin * fwd + cos * str;
 
-    if (world.inside) {
-      p.swim = false;
-      const nx = p.x + p.vx * dt;
-      p.x = nx;
-      Places.collide(p, world);
-      const ny = p.y + p.vy * dt;
-      p.y = ny;
-      Places.collide(p, world);
+    if (typeof Physics !== "undefined") {
+      Physics.tryJump(p, input);
+      Physics.move(p, dt, input, world);
     } else {
-      const nx = p.x + p.vx * dt;
-      p.x = nx;
-      if (!p.swim) Places.collide(p, world);
-      const ny = p.y + p.vy * dt;
-      p.y = ny;
-      const c = Island.clampPlay(p.x + 16, p.y + FEET_OFF);
-      p.x = c.x - 16;
-      p.y = c.y - FEET_OFF;
-      p.swim = !!c.swim;
-      p.x = Math.max(8, Math.min(world.W - PW, p.x));
-      p.y = Math.max(8, Math.min(world.H - PH, p.y));
-      if (!p.swim) Places.collide(p, world);
+      const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
+      const cafe = typeof Progress !== "undefined" ? Progress.cafeBonus() : 0;
+      let speed = p.baseSpeed * (1 + p.stats.moveBonus + cafe) * (1 - loaded * 0.2);
+      if (typeof Market !== "undefined") speed *= Market.speedPenalty();
+      if (p.swim) speed *= 0.52;
+
+      p.vx = input.x * speed;
+      p.vy = input.y * speed;
+
+      if (world.inside) {
+        p.swim = false;
+        const nx = p.x + p.vx * dt;
+        p.x = nx;
+        Places.collide(p, world);
+        const ny = p.y + p.vy * dt;
+        p.y = ny;
+        Places.collide(p, world);
+      } else {
+        const nx = p.x + p.vx * dt;
+        p.x = nx;
+        if (!p.swim) Places.collide(p, world);
+        const ny = p.y + p.vy * dt;
+        p.y = ny;
+        const c = Island.clampPlay(p.x + 16, p.y + FEET_OFF);
+        p.x = c.x - 16;
+        p.y = c.y - FEET_OFF;
+        p.swim = !!c.swim;
+        p.x = Math.max(8, Math.min(world.W - PW, p.x));
+        p.y = Math.max(8, Math.min(world.H - PH, p.y));
+        if (!p.swim) Places.collide(p, world);
+      }
     }
 
     if (Math.abs(p.vx) > 0.1) p.facing = p.vx >= 0 ? 1 : -1;
@@ -106,6 +129,24 @@ const Player = (() => {
       if (more) return more;
       if (world.ride.boardLock > 0) return null;
       return Traffic.hopOff(world, p);
+    }
+    if (typeof Market !== "undefined" && Market.isOpen()) {
+      p.attacking = false;
+      return null;
+    }
+    const spot = typeof Interactions !== "undefined" ? Interactions.near(p, world) : null;
+    if (spot && !world.inside && !p.swim) {
+      p.attacking = false;
+      p.attackTimer = 0;
+      p.cooldown = 0.35;
+      return Interactions.use(spot, p, world);
+    }
+    const stall = typeof Market !== "undefined" ? Market.nearStall(p, world) : null;
+    if (stall && !world.inside) {
+      p.attacking = false;
+      p.attackTimer = 0;
+      Market.openMarket(stall);
+      return { type: "market", title: stall.name, sub: stall.sub };
     }
     const atDoor = Places.nearDoor(p, world);
     if (atDoor) {

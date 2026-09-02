@@ -1,6 +1,7 @@
 /* Progress, save/load, tools, XP, daily challenges */
 const Progress = (() => {
-  const SAVE_KEY = "djerba-propre-save";
+  const SAVE_KEY = "djerba2-eau-propre-save";
+  const LEGACY_SAVE_KEY = "djerba-propre-save";
 
   const TOOL_DEFS = {
     pince: {
@@ -82,6 +83,10 @@ const Progress = (() => {
     },
     quests: {},
     qFlags: {},
+    water: {
+      thirst: 100,
+      stock: { b05: 0, b15: 0, bidon: 0, cistern: 0, premium: 0 },
+    },
   });
 
   function todayKey() {
@@ -93,7 +98,8 @@ const Progress = (() => {
 
   function load() {
     try {
-      const raw = localStorage.getItem(SAVE_KEY);
+      let raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) raw = localStorage.getItem(LEGACY_SAVE_KEY);
       if (!raw) {
         state = defaultState();
         return state;
@@ -116,6 +122,11 @@ const Progress = (() => {
       };
       state.quests = { ...(parsed.quests || {}) };
       state.qFlags = { ...(parsed.qFlags || {}) };
+      state.water = {
+        ...defaultState().water,
+        ...(parsed.water || {}),
+        stock: { ...defaultState().water.stock, ...((parsed.water && parsed.water.stock) || {}) },
+      };
       if (!parsed.daily || parsed.daily.day !== todayKey() || parsed.daily.pick == null) {
         state.daily = defaultState().daily;
       } else {
@@ -293,6 +304,49 @@ const Progress = (() => {
     return { ok: true, coins: 500, xp: 200 };
   }
 
+  function buyWater(id, cost) {
+    const stock = state.water.stock || {};
+    if (!(id in stock)) return { ok: false, reason: "Produit inconnu" };
+    if (!spendCoins(cost)) return { ok: false, reason: "Pas assez de pièces" };
+    state.water.stock[id] = (state.water.stock[id] || 0) + 1;
+    save();
+    return { ok: true };
+  }
+
+  function drinkWater(id) {
+    const n = state.water.stock[id] || 0;
+    if (n <= 0) return { ok: false, reason: "Plus de bouteilles" };
+    const thirstGain = {
+      b05: 20, b15: 45, bidon: 90, cistern: 28, premium: 58,
+    }[id] || 20;
+    state.water.stock[id] = n - 1;
+    state.water.thirst = Math.min(100, (state.water.thirst || 0) + thirstGain);
+    save();
+    return { ok: true, thirst: state.water.thirst, gain: thirstGain };
+  }
+
+  function tickThirst(dt, rate) {
+    if (!state.water) state.water = defaultState().water;
+    const before = state.water.thirst;
+    state.water.thirst = Math.max(0, before - (rate || 2) * dt);
+    if (state.water.thirst !== before) save();
+    const warn = state.water.thirst <= 22 && before > 22;
+    return { thirst: state.water.thirst, warn };
+  }
+
+  function waterPenalty() {
+    const t = (state.water && state.water.thirst) || 100;
+    if (t <= 8) return 0.42;
+    if (t <= 22) return 0.68;
+    if (t <= 40) return 0.85;
+    return 1;
+  }
+
+  function waterStockTotal() {
+    const s = (state.water && state.water.stock) || {};
+    return Object.values(s).reduce((a, b) => a + (b || 0), 0);
+  }
+
   function toolStats() {
     const t = state.tools;
     return {
@@ -338,5 +392,10 @@ const Progress = (() => {
     markIntroSeen,
     markEndingSeen,
     totalStars,
+    buyWater,
+    drinkWater,
+    tickThirst,
+    waterPenalty,
+    waterStockTotal,
   };
 })();

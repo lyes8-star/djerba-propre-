@@ -5,6 +5,15 @@ const FX = (() => {
   let rings = [];
   let shake = 0;
   let flash = 0;
+  const MAX_PARTICLES = 96;
+  const MAX_TEXTS = 20;
+  const MAX_RINGS = 14;
+
+  function trim() {
+    if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES);
+    if (texts.length > MAX_TEXTS) texts.splice(0, texts.length - MAX_TEXTS);
+    if (rings.length > MAX_RINGS) rings.splice(0, rings.length - MAX_RINGS);
+  }
 
   function reset() {
     particles = [];
@@ -15,7 +24,11 @@ const FX = (() => {
   }
 
   function burst(x, y, color, n = 12, speed = 50) {
-    for (let i = 0; i < n; i++) {
+    trim();
+    const room = MAX_PARTICLES - particles.length;
+    if (room <= 0) return;
+    const count = Math.min(n, room);
+    for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = speed * (0.35 + Math.random());
       particles.push({
@@ -34,23 +47,27 @@ const FX = (() => {
   function stars(x, y) {
     burst(x, y, "#ffd24a", 16, 60);
     burst(x, y, "#ffffff", 10, 40);
-    rings.push({ x, y, r: 2, max: 28, life: 0.45 });
+    if (rings.length < MAX_RINGS) rings.push({ x, y, r: 2, max: 28, life: 0.45 });
   }
 
   function recycle(x, y) {
     burst(x, y, "#3ddc5a", 14, 50);
     burst(x, y, "#8dff9c", 10, 35);
     flash = 0.22;
-    rings.push({ x, y, r: 2, max: 34, life: 0.5, color: "#3ddc5a" });
+    if (rings.length < MAX_RINGS) rings.push({ x, y, r: 2, max: 34, life: 0.5, color: "#3ddc5a" });
   }
 
   function pickup(x, y) {
     burst(x, y, "#6ec8ff", 8, 40);
-    rings.push({ x, y, r: 1, max: 16, life: 0.28, color: "#6ec8ff" });
+    if (rings.length < MAX_RINGS) rings.push({ x, y, r: 1, max: 16, life: 0.28, color: "#6ec8ff" });
   }
 
   function sweep(x, y) {
-    for (let i = 0; i < 12; i++) {
+    trim();
+    const room = MAX_PARTICLES - particles.length;
+    if (room <= 0) return;
+    const count = Math.min(12, room);
+    for (let i = 0; i < count; i++) {
       particles.push({
         x: x + (Math.random() - 0.5) * 22,
         y: y + 4,
@@ -66,6 +83,7 @@ const FX = (() => {
   }
 
   function dust(x, y) {
+    if (particles.length >= MAX_PARTICLES) return;
     particles.push({
       x: x + (Math.random() - 0.5) * 8,
       y: y + 30,
@@ -80,15 +98,18 @@ const FX = (() => {
   }
 
   function glint(x, y) {
+    if (particles.length >= MAX_PARTICLES - 3) return;
     burst(x, y, "#ffe9a0", 3, 18);
   }
 
   function floatText(x, y, text, color = "#ffd24a") {
+    if (texts.length >= MAX_TEXTS) texts.shift();
     texts.push({ x, y, text, color, life: 1, max: 1, vy: -32 });
   }
 
   function hitShake(amount = 0.28) {
     shake = Math.max(shake, amount);
+    if (typeof Engine3D !== "undefined" && Engine3D.active()) Engine3D.hitShake(amount);
   }
 
   function update(dt) {

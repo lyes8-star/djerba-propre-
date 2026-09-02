@@ -635,11 +635,20 @@ const Island = (() => {
     const y0 = cam ? Math.max(0, (cam.y / TS | 0) - 1) : 0;
     const x1 = cam ? Math.min(TW, ((cam.x + cam.vw) / TS | 0) + 2) : TW;
     const y1 = cam ? Math.min(TH, ((cam.y + cam.vh) / TS | 0) + 2) : TH;
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = typeof Textures !== "undefined" && Textures.isReady();
     for (let ty = y0; ty < y1; ty++) {
       for (let tx = x0; tx < x1; tx++) {
         const img = tileImage(tx, ty);
-        if (img) ctx.drawImage(img, tx * TS, ty * TS);
+        if (img) Atlas.drawSprite(ctx, img, tx * TS, ty * TS);
+      }
+    }
+    ctx.fillStyle = "rgba(20,12,28,0.06)";
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        const k = grid[ty * TW + tx];
+        if (!k || k === WATER) continue;
+        if ((tx + ty) & 3) continue;
+        ctx.fillRect(tx * TS + 12, ty * TS + 12, 3, 3);
       }
     }
   }

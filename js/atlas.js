@@ -32,6 +32,97 @@ const Atlas = (() => {
   const tiles = {};
   const frames = {};
   let ready = false;
+  let sheet = null;
+  let sheetCtx = null;
+  let sheetW = 2048;
+  let sheetY = 0;
+  let packX = 0;
+  let packRowH = 0;
+
+  function isCanvas(v) {
+    return !!v && typeof v === "object" && v.tagName === "CANVAS";
+  }
+
+  function growSheet(minH) {
+    const nh = Math.min(8192, Math.max(sheetH(), minH + 64));
+    if (nh <= sheet.height) return;
+    const next = document.createElement("canvas");
+    next.width = sheetW;
+    next.height = nh;
+    const nctx = next.getContext("2d");
+    nctx.imageSmoothingEnabled = false;
+    nctx.drawImage(sheet, 0, 0);
+    sheet = next;
+    sheetCtx = nctx;
+  }
+
+  function sheetH() {
+    return sheet ? sheet.height : 0;
+  }
+
+  function registerCanvas(c) {
+    if (!c || !isCanvas(c)) return c;
+    if (!sheet) {
+      sheet = document.createElement("canvas");
+      sheet.width = sheetW;
+      sheet.height = 512;
+      sheetCtx = sheet.getContext("2d");
+      sheetCtx.imageSmoothingEnabled = false;
+      packX = 0;
+      packRowH = 0;
+      sheetY = 0;
+    }
+    const w = c.width;
+    const h = c.height;
+    if (!w || !h) return null;
+    if (packX + w > sheetW) {
+      packX = 0;
+      sheetY += packRowH + 1;
+      packRowH = 0;
+    }
+    growSheet(sheetY + h);
+    sheetCtx.drawImage(c, packX, sheetY);
+    const frame = { sheet, sx: packX, sy: sheetY, sw: w, sh: h };
+    packX += w + 1;
+    packRowH = Math.max(packRowH, h);
+    return frame;
+  }
+
+  function packValue(v) {
+    if (isCanvas(v)) return registerCanvas(v);
+    if (Array.isArray(v)) {
+      for (let i = 0; i < v.length; i++) v[i] = packValue(v[i]);
+      return v;
+    }
+    if (v && typeof v === "object") {
+      for (const k of Object.keys(v)) v[k] = packValue(v[k]);
+    }
+    return v;
+  }
+
+  function drawSprite(ctx, spr, dx, dy, dw, dh) {
+    if (!spr) return;
+    if (isCanvas(spr)) {
+      if (dw != null && dh != null) ctx.drawImage(spr, dx | 0, dy | 0, dw, dh);
+      else ctx.drawImage(spr, dx | 0, dy | 0);
+      return;
+    }
+    if (spr.sheet) {
+      const sw = spr.sw;
+      const sh = spr.sh;
+      ctx.drawImage(
+        spr.sheet,
+        spr.sx,
+        spr.sy,
+        sw,
+        sh,
+        dx | 0,
+        dy | 0,
+        dw != null ? dw : sw,
+        dh != null ? dh : sh
+      );
+    }
+  }
 
   function make(w, h) {
     const c = document.createElement("canvas");
@@ -1876,12 +1967,13 @@ const Atlas = (() => {
         }
       }
     }
+    packValue(tiles);
+    packValue(frames);
     ready = true;
   }
 
   function blit(ctx, img, x, y) {
-    if (!img) return;
-    ctx.drawImage(img, x | 0, y | 0);
+    drawSprite(ctx, img, x, y);
   }
 
   function inView(cam, x, y, w, h) {
@@ -1889,5 +1981,5 @@ const Atlas = (() => {
     return x + w > cam.x && x < cam.x + cam.vw && y + h > cam.y && y < cam.y + cam.vh;
   }
 
-  return { C, tiles, frames, bake, blit, inView, ready: () => ready, PW, PH, NPC_STYLES };
+  return { C, tiles, frames, bake, blit, drawSprite, inView, ready: () => ready, PW, PH, NPC_STYLES };
 })();
