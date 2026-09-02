@@ -4,21 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#0b2a4a" />
+  <meta name="theme-color" content="#010409" />
   <title>DJERBA 2 · EAU PROPRE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a6bb5'/%3E%3Crect x='4' y='4' width='8' height='8' fill='%232db84a'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/style.css?v=41" />
 </head>
 <body>
   <div id="app">
-    <div class="scanlines" aria-hidden="true"></div>
 
     <!-- TITLE / INTRO -->
     <section id="screen-title" class="screen active">
+      <div id="title-3d-wrap" aria-hidden="true"></div>
       <canvas id="title-bg-canvas" width="320" height="560" aria-hidden="true"></canvas>
+      <div class="title-vignette" aria-hidden="true"></div>
       <div id="intro-veil" class="intro-veil">
         <div id="intro-studio" class="intro-card">
           <div class="intro-kicker" id="intro-kicker">FITNA GAMES</div>
@@ -31,7 +32,7 @@
           </h1>
           <p class="tagline">Monde ouvert · Île GTA · Pénurie d'eau</p>
         </div>
-        <p class="intro-skip blink hidden" id="intro-skip">APPUIE</p>
+        <p class="intro-skip blink hidden" id="intro-skip">Appuyez pour continuer</p>
       </div>
       <div id="title-menu" class="title-menu hidden">
         <h1 class="logo">
@@ -39,8 +40,8 @@
           <span class="logo-sub">EAU PROPRE</span>
         </h1>
         <p class="tagline">Monde ouvert · Île détaillée · Marchés d'eau</p>
-        <p class="press-start blink">APPUIE POUR JOUER</p>
-        <button id="btn-quick" class="title-quiet" type="button">monde libre</button>
+        <p class="press-start blink">Appuyez pour jouer</p>
+        <button id="btn-quick" class="title-quiet" type="button">Monde libre</button>
         <div class="title-stats-quiet" id="title-stats"></div>
       </div>
       <button id="btn-play" class="title-hit" type="button" aria-label="Jouer"></button>
@@ -94,8 +95,8 @@
 
         <header class="hud-overlay">
           <div class="hud-left">
-            <button type="button" class="hud-chip" id="btn-obj">OBJ</button>
-            <div class="hud-chip hud-mission-chip" id="hud-mission">LIBRE</div>
+            <button type="button" class="hud-chip" id="btn-obj">Quêtes</button>
+            <div class="hud-chip hud-mission-chip" id="hud-mission">Libre</div>
           </div>
           <div class="hud-chip hud-timer">
             <span class="value" id="hud-timer">DJERBA</span>
@@ -105,7 +106,7 @@
             <div class="hud-chip hud-water" id="hud-water" title="Soif">💧100</div>
             <div class="hud-chip"><span class="score" id="hud-score">0</span></div>
             <div class="hud-chip coins" id="hud-coins">$0</div>
-            <button type="button" class="hud-chip hud-pause" id="btn-pause">||</button>
+            <button type="button" class="hud-chip hud-pause" id="btn-pause" aria-label="Pause">⏸</button>
           </div>
         </header>
 
@@ -116,7 +117,7 @@
         </aside>
 
         <aside class="hud-popup hidden" id="hud-objectives">
-          <div class="obj-title">QUETES</div>
+          <div class="obj-title">Quêtes</div>
           <ul id="obj-list"></ul>
         </aside>
 
@@ -131,7 +132,7 @@
             <div class="joy-pad" id="joy-pad"></div>
             <div class="joy-stick" id="joy-stick"></div>
           </div>
-          <button type="button" class="btn-menu-hud" id="btn-menu-hud">MENU</button>
+          <button type="button" class="btn-menu-hud" id="btn-menu-hud">Menu</button>
           <div class="action-cluster">
             <button id="btn-tool" class="btn-tool" type="button">Q</button>
             <button id="btn-action" class="btn-action" aria-label="Action">
@@ -173,13 +174,13 @@
             </div>
           </div>
           <nav class="panel-tabs" id="bottom-tabs">
-            <button data-panel="outils" class="tab active">OUTILS</button>
-            <button data-panel="ameliorations" class="tab">UP</button>
-            <button data-panel="defis" class="tab">DEFIS</button>
-            <button data-panel="boutique" class="tab">SHOP</button>
+            <button data-panel="outils" class="tab active">Outils</button>
+            <button data-panel="ameliorations" class="tab">Upgrades</button>
+            <button data-panel="defis" class="tab">Défis</button>
+            <button data-panel="boutique" class="tab">Shop</button>
           </nav>
           <div class="panel pixel-frame" id="panel-content"></div>
-          <button id="btn-close-panel" class="btn btn-secondary">FERMER</button>
+          <button id="btn-close-panel" class="btn btn-secondary">Fermer</button>
         </div>
       </div>
     </section>
@@ -206,31 +207,31 @@
     <!-- PAUSE -->
     <section id="screen-pause" class="screen overlay-screen">
       <div class="pause-card pixel-frame">
-        <h2>PAUSE</h2>
-        <button id="btn-resume" class="btn btn-primary">CONTINUER</button>
-        <button id="btn-map-pause" class="btn btn-secondary">CARTE</button>
-        <button id="btn-quit" class="btn btn-secondary">QUITTER</button>
+        <h2>Pause</h2>
+        <button id="btn-resume" class="btn btn-primary">Continuer</button>
+        <button id="btn-map-pause" class="btn btn-secondary">Carte</button>
+        <button id="btn-quit" class="btn btn-secondary">Quitter</button>
       </div>
     </section>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="js/progress.js?v=39"></script>
-  <script src="js/campaign.js?v=39"></script>
-  <script src="js/audio.js?v=39"></script>
-  <script src="js/fx.js?v=39"></script>
-  <script src="js/atlas.js?v=39"></script>
-  <script src="js/island.js?v=39"></script>
-  <script src="js/sprites.js?v=39"></script>
-  <script src="js/world.js?v=39"></script>
-  <script src="js/places.js?v=39"></script>
-  <script src="js/market.js?v=39"></script>
-  <script src="js/player.js?v=39"></script>
-  <script src="js/talk-lines.js?v=39"></script>
-  <script src="js/npc.js?v=39"></script>
-  <script src="js/traffic.js?v=39"></script>
-  <script src="js/quests.js?v=40"></script>
-  <script src="js/ui.js?v=40"></script>
+  <script src="js/progress.js?v=41"></script>
+  <script src="js/campaign.js?v=41"></script>
+  <script src="js/audio.js?v=41"></script>
+  <script src="js/fx.js?v=41"></script>
+  <script src="js/atlas.js?v=41"></script>
+  <script src="js/island.js?v=41"></script>
+  <script src="js/sprites.js?v=41"></script>
+  <script src="js/world.js?v=41"></script>
+  <script src="js/places.js?v=41"></script>
+  <script src="js/market.js?v=41"></script>
+  <script src="js/player.js?v=41"></script>
+  <script src="js/talk-lines.js?v=41"></script>
+  <script src="js/npc.js?v=41"></script>
+  <script src="js/traffic.js?v=41"></script>
+  <script src="js/quests.js?v=41"></script>
+  <script src="js/ui.js?v=41"></script>
   <script src="js/physics.js?v=41"></script>
   <script src="js/water3d.js?v=41"></script>
   <script src="js/worldsim.js?v=41"></script>

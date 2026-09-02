@@ -1,4 +1,4 @@
-/* HUD, panels, joystick, toasts — pixel UI */
+/* HUD, panels, joystick — UI open-world réaliste */
 const UI = (() => {
   const els = {};
   let currentMarketStall = null;

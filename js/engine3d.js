@@ -53,6 +53,9 @@ const Engine3D = (() => {
   let decoRoot = null;
   let active = false;
   let built = false;
+  let titleMode = false;
+  let titleCamAngle = 0;
+  let titleLastTs = 0;
   let camPos = new THREE.Vector3();
   let camTarget = new THREE.Vector3();
   let camYaw = Math.PI * 0.22;
@@ -556,6 +559,7 @@ const Engine3D = (() => {
 
     active = true;
     built = false;
+    titleMode = false;
     resize();
     window.addEventListener("resize", resize);
     return true;
@@ -564,6 +568,96 @@ const Engine3D = (() => {
       dispose();
       return false;
     }
+  }
+
+  function initTitle(mount) {
+    if (typeof THREE === "undefined") return false;
+    try {
+      if (renderer) dispose();
+      Island.bake();
+      titleMode = true;
+      titleCamAngle = Math.PI * 0.35;
+      titleLastTs = performance.now();
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      renderer.domElement.id = "title-gl";
+      renderer.domElement.className = "game-gl";
+      mount.appendChild(renderer.domElement);
+
+      scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xd4a574, 700, 3200);
+      clock = new THREE.Clock();
+      root = new THREE.Group();
+      scene.add(root);
+
+      camera = new THREE.PerspectiveCamera(42, 1, 1, 8000);
+      buildSky();
+      buildLights();
+      if (sun) {
+        sun.intensity = 1.35;
+        sun.color.set(0xffd090);
+      }
+      buildTerrain();
+      if (typeof Textures !== "undefined") {
+        Textures.loadAll().then(() => rebuildTexturedWorld()).catch(() => {
+          buildBuildings();
+          buildDeco();
+        });
+      } else {
+        buildBuildings();
+        buildDeco();
+      }
+
+      playerGrp = makePlayerMesh();
+      playerGrp.visible = false;
+      root.add(playerGrp);
+
+      trashRoot = new THREE.Group();
+      npcRoot = new THREE.Group();
+      carRoot = new THREE.Group();
+      root.add(trashRoot, npcRoot, carRoot);
+
+      active = true;
+      built = false;
+      resize();
+      window.addEventListener("resize", resize);
+      return true;
+    } catch (err) {
+      console.error("Engine3D title:", err);
+      dispose();
+      return false;
+    }
+  }
+
+  function renderTitle(t, dt) {
+    if (!active || !renderer || !titleMode) return;
+    titleCamAngle += (dt || 0.016) * 0.1;
+    const p = Island.xy("houmt");
+    const cx = p.x + 16;
+    const cz = p.y + 20;
+    const gy = groundY(cx, cz);
+    const dist = 240;
+    const height = 95;
+    camera.position.set(
+      cx + Math.sin(titleCamAngle) * dist,
+      gy + height,
+      cz + Math.cos(titleCamAngle) * dist * 0.85
+    );
+    camera.lookAt(cx, gy + 18, cz);
+    if (sun) {
+      sun.position.set(cx + 500, gy + 900, cz + 300);
+      sun.target.position.set(cx, gy + 10, cz);
+      sun.target.updateMatrixWorld();
+    }
+    if (water) water.position.y = -5.5 + Math.sin(t * 0.5) * 0.3;
+    if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
+    renderer.render(scene, camera);
   }
 
   function buildWorld(world) {
@@ -751,6 +845,7 @@ const Engine3D = (() => {
   function dispose() {
     active = false;
     built = false;
+    titleMode = false;
     window.removeEventListener("resize", resize);
     trashMesh.clear();
     npcMesh.clear();
@@ -769,5 +864,8 @@ const Engine3D = (() => {
     playerGrp = null;
   }
 
-  return { init, buildWorld, render, resize, dispose, hitShake, applyWorldSim, active: () => active };
+  return {
+    init, initTitle, buildWorld, render, renderTitle, resize, dispose, hitShake,
+    applyWorldSim, active: () => active, titleActive: () => titleMode,
+  };
 })();
