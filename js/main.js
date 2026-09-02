@@ -135,7 +135,6 @@
   }
 
   function handleTitlePress(e) {
-    if (e.target && e.target.id === "btn-quick") return;
     AudioSys.unlock();
     if (!introAudio) {
       introAudio = true;
@@ -376,8 +375,6 @@
     const missionLabel = document.getElementById("hud-mission");
     if (missionLabel) missionLabel.textContent = "LIBRE";
     UI.updateHud(Progress.get(), world, timeLeft);
-    UI.drawAvatar(0);
-    UI.toggleObjectives(true);
     const wrap = document.getElementById("canvas-wrap");
     stopTitle3d();
     if (typeof Engine3D !== "undefined" && wrap && Engine3D.init(wrap)) {
@@ -529,15 +526,15 @@
       }
       if (res.quest === "start") {
         UI.toast(`QUETE<br/>${res.questTitle || ""}`, 2200);
-        UI.toggleObjectives(true);
+        UI.toggleObjectives();
       } else if (res.quest === "step") {
         UI.toast((res.questTitle || "QUETE") + "<br/>etape suivante", 1800);
-        UI.toggleObjectives(true);
+        UI.toggleObjectives();
       } else if (res.quest === "done") {
         AudioSys.sfx("super");
         FX.stars(player.x + 8, player.y);
         UI.toast(`QUETE OK!<br/>${res.questTitle || ""}`, 2600);
-        UI.toggleObjectives(true);
+        UI.toggleObjectives();
       }
     } else if (res.type === "market") {
       AudioSys.sfx("click");
@@ -680,7 +677,7 @@
       world.qToast = null;
       UI.toast(t.html, 2000);
       if (t.kind === "step") AudioSys.sfx("click");
-      UI.toggleObjectives(true);
+      UI.toggleObjectives();
     }
     if (world.taxiToast) {
       const tt = world.taxiToast;
@@ -825,10 +822,14 @@
     document.getElementById("btn-play").addEventListener("click", (e) => {
       handleTitlePress(e);
     });
-    document.getElementById("btn-quick").addEventListener("click", () => {
-      AudioSys.sfx("click");
-      launchOpenWorld();
-    });
+    const screenTitle = document.getElementById("screen-title");
+    if (screenTitle) {
+      screenTitle.addEventListener("click", (e) => {
+        if (state !== "title" || introPhase !== "cine") return;
+        if (e.target.closest("#btn-play")) return;
+        handleTitlePress(e);
+      });
+    }
     document.getElementById("btn-story-next").addEventListener("click", () => {
       AudioSys.sfx("click");
       storyIndex += 1;
@@ -840,16 +841,6 @@
         UI.showScreen("screen-game", true);
         resumeGame();
       } else goTitle();
-    });
-    document.getElementById("btn-map-prev").addEventListener("click", () => {
-      AudioSys.sfx("click");
-      selectedMapId = Math.max(1, selectedMapId - 1);
-      refreshMapInfo();
-    });
-    document.getElementById("btn-map-next").addEventListener("click", () => {
-      AudioSys.sfx("click");
-      selectedMapId = Math.min(8, selectedMapId + 1);
-      refreshMapInfo();
     });
     document.getElementById("btn-map-play").addEventListener("click", () => {
       AudioSys.sfx("click");
@@ -906,8 +897,8 @@
         UI.showScreen("screen-map", true);
         const z = player ? Island.zoneLabel(Sprites.zoneAt(player.x, player.y)) : "DJERBA";
         document.getElementById("map-level-name").textContent = z;
-        document.getElementById("map-level-sub").textContent = "MONDE LIBRE";
-        document.getElementById("map-level-desc").textContent = "Carte pixel = le vrai terrain. Triangle vert = toi. Toute l'ile est ouverte.";
+        document.getElementById("map-level-sub").textContent = "Monde libre";
+        document.getElementById("map-level-desc").textContent = "Triangle vert = ta position. Explore toute l'île.";
         startMapLoop();
       });
     }
@@ -919,7 +910,6 @@
     document.getElementById("btn-close-panel").addEventListener("click", () => {
       AudioSys.sfx("click");
       UI.closePanel();
-      document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
       if (state === "menu") {
         state = "play";
         lastTs = performance.now();
@@ -927,34 +917,22 @@
       }
     });
 
-    document.querySelectorAll("#bottom-tabs .tab[data-panel]").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        AudioSys.sfx("click");
-        document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-        if (state === "play") state = "menu";
-        UI.openPanel(tab.getAttribute("data-panel"));
-      });
-    });
-
     const btnMenu = document.getElementById("btn-menu-hud");
     if (btnMenu) {
       btnMenu.addEventListener("click", () => {
         AudioSys.sfx("click");
-        const first = document.querySelector("#bottom-tabs .tab[data-panel]");
-        document.querySelectorAll("#bottom-tabs .tab").forEach((t) => t.classList.remove("active"));
-        if (first) first.classList.add("active");
         if (state === "play") state = "menu";
-        UI.openPanel(first ? first.getAttribute("data-panel") : "outils");
+        UI.openPanel();
       });
     }
 
-    const btnObj = document.getElementById("btn-obj");
-    if (btnObj) {
-      btnObj.addEventListener("click", (e) => {
+    const btnQuestBar = document.getElementById("hud-quest-bar");
+    if (btnQuestBar) {
+      btnQuestBar.addEventListener("click", (e) => {
         e.preventDefault();
         AudioSys.sfx("click");
-        UI.toggleObjectives();
+        if (state === "play") state = "menu";
+        UI.openPanel();
       });
     }
 
