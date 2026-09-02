@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231a6bb5'/%3E%3Crect x='4' y='4' width='8' height='8' fill='%232db84a'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="css/style.css?v=42" />
+  <link rel="stylesheet" href="css/style.css?v=43" />
 </head>
 <body>
   <div id="app">
@@ -35,16 +35,69 @@
         <p class="intro-skip blink hidden" id="intro-skip">Appuyez pour continuer</p>
       </div>
       <div id="title-menu" class="title-menu hidden">
-        <h1 class="logo">
-          <span class="logo-main">DJERBA 2</span>
-          <span class="logo-sub">EAU PROPRE</span>
-        </h1>
-        <p class="tagline">Monde ouvert · Île détaillée · Marchés d'eau</p>
-        <p class="press-start blink">Appuyez pour jouer</p>
-        <button id="btn-quick" class="title-quiet" type="button">Monde libre</button>
-        <div class="title-stats-quiet" id="title-stats"></div>
+        <header class="title-hero">
+          <p class="title-studio">FITNA GAMES</p>
+          <h1 class="logo">
+            <span class="logo-main">DJERBA 2</span>
+            <span class="logo-sub">EAU PROPRE</span>
+          </h1>
+          <p class="tagline">Monde ouvert · Île détaillée · Marchés d'eau</p>
+        </header>
+        <div class="title-dock pixel-frame">
+          <nav class="title-nav" id="title-nav" aria-label="Menu principal">
+            <button id="btn-continue" class="menu-btn menu-btn-accent hidden" type="button">
+              <span class="menu-btn-icon" aria-hidden="true">▶</span>
+              <span class="menu-btn-body">
+                <span class="menu-btn-label">Continuer</span>
+                <span class="menu-btn-hint" id="title-continue-hint">Reprendre la campagne</span>
+              </span>
+            </button>
+            <button id="btn-campaign" class="menu-btn menu-btn-primary" type="button">
+              <span class="menu-btn-icon" aria-hidden="true">◎</span>
+              <span class="menu-btn-body">
+                <span class="menu-btn-label">Campagne</span>
+                <span class="menu-btn-hint" id="title-campaign-hint">8 chapitres · île de Djerba</span>
+              </span>
+            </button>
+            <button id="btn-quick" class="menu-btn menu-btn-secondary" type="button">
+              <span class="menu-btn-icon" aria-hidden="true">◇</span>
+              <span class="menu-btn-body">
+                <span class="menu-btn-label">Monde libre</span>
+                <span class="menu-btn-hint">Explore sans limite de temps</span>
+              </span>
+            </button>
+            <button id="btn-map-title" class="menu-btn menu-btn-secondary" type="button">
+              <span class="menu-btn-icon" aria-hidden="true">⌖</span>
+              <span class="menu-btn-body">
+                <span class="menu-btn-label">Carte</span>
+                <span class="menu-btn-hint">Choisir un chapitre</span>
+              </span>
+            </button>
+          </nav>
+          <div class="title-stats-bar" id="title-stats" aria-live="polite"></div>
+          <footer class="title-footer">
+            <button id="btn-settings" class="title-link-btn" type="button">Paramètres</button>
+            <span class="title-version">v2.0</span>
+          </footer>
+        </div>
       </div>
-      <button id="btn-play" class="title-hit" type="button" aria-label="Jouer"></button>
+      <div id="title-settings" class="title-settings hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="title-settings-sheet pixel-frame">
+          <div class="title-settings-head">
+            <h2 id="settings-title">Paramètres</h2>
+            <button id="btn-settings-close" class="btn btn-secondary btn-mini" type="button" aria-label="Fermer">✕</button>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Musique</span>
+            <button id="btn-toggle-music" class="settings-toggle" type="button" aria-pressed="true">Activée</button>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Effets sonores</span>
+            <button id="btn-toggle-sfx" class="settings-toggle" type="button" aria-pressed="true">Activés</button>
+          </div>
+          <p class="settings-note">Les réglages sont enregistrés sur cet appareil.</p>
+        </div>
+      </div>
     </section>
 
     <!-- STORY / DIALOGUE -->
@@ -208,9 +261,26 @@
     <section id="screen-pause" class="screen overlay-screen">
       <div class="pause-card pixel-frame">
         <h2>Pause</h2>
-        <button id="btn-resume" class="btn btn-primary">Continuer</button>
-        <button id="btn-map-pause" class="btn btn-secondary">Carte</button>
-        <button id="btn-quit" class="btn btn-secondary">Quitter</button>
+        <nav class="menu-stack" aria-label="Menu pause">
+          <button id="btn-resume" class="menu-btn menu-btn-primary" type="button">
+            <span class="menu-btn-icon" aria-hidden="true">▶</span>
+            <span class="menu-btn-body">
+              <span class="menu-btn-label">Reprendre</span>
+            </span>
+          </button>
+          <button id="btn-map-pause" class="menu-btn menu-btn-secondary" type="button">
+            <span class="menu-btn-icon" aria-hidden="true">⌖</span>
+            <span class="menu-btn-body">
+              <span class="menu-btn-label">Carte</span>
+            </span>
+          </button>
+          <button id="btn-quit" class="menu-btn menu-btn-ghost" type="button">
+            <span class="menu-btn-icon" aria-hidden="true">↩</span>
+            <span class="menu-btn-body">
+              <span class="menu-btn-label">Menu principal</span>
+            </span>
+          </button>
+        </nav>
       </div>
     </section>
   </div>
@@ -218,7 +288,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <script src="js/progress.js?v=42"></script>
   <script src="js/campaign.js?v=42"></script>
-  <script src="js/audio.js?v=42"></script>
+  <script src="js/audio.js?v=43"></script>
   <script src="js/fx.js?v=42"></script>
   <script src="js/atlas.js?v=42"></script>
   <script src="js/island.js?v=42"></script>
@@ -231,7 +301,7 @@
   <script src="js/npc.js?v=42"></script>
   <script src="js/traffic.js?v=42"></script>
   <script src="js/quests.js?v=42"></script>
-  <script src="js/ui.js?v=42"></script>
+  <script src="js/ui.js?v=43"></script>
   <script src="js/physics.js?v=42"></script>
   <script src="js/water3d.js?v=42"></script>
   <script src="js/worldsim.js?v=42"></script>
@@ -239,6 +309,6 @@
   <script src="js/interactions.js?v=42"></script>
   <script src="js/textures.js?v=42"></script>
   <script src="js/engine3d.js?v=42"></script>
-  <script src="js/main.js?v=42"></script>
+  <script src="js/main.js?v=43"></script>
 </body>
 </html>
