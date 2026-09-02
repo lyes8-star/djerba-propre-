@@ -1,11 +1,11 @@
-/* DJERBA PROPRE — campagne, histoire, niveaux */
+/* DJERBA 2 · EAU PROPRE — monde ouvert GTA, campagne, marchés d'eau */
 (() => {
   const canvas = document.getElementById("game-canvas");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { alpha: false });
   const titleBg = document.getElementById("title-bg-canvas");
-  const titleBgCtx = titleBg.getContext("2d");
+  const titleBgCtx = titleBg.getContext("2d", { alpha: false });
   const mapCanvas = document.getElementById("map-canvas");
-  const mapCtx = mapCanvas.getContext("2d");
+  const mapCtx = mapCanvas.getContext("2d", { alpha: false });
 
   canvas.width = 320;
   canvas.height = 400;
@@ -47,21 +47,23 @@
 
   function fitGameCanvas() {
     const wrap = canvas.parentElement;
-    const w = (wrap && wrap.clientWidth) || window.innerWidth || 320;
-    const h = (wrap && wrap.clientHeight) || window.innerHeight || 400;
+    const w = Math.max(260, (wrap && wrap.clientWidth) || window.innerWidth || 320);
+    const h = Math.max(340, (wrap && wrap.clientHeight) || window.innerHeight || 400);
     const px = Math.max(2, Math.min(3, Math.floor(Math.min(w / 260, h / 340)) || 2));
     const nw = Math.max(260, Math.round(w / px));
     const nh = Math.max(340, Math.round(h / px));
     if (canvas.width !== nw || canvas.height !== nh) {
       canvas.width = nw;
       canvas.height = nh;
+      ctx.imageSmoothingEnabled = false;
     }
-    ctx.imageSmoothingEnabled = false;
   }
 
   let introPhase = "cine";
   let introStart = 0;
   let introAudio = false;
+  let title3d = false;
+  let titleLastFrame = 0;
 
   function fitTitleBg() {
     const w = Math.max(280, Math.round((titleBg.clientWidth || 320) / 2));
@@ -100,8 +102,10 @@
       cineLogo.classList.add("hidden");
       skip.classList.add("hidden");
       menu.classList.remove("hidden");
-      titleBg.classList.remove("lit");
-      titleBg.classList.add("menu");
+      if (!title3d) {
+        titleBg.classList.remove("lit");
+        titleBg.classList.add("menu");
+      }
       AudioSys.setTheme("title");
       AudioSys.startMusic("title");
     }
@@ -121,7 +125,7 @@
     if (t > 2.2) skip.classList.remove("hidden");
     if (t > 3.05) {
       veil.classList.add("dim");
-      titleBg.classList.add("lit");
+      if (!title3d) titleBg.classList.add("lit");
     }
     if (t > 3.6) {
       studio.classList.add("hidden");
@@ -157,15 +161,41 @@
   function drawTitleFrame(ts) {
     if (state !== "title") return;
     animTime = ts / 1000;
-    fitTitleBg();
+    const dt = titleLastFrame ? Math.min(0.05, (ts - titleLastFrame) / 1000) : 0.016;
+    titleLastFrame = ts;
     tickIntro(ts);
-    Sprites.drawCinematic(titleBgCtx, titleBg.width, titleBg.height, animTime);
+    if (title3d && typeof Engine3D !== "undefined" && Engine3D.titleActive()) {
+      Engine3D.renderTitle(animTime, dt);
+    } else {
+      fitTitleBg();
+      Sprites.drawCinematic(titleBgCtx, titleBg.width, titleBg.height, animTime);
+    }
     titleRaf = requestAnimationFrame(drawTitleFrame);
+  }
+
+  function stopTitle3d() {
+    if (title3d && typeof Engine3D !== "undefined") {
+      Engine3D.dispose();
+      const wrap = document.getElementById("title-3d-wrap");
+      if (wrap) wrap.innerHTML = "";
+    }
+    title3d = false;
+    titleLastFrame = 0;
+    titleBg.style.display = "";
   }
 
   function startTitleLoop() {
     cancelAnimationFrame(titleRaf);
     cancelAnimationFrame(mapRaf);
+    titleLastFrame = 0;
+    const wrap = document.getElementById("title-3d-wrap");
+    if (typeof Engine3D !== "undefined" && wrap && Engine3D.initTitle(wrap)) {
+      title3d = true;
+      titleBg.style.display = "none";
+    } else {
+      title3d = false;
+      titleBg.style.display = "";
+    }
     titleRaf = requestAnimationFrame(drawTitleFrame);
   }
 
@@ -302,7 +332,7 @@
   function beginMission(id) {
     const mission = {
       id: 0,
-      name: "Djerba",
+      name: "Djerba 2",
       code: "LIBRE",
       theme: "beach",
       trash: 80,
@@ -348,6 +378,12 @@
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
     UI.toggleObjectives(true);
+    const wrap = document.getElementById("canvas-wrap");
+    stopTitle3d();
+    if (typeof Engine3D !== "undefined" && wrap && Engine3D.init(wrap)) {
+      Engine3D.buildWorld(world);
+      canvas.classList.add("hidden-2d");
+    }
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
@@ -355,6 +391,8 @@
 
   function goTitle() {
     state = "title";
+    if (typeof Engine3D !== "undefined" && Engine3D.active()) Engine3D.dispose();
+    canvas.classList.remove("hidden-2d");
     quickPlay = false;
     introPhase = "menu";
     introAudio = true;
@@ -501,6 +539,16 @@
         UI.toast(`QUETE OK!<br/>${res.questTitle || ""}`, 2600);
         UI.toggleObjectives(true);
       }
+    } else if (res.type === "market") {
+      AudioSys.sfx("click");
+      UI.toast(`${res.title || "MARCHÉ"}<br/>${res.sub || "Eau propre"} · pénurie`);
+    } else if (res.type === "interact") {
+      AudioSys.sfx(res.thirst ? "splash" : "click");
+      UI.toast(`${res.label || "ACTION"}<br/>${res.text || ""}`);
+      if (res.coins) {
+        Progress.addCoins(res.coins);
+        FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
+      }
     } else if (res.type === "door") {
       AudioSys.sfx("click");
       if (res.dir === "in") UI.toast((res.title || "SALLE") + "<br/>Porte ouverte");
@@ -513,58 +561,100 @@
 
   function checkObjectives() {}
 
-  function render(t) {
+  function render(t, dt) {
+    fitGameCanvas();
     if (!world || !player) return;
+
     const inside = world.inside;
-    const W = inside ? inside.w : world.W;
-    const H = inside ? inside.h : world.H;
-    const vw = canvas.width / ZOOM;
-    const vh = canvas.height / ZOOM;
-    let camX = player.x + 16 - vw / 2;
-    let camY = player.y + 20 - vh / 2;
-    camX = Math.max(0, Math.min(Math.max(0, W - vw), camX));
-    camY = Math.max(0, Math.min(Math.max(0, H - vh), camY));
-    cam = { x: camX, y: camY, vw, vh };
-
-    ctx.imageSmoothingEnabled = false;
-    ctx.save();
-    FX.applyShake(ctx);
-    ctx.scale(ZOOM, ZOOM);
-    ctx.translate(-camX, -camY);
-
-    const gold = Progress.get().cosmetics.hat_gold;
-    if (inside) {
-      Sprites.drawInterior(ctx, inside, t);
-      const actors = (world.npcs || []).filter((n) => n.indoor).map((n) => ({ n, y: n.y, player: false }));
-      actors.push({ y: player.y, player: true });
-      actors.sort((a, b) => a.y - b.y);
-      for (const a of actors) {
-        if (a.player) Sprites.drawPlayer(ctx, player, gold, t, null);
-        else Sprites.drawNpc(ctx, a.n, t, null);
-      }
-    } else {
-      Sprites.drawWorldBg(ctx, world.W, world.H, t, world.theme, cam);
-      Sprites.drawDoors(ctx, player, cam, t);
-      Sprites.drawFilth(ctx, world, t, cam);
-      for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
-      for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
-      for (const b of world.bins || [world.bin]) {
-        if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
-      }
-      const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
-      for (const car of world.cars || []) actors.push({ car, y: car.y });
-      actors.push({ y: player.y, player: true });
-      actors.sort((a, b) => a.y - b.y);
-      for (const a of actors) {
-        if (a.car) Sprites.drawCar(ctx, a.car, t, cam);
-        else if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
-        else Sprites.drawNpc(ctx, a.n, t, cam);
-      }
-      Sprites.drawMinimap(ctx, world.W, world.H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
+    if (!inside && typeof Engine3D !== "undefined" && Engine3D.active()) {
+      canvas.classList.add("hidden-2d");
+      const gl = document.getElementById("game-gl");
+      if (gl) gl.style.display = "block";
+      Engine3D.render(world, player, t, dt);
+      return;
     }
-    FX.draw(ctx);
-    ctx.restore();
-    FX.drawFlash(ctx, canvas.width, canvas.height);
+    canvas.classList.remove("hidden-2d");
+    const glHide = document.getElementById("game-gl");
+    if (glHide) glHide.style.display = "none";
+
+    try {
+      const W = inside ? inside.w : world.W;
+      const H = inside ? inside.h : world.H;
+      const vw = canvas.width / ZOOM;
+      const vh = canvas.height / ZOOM;
+      let camX = player.x + 16 - vw / 2;
+      let camY = player.y + 20 - vh / 2;
+      camX = Math.max(0, Math.min(Math.max(0, W - vw), camX));
+      camY = Math.max(0, Math.min(Math.max(0, H - vh), camY));
+      cam = { x: camX, y: camY, vw, vh };
+
+      ctx.fillStyle = "#2090dc";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.save();
+      FX.applyShake(ctx);
+      ctx.scale(ZOOM, ZOOM);
+      ctx.translate(-camX, -camY);
+
+      const gold = Progress.get().cosmetics.hat_gold;
+      if (inside) {
+        Sprites.drawInterior(ctx, inside, t);
+        const actors = (world.npcs || []).filter((n) => n.indoor).map((n) => ({ n, y: n.y, player: false }));
+        actors.push({ y: player.y, player: true });
+        actors.sort((a, b) => a.y - b.y);
+        for (const a of actors) {
+          if (a.player) Sprites.drawPlayer(ctx, player, gold, t, null);
+          else Sprites.drawNpc(ctx, a.n, t, null);
+        }
+      } else {
+        Sprites.drawWorldBg(ctx, world.W, world.H, t, world.theme, cam);
+        Sprites.drawDoors(ctx, player, cam, t);
+        Sprites.drawFilth(ctx, world, t, cam);
+        for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
+        for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
+        for (const b of world.bins || [world.bin]) {
+          if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
+        }
+        if (typeof Market !== "undefined") Market.drawStalls(ctx, cam, t);
+        if (typeof Interactions !== "undefined") {
+          for (const s of Interactions.spots) {
+            const sx = s.x - cam.x;
+            const sy = s.y - cam.y;
+            if (sx < -40 || sy < -40 || sx > cam.vw + 40 || sy > cam.vh + 40) continue;
+            const pulse = 0.5 + Math.sin(t * 4 + s.x * 0.01) * 0.5;
+            ctx.fillStyle = `rgba(72, 200, 120, ${0.35 + pulse * 0.35})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy - 8, 5 + pulse * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+        const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
+        for (const car of world.cars || []) actors.push({ car, y: car.y });
+        actors.push({ y: player.y, player: true });
+        actors.sort((a, b) => a.y - b.y);
+        for (const a of actors) {
+          if (a.car) Sprites.drawCar(ctx, a.car, t, cam);
+          else if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
+          else Sprites.drawNpc(ctx, a.n, t, cam);
+        }
+        Sprites.drawMinimap(ctx, world.W, world.H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
+      }
+      FX.draw(ctx);
+      ctx.restore();
+      FX.drawFlash(ctx, canvas.width, canvas.height);
+    } catch (err) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#2090dc";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#fff";
+      ctx.font = "8px monospace";
+      ctx.fillText("RELOAD", 8, 16);
+      if (typeof console !== "undefined") console.error(err);
+    }
   }
 
   function loop(ts) {
@@ -575,8 +665,16 @@
     animTime = ts / 1000;
 
     if (typeof Traffic !== "undefined" && !world.inside) Traffic.update(world, dt, player);
+    const wasSwim = player.swim;
+    if (typeof WorldSim !== "undefined") WorldSim.tick(dt, player);
+    if (typeof Interactions !== "undefined") Interactions.tick(dt, player);
     Player.update(player, dt, input, world);
+    if (!wasSwim && player.swim) AudioSys.sfx("splash");
     Npc.update(world, dt, player, animTime);
+    if (typeof Market !== "undefined" && !world.inside) {
+      const thirstToast = Market.tick(dt, player, world);
+      if (thirstToast) UI.toast(thirstToast.html, 2600);
+    }
     if (world.qToast) {
       const t = world.qToast;
       world.qToast = null;
@@ -597,6 +695,7 @@
     if (!world.ride && !player.swim && Math.hypot(player.vx, player.vy) > 20 && fxAmbient > 0.12) {
       FX.dust(player.x + 12, player.y + 34);
       fxAmbient = 0;
+      if (Math.random() < 0.08) AudioSys.sfx("footstep");
     }
     if (player.swim && Math.hypot(player.vx, player.vy) > 12 && fxAmbient > 0.14) {
       FX.glint(player.x + 8 + Math.random() * 12, player.y + 22);
@@ -613,7 +712,7 @@
 
     checkObjectives();
     if (state !== "play") return;
-    render(animTime);
+    render(animTime, dt);
     UI.updateHud(Progress.get(), world, timeLeft);
     const indoor = !!world.inside;
     const speaker = (world.npcs || []).find((n) => n.pages && (indoor ? n.indoor : !n.indoor));
@@ -636,10 +735,14 @@
     const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
     const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
     const nearBin = World.nearestBin(world, player, 40);
+    const nearStall = !world.inside && typeof Market !== "undefined" ? Market.nearStall(player, world) : null;
+    const nearSpot = !world.inside && typeof Interactions !== "undefined" ? Interactions.near(player, world) : null;
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    else if (nearStall && !player.swim) UI.setToolLabel("MARCHE");
+    else if (nearSpot && !player.swim) UI.setToolLabel(nearSpot.label);
     else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearBin && player.inventory.length > 0) UI.setToolLabel("VIDER");
@@ -669,7 +772,13 @@
       }
       if ((e.key === " " || k === "e") && !e.repeat) doAction();
       if (k === "q") toggleTool();
-      if (e.key === "Escape" && state === "play") pauseGame();
+      if (e.key === "Escape") {
+        if (typeof Market !== "undefined" && Market.isOpen()) {
+          Market.closeMarket();
+          return;
+        }
+        if (state === "play") pauseGame();
+      }
       syncKeyInput();
     });
     window.addEventListener("keyup", (e) => {
@@ -904,10 +1013,23 @@
         raf = requestAnimationFrame(loop);
       }
     });
+
+    const btnMarketClose = document.getElementById("btn-market-close");
+    if (btnMarketClose) {
+      btnMarketClose.addEventListener("click", () => {
+        AudioSys.sfx("click");
+        if (typeof Market !== "undefined") Market.closeMarket();
+      });
+    }
   }
 
   function init() {
     Atlas.bake();
+    if (typeof Textures !== "undefined") {
+      Textures.loadAll().then(() => {
+        Textures.injectAtlasTiles();
+      }).catch(() => {});
+    }
     UI.cache();
     UI.setupJoystick(input);
     const joy = document.getElementById("joystick");

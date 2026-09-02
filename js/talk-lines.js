@@ -3,7 +3,7 @@ const NpcTalk = {
   LINES: {
     beach: {
       localM: [
-        "Écoute-moi bien, ya khouya. Sidi Mahrez, c'est pas un parking à clics-clacs. Hier le ferry a recraché une tribu entière: radio à fond, dispute pour un mètre de sable, et le père qui disparaît derrière la dune... à la turque. Ils appellent ça des vacances. Nous on appelle ça une infestation saisonnière. Toi tu ramasses le plastique. Eux ils ramassent la honte et ils la ramènent chez eux, inchallah dans un sac étanche. Djerba n'est pas leur salle de bain.",
+        "L'étal EAU à Sidi Mahrez vend cher — pénurie, soleil, touristes. Djerba 2 en monde ouvert, tu traverses l'île pour une bouteille propre. L'ouest apporte un seau. Nous on apporte des citernes. Ramasse le plastique pendant que tu marches. Sahit.",
         "Tu les as entendus, 1, 2, 3 viva? Ils chantent comme si le classement se gagnait à la gorge. Pendant ce temps ici la mer est propre, le poisson a encore un nom, et personne n'a besoin d'un seau pour aller aux toilettes. Deux millions de kilomètres carrés, zéro chasse d'eau qui marche. C'est pas un pays, c'est un complexe avec un hymne. Ramasse, toi. Laisse la Fitna à ceux qui la collectionnent comme des canettes.",
         "Mon cousin à Ajim les voit descendre du bateau. Première phrase: WESH. Deuxième: c'est combien le brik. Troisième: ils crachent sur le quai. Le pack complet. Moi je me baigne. Eux ils se lavent de six mois de poussière et ils croient que la Méditerranée leur doit un tapis rouge. On a une île. Eux un ego en béton fissuré. Devine qui bronzera cet été sans se mettre accroupi.",
       ],
@@ -98,6 +98,7 @@ const NpcTalk = {
     },
     souk: {
       merchM: [
+        "Pénurie d'eau propre, ya sidi. Les étals EAU sur toute l'île — Houmt, Midoun, le port — vendent à prix d'or. L'ouest arrive avec un seau et veut remplir gratis. Ici c'est Djerba 2, monde ouvert, pas un souk d'Alger après la panne. Toi tu ramasses le plastique. Moi je compte les bouteilles. Sahit.",
         "Ils touchent tout, marchandent à un dinar, crachent à côté de l'étal, et se croient des clients VIP. VIP de la fosse, peut-être. Mon souk est un métier. Le leur, un champ de ruines qu'ils exportent avec le tapis. Toilettes turques et prix cassés: le made in Algeria, édition humiliation. Le tapis berbère se vend. L'ego en carton, non. Toi tu ramasses les sacs. Moi je ramasse les miettes de leur dignité. Y a plus de stock.",
         "Un type de l'ouest a voulu le tapis à deux dinars, plus un verre d'eau, plus mon sourire. J'ai dit le prix. Il a dit: chez nous c'est moins cher. J'ai dit: chez vous y a pas de tapis, y a de la poussière et un klaxon. Il a ri. Il a quand même touché les six tapis. Aucun achat. Fitna du commerce: le tourisme du toucher. Houmt Souk n'est pas un showroom gratuit pour ceux qui n'ont pas de chasse d'eau. Sahit à toi. Toi au moins tu paies en effort.",
         "Je vends depuis vingt ans. Italiens, Allemands, Tunisiens de Tunis qui font les malins. Puis l'ouest. C'est la seule nationalité qui discute le prix avant de dire bonjour, et qui crache avant de dire au revoir. On a de l'huile, des épices, du cuir. Eux ils ont le WESH et un visa refusé qu'ils transforment en leçon de fierté. Calme-toi, Abdel. Ici on pèse en kilos, pas en décibels. Ramasse le plastique. Laisse-moi le reste de la discorde.",
@@ -400,6 +401,7 @@ const NpcTalk = {
         "El Bassi, Sidi Salem. Petites mosquées, comme partout. Intéressantes si tu aimes les murs. Sinon tu continues vers Aghir. Djerba n'est pas un checklist. C'est une île. Marche. Ramasse. Tais-toi un peu.",
       ],
       merchM: [
+        "Marché eau Midoun — citerne du village, bouteilles, prix de pénurie. El May a encore de l'eau de foggara moins chère si tu veux faire le tour de l'île GTA. L'ouest marchande comme après une panne. Moi je vends. Toi tu bois. Sahit.",
         "Étal de Midoun. Harissa, pain, zéro WESH dans la file s'il vous plaît. Ils touchent les tomates comme des reliques, puis ils marchandent le kilo. Calme-toi. C'est un village, pas un souk d'Alger après la panne. Toi tu as une pince. Eux un ego. Devine qui je sers en premier.",
       ],
     },

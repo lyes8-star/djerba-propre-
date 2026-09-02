@@ -12,6 +12,11 @@ const AudioSys = (() => {
   let timers = [];
   let barCount = 0;
   let noiseBuf = null;
+  const loops = {};
+  let ambienceOn = false;
+  let ambTarget = { ocean: 0, seagulls: 0, wind: 0, rain: 0, crowd: 0, beach: 0, medina: 0 };
+  let ambCurrent = { ocean: 0, seagulls: 0, wind: 0, rain: 0, crowd: 0, beach: 0, medina: 0 };
+  let oneShots = {};
 
   /* Quart de ton (50 cents) : le grain maghrébin, pas du do-ré-mi occidental */
   const QT = Math.pow(2, -50 / 1200);
@@ -250,6 +255,66 @@ const AudioSys = (() => {
   async function unlock() {
     if (!ensure()) return;
     if (ctx.state === "suspended") await ctx.resume();
+    startAmbience();
+  }
+
+  function loopAudio(name, path, baseVol) {
+    if (!loops[name]) {
+      const a = new Audio(path);
+      a.loop = true;
+      a.volume = 0;
+      a.preload = "auto";
+      loops[name] = { el: a, base: baseVol || 0.35 };
+    }
+    return loops[name];
+  }
+
+  function startAmbience() {
+    if (ambienceOn) return;
+    ambienceOn = true;
+    loopAudio("ocean", "audio/ambient/ocean.mp3", 0.28);
+    loopAudio("seagulls", "audio/ambient/seagulls.mp3", 0.22);
+    loopAudio("wind", "audio/ambient/wind.mp3", 0.18);
+    loopAudio("rain", "audio/ambient/rain.mp3", 0.32);
+    loopAudio("crowd", "audio/ambient/crowd.mp3", 0.2);
+    loopAudio("beach", "audio/music/beach.mp3", 0.14);
+    loopAudio("medina", "audio/music/medina.mp3", 0.12);
+    Object.values(loops).forEach((l) => {
+      l.el.play().catch(() => {});
+    });
+  }
+
+  function lerpAmb(dt) {
+    const k = 1 - Math.pow(0.001, dt);
+    for (const key of Object.keys(ambTarget)) {
+      ambCurrent[key] += (ambTarget[key] - ambCurrent[key]) * k;
+      const loop = loops[key];
+      if (loop) loop.el.volume = Math.max(0, Math.min(1, ambCurrent[key] * loop.base));
+    }
+  }
+
+  function updateAmbience(opts) {
+    if (!opts) return;
+    startAmbience();
+    const { weather, zone, swim } = opts;
+    const coastal = ["beach", "sea", "aghir", "port", "lagoon", "play"].includes(zone);
+    const urban = ["souk", "ville", "houmt", "midoun", "plaza", "inside"].includes(zone);
+    ambTarget.ocean = coastal || swim ? 0.85 : 0.25;
+    ambTarget.seagulls = coastal && weather !== "rain" ? 0.7 : 0.08;
+    ambTarget.wind = weather === "windy" || weather === "sandstorm" ? 0.9 : 0.12;
+    ambTarget.rain = weather === "rain" ? 0.95 : 0;
+    ambTarget.crowd = urban ? 0.75 : 0.05;
+    ambTarget.beach = coastal && weather === "clear" ? 0.55 : 0.08;
+    ambTarget.medina = urban ? 0.5 : 0;
+    if (swim) ambTarget.ocean = 1;
+    lerpAmb(0.12);
+  }
+
+  function playOneShot(name, path, vol) {
+    if (!oneShots[name]) oneShots[name] = new Audio(path);
+    const a = oneShots[name].cloneNode();
+    a.volume = vol != null ? vol : 0.35;
+    a.play().catch(() => {});
   }
 
   function envGain(t, dur, vol, attack, dest) {
@@ -568,10 +633,20 @@ const AudioSys = (() => {
         tone(420, t, 0.09, "square", 0.16);
         tone(280, t + 0.1, 0.14, "square", 0.14);
         break;
+      case "jump":
+        tone(320, t, 0.06, "triangle", 0.12, 480);
+        break;
+      case "splash":
+        playOneShot("splash", "audio/sfx/splash.mp3", 0.42);
+        noiseHit(t, 0.12, 0.08, 600, sfxGain, "lowpass");
+        break;
+      case "footstep":
+        playOneShot("footstep", "audio/sfx/footstep.mp3", 0.08);
+        break;
       default:
         break;
     }
   }
 
-  return { unlock, startMusic, stopMusic, setTheme, sfx, ensure };
+  return { unlock, startMusic, stopMusic, setTheme, sfx, ensure, updateAmbience, startAmbience };
 })();
