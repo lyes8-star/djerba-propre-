@@ -1,4 +1,4 @@
-/* DJERBA PROPRE — polished pixel UI */
+/* DJERBA 2 · EAU PROPRE — polished pixel UI */
 :root {
   --sky: #5ec8f5;
   --sea: #1a7ab8;
@@ -440,6 +440,18 @@ html, body {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background: var(--sand);
+}
+
+#game-canvas.hidden-2d {
+  display: none !important;
+}
+
+.game-gl {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+  touch-action: none;
 }
 
 .hud-overlay {
@@ -1082,4 +1094,115 @@ button.hud-chip {
   margin-top: 2px;
   font-size: 9px;
   padding: 10px 16px;
+}
+
+.hud-water {
+  font-size: 7px;
+  min-width: 42px;
+  color: #8de8ff;
+  border-color: #48b0e8;
+}
+
+.hud-water.low {
+  color: #ffd24a;
+  border-color: #ffd24a;
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+.hud-water.crit {
+  color: #ff6b6b;
+  border-color: #e83838;
+  animation: pulse 0.45s ease-in-out infinite;
+}
+
+.market-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(3, 16, 31, 0.72);
+}
+
+.market-overlay.hidden { display: none; }
+
+.market-sheet {
+  width: 100%;
+  max-width: 400px;
+  max-height: 78vh;
+  overflow-y: auto;
+  padding: 12px;
+  background: rgba(8, 40, 72, 0.95);
+}
+
+.market-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.market-title {
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+.market-sub {
+  font-size: 6px;
+  color: var(--blue-light);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.market-crisis {
+  font-size: 7px;
+  color: #ffd24a;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border: 2px solid rgba(255, 210, 74, 0.45);
+  background: rgba(255, 210, 74, 0.08);
+  line-height: 1.5;
+}
+
+.market-crisis.crit {
+  color: #ff8a8a;
+  border-color: rgba(232, 56, 56, 0.55);
+  background: rgba(232, 56, 56, 0.12);
+}
+
+.market-stock {
+  font-size: 6px;
+  color: var(--blue-light);
+  margin-bottom: 8px;
+}
+
+.market-list { margin-bottom: 10px; }
+
+.market-row .tool-info span { line-height: 1.45; }
+
+.market-drink-title {
+  font-size: 7px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.market-drink-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn-drink {
+  font-size: 6px;
+  padding: 6px 8px;
+}
+
+.market-empty {
+  font-size: 6px;
+  opacity: 0.75;
+  line-height: 1.5;
 }

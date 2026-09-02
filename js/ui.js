@@ -1,6 +1,7 @@
 /* HUD, panels, joystick, toasts — pixel UI */
 const UI = (() => {
   const els = {};
+  let currentMarketStall = null;
 
   function cache() {
     els.level = document.getElementById("hud-level");
@@ -27,6 +28,14 @@ const UI = (() => {
     els.avatar = document.getElementById("hud-avatar");
     els.bag = document.getElementById("hud-bag");
     els.objPopup = document.getElementById("hud-objectives");
+    els.water = document.getElementById("hud-water");
+    els.marketOverlay = document.getElementById("market-overlay");
+    els.marketTitle = document.getElementById("market-title");
+    els.marketSub = document.getElementById("market-sub");
+    els.marketCrisis = document.getElementById("market-crisis");
+    els.marketStock = document.getElementById("market-stock");
+    els.marketList = document.getElementById("market-list");
+    els.marketDrinkRow = document.getElementById("market-drink-row");
   }
 
   function showScreen(id, fade = false) {
@@ -76,6 +85,14 @@ const UI = (() => {
       const cafeMs = Progress.cafeLeft();
       if (cafeMs > 0) bagTxt += ` · CAFE ${Math.ceil(cafeMs / 1000)}s`;
       els.bag.textContent = bagTxt;
+    }
+    if (els.water) {
+      const thirst = Math.round((st.water && st.water.thirst) || 100);
+      const bottles = Progress.waterStockTotal();
+      els.water.textContent = `💧${thirst}`;
+      els.water.title = `Soif ${thirst}% · ${bottles} bouteille(s)`;
+      els.water.classList.toggle("low", thirst <= 25);
+      els.water.classList.toggle("crit", thirst <= 10);
     }
 
     const missionLabel = document.getElementById("hud-mission");
@@ -134,7 +151,82 @@ const UI = (() => {
   function refreshTitleStats() {
     const s = Progress.get();
     const qn = Progress.questsDone();
-    els.titleStats.innerHTML = `NV.${s.level} · $${s.coins}<br>QUETES ${qn}/10`;
+    const bottles = Progress.waterStockTotal();
+    els.titleStats.innerHTML = `NV.${s.level} · $${s.coins}<br>QUETES ${qn}/11 · 💧${bottles}`;
+  }
+
+  function renderMarketDrink() {
+    if (!els.marketDrinkRow) return;
+    const stock = Progress.get().water.stock || {};
+    const ids = ["b05", "b15", "bidon", "cistern", "premium"];
+    const labels = { b05: "0.5L", b15: "1.5L", bidon: "5L", cistern: "CT", premium: "++" };
+    els.marketDrinkRow.innerHTML = ids
+      .filter((id) => (stock[id] || 0) > 0)
+      .map((id) => `<button class="btn-buy btn-drink" data-drink="${id}">${labels[id]} x${stock[id]}</button>`)
+      .join("") || `<span class="market-empty">Aucune bouteille — achète ci-dessus</span>`;
+    els.marketDrinkRow.querySelectorAll("[data-drink]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-drink");
+        const res = Market.drink(id);
+        if (res.ok) {
+          AudioSys.sfx("pickup");
+          toast(`EAU!<br/>+${res.gain} soif · ${Math.round(res.thirst)}%`);
+          refreshWaterMarket(currentMarketStall);
+          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
+        } else toast(res.reason || "Impossible");
+      });
+    });
+  }
+
+  function refreshWaterMarket(stall) {
+    if (!stall || !els.marketList) return;
+    const info = Market.panelLines();
+    const items = Market.catalog(stall);
+    const stock = Progress.get().water.stock || {};
+    const total = Progress.waterStockTotal();
+    if (els.marketTitle) els.marketTitle.textContent = stall.name.toUpperCase();
+    if (els.marketSub) els.marketSub.textContent = `${stall.sub} · Monde ouvert Djerba 2`;
+    if (els.marketCrisis) {
+      els.marketCrisis.textContent = `Pénurie ${info.label} — prix x${info.mult.toFixed(2)} (${info.shortage}%)`;
+      els.marketCrisis.classList.toggle("crit", info.shortage >= 80);
+    }
+    if (els.marketStock) els.marketStock.textContent = `Sac à eau : ${total} bouteille(s) · Soif ${Math.round((Progress.get().water.thirst) || 100)}%`;
+    els.marketList.innerHTML = items.map((item) => {
+      const owned = stock[item.id] || 0;
+      return `<div class="shop-row market-row">
+        <div class="tool-icon">${item.icon}</div>
+        <div class="tool-info"><strong>${item.name}</strong><span>$${item.cost} · ${item.blurb}${owned ? ` · x${owned}` : ""}</span></div>
+        <button class="btn-buy" data-water="${item.id}" ${s.coins < item.cost ? "disabled" : ""}>BUY</button>
+      </div>`;
+    }).join("");
+    els.marketList.querySelectorAll("[data-water]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-water");
+        const res = Market.buy(id);
+        if (res.ok) {
+          AudioSys.sfx("upgrade");
+          toast(`ACHAT!<br/>${res.name}<span class="bonus">+$${res.cost} · +${res.thirst} soif si bu</span>`);
+          if (typeof Quests !== "undefined") Quests.onWaterBuy(window.__world);
+          refreshWaterMarket(stall);
+          els.coins.textContent = `$${Progress.get().coins}`;
+          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
+        } else toast(res.reason || "Impossible");
+      });
+    });
+    renderMarketDrink();
+  }
+
+  function openWaterMarket(stall) {
+    if (!els.marketOverlay) return;
+    currentMarketStall = stall;
+    refreshWaterMarket(stall);
+    els.marketOverlay.classList.remove("hidden");
+  }
+
+  function closeWaterMarket() {
+    if (!els.marketOverlay) return;
+    els.marketOverlay.classList.add("hidden");
+    currentMarketStall = null;
   }
 
   function drawAvatar(t) {
@@ -385,5 +477,8 @@ const UI = (() => {
     setToolLabel,
     formatTime,
     starString,
+    openWaterMarket,
+    closeWaterMarket,
+    refreshWaterMarket,
   };
 })();

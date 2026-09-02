@@ -1,4 +1,4 @@
-/* DJERBA PROPRE — campagne, histoire, niveaux */
+/* DJERBA 2 · EAU PROPRE — monde ouvert GTA, campagne, marchés d'eau */
 (() => {
   const canvas = document.getElementById("game-canvas");
   const ctx = canvas.getContext("2d", { alpha: false });
@@ -300,7 +300,7 @@
   function beginMission(id) {
     const mission = {
       id: 0,
-      name: "Djerba",
+      name: "Djerba 2",
       code: "LIBRE",
       theme: "beach",
       trash: 80,
@@ -345,6 +345,11 @@
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
     UI.toggleObjectives(true);
+    const wrap = document.getElementById("canvas-wrap");
+    if (typeof Engine3D !== "undefined" && wrap && Engine3D.init(wrap)) {
+      Engine3D.buildWorld(world);
+      canvas.classList.add("hidden-2d");
+    }
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
@@ -352,6 +357,8 @@
 
   function goTitle() {
     state = "title";
+    if (typeof Engine3D !== "undefined") Engine3D.dispose();
+    canvas.classList.remove("hidden-2d");
     quickPlay = false;
     introPhase = "menu";
     introAudio = true;
@@ -498,6 +505,9 @@
         UI.toast(`QUETE OK!<br/>${res.questTitle || ""}`, 2600);
         UI.toggleObjectives(true);
       }
+    } else if (res.type === "market") {
+      AudioSys.sfx("click");
+      UI.toast(`${res.title || "MARCHÉ"}<br/>${res.sub || "Eau propre"} · pénurie`);
     } else if (res.type === "door") {
       AudioSys.sfx("click");
       if (res.dir === "in") UI.toast((res.title || "SALLE") + "<br/>Porte ouverte");
@@ -510,11 +520,23 @@
 
   function checkObjectives() {}
 
-  function render(t) {
+  function render(t, dt) {
     fitGameCanvas();
     if (!world || !player) return;
+
+    const inside = world.inside;
+    if (!inside && typeof Engine3D !== "undefined" && Engine3D.active()) {
+      canvas.classList.add("hidden-2d");
+      const gl = document.getElementById("game-gl");
+      if (gl) gl.style.display = "block";
+      Engine3D.render(world, player, t, dt);
+      return;
+    }
+    canvas.classList.remove("hidden-2d");
+    const glHide = document.getElementById("game-gl");
+    if (glHide) glHide.style.display = "none";
+
     try {
-      const inside = world.inside;
       const W = inside ? inside.w : world.W;
       const H = inside ? inside.h : world.H;
       const vw = canvas.width / ZOOM;
@@ -552,6 +574,7 @@
         for (const b of world.bins || [world.bin]) {
           if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
         }
+        if (typeof Market !== "undefined") Market.drawStalls(ctx, cam, t);
         const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
         for (const car of world.cars || []) actors.push({ car, y: car.y });
         actors.push({ y: player.y, player: true });
@@ -587,6 +610,10 @@
     if (typeof Traffic !== "undefined" && !world.inside) Traffic.update(world, dt, player);
     Player.update(player, dt, input, world);
     Npc.update(world, dt, player, animTime);
+    if (typeof Market !== "undefined" && !world.inside) {
+      const thirstToast = Market.tick(dt, player, world);
+      if (thirstToast) UI.toast(thirstToast.html, 2600);
+    }
     if (world.qToast) {
       const t = world.qToast;
       world.qToast = null;
@@ -619,7 +646,7 @@
 
     checkObjectives();
     if (state !== "play") return;
-    render(animTime);
+    render(animTime, dt);
     UI.updateHud(Progress.get(), world, timeLeft);
     const indoor = !!world.inside;
     const speaker = (world.npcs || []).find((n) => n.pages && (indoor ? n.indoor : !n.indoor));
@@ -642,10 +669,12 @@
     const npcD = nearNpc ? Math.hypot(nearNpc.x + 16 - (player.x + 16), nearNpc.y + 20 - (player.y + 20)) : 999;
     const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
     const nearBin = World.nearestBin(world, player, 40);
+    const nearStall = !world.inside && typeof Market !== "undefined" ? Market.nearStall(player, world) : null;
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
+    else if (nearStall && !player.swim) UI.setToolLabel("MARCHE");
     else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearBin && player.inventory.length > 0) UI.setToolLabel("VIDER");
@@ -675,7 +704,13 @@
       }
       if ((e.key === " " || k === "e") && !e.repeat) doAction();
       if (k === "q") toggleTool();
-      if (e.key === "Escape" && state === "play") pauseGame();
+      if (e.key === "Escape") {
+        if (typeof Market !== "undefined" && Market.isOpen()) {
+          Market.closeMarket();
+          return;
+        }
+        if (state === "play") pauseGame();
+      }
       syncKeyInput();
     });
     window.addEventListener("keyup", (e) => {
@@ -896,10 +931,23 @@
     };
     window.addEventListener("pointerdown", unlock);
     window.addEventListener("resize", fitGameCanvas);
+
+    const btnMarketClose = document.getElementById("btn-market-close");
+    if (btnMarketClose) {
+      btnMarketClose.addEventListener("click", () => {
+        AudioSys.sfx("click");
+        if (typeof Market !== "undefined") Market.closeMarket();
+      });
+    }
   }
 
   function init() {
     Atlas.bake();
+    if (typeof Textures !== "undefined") {
+      Textures.loadAll().then(() => {
+        Textures.injectAtlasTiles();
+      }).catch(() => {});
+    }
     UI.cache();
     UI.setupJoystick(input);
     const joy = document.getElementById("joystick");

@@ -120,6 +120,18 @@ const Quests = (() => {
         { hint: "Dis a Chedly qu'il s'assoit", roles: ["chedly"] },
       ],
     },
+    {
+      id: "eau",
+      title: "EAU PROPRE",
+      short: "EAU",
+      reward: { coins: 120, xp: 70, score: 320 },
+      steps: [
+        { hint: "Salim au marché de l'eau, Houmt Souk", roles: ["salim"] },
+        { hint: "Achète 2 bouteilles à un étal EAU", roles: ["salim"] },
+        { hint: "Dépose à la citerne El May", roles: ["salim"], enter: "cistern" },
+        { hint: "Retourne voir Salim", roles: ["salim"] },
+      ],
+    },
   ];
 
   const NPCS = [
@@ -145,6 +157,7 @@ const Quests = (() => {
     { role: "clara", name: "Clara", style: "tourF", job: "photo", zone: "erriadh", anchor: "erriadh", dx: -50, dy: 20 },
     { role: "riad", name: "Riadh", style: "localM2", job: "stand", zone: "erriadh", anchor: "erriadh", dx: 20, dy: 220 },
     { role: "drippy", name: "Fathi", style: "localM2", job: "stand", zone: "ville", anchor: "houmt", dx: -40, dy: 148 },
+    { role: "salim", name: "Salim", style: "merchM", job: "stand", zone: "souk", anchor: "houmt", dx: -880, dy: 72 },
   ];
 
   function def(id) {
@@ -251,6 +264,21 @@ const Quests = (() => {
       setStep("wc", 3);
       flag("wc", 1);
       ping(world, "WC<br/>siege, porte, savon", "step");
+    }
+    if (b.room === "cistern" && stepOf("eau") === 2 && (Progress.waterStockTotal() >= 1 || flag("eauDeliver"))) {
+      flag("eauDeliver", 1);
+      setStep("eau", 3);
+      ping(world, "EAU<br/>citerne remplie", "step");
+    }
+  }
+
+  function onWaterBuy(world) {
+    if (stepOf("eau") !== 1) return;
+    const bought = (flag("eauBuy") || 0) + 1;
+    flag("eauBuy", bought);
+    if (bought >= 2) {
+      setStep("eau", 2);
+      ping(world, "EAU<br/>2 bouteilles — va à El May", "step");
     }
   }
 
@@ -537,6 +565,19 @@ const Quests = (() => {
       if (s.step === 2) return say("Assis. Brik. Chaise. Va voir Chedly avant qu'il me facture le sol.");
     }
 
+    if (r === "salim") {
+      const s = rec("eau");
+      if (s.done) return say("La citerne d'El May a respiré. Toi tu ramasses le plastique, moi je compte les bouteilles. Pénurie ou pas, Djerba 2 tient debout. Sahit.");
+      if (s.step === 0) {
+        return begin("eau", "Ya khouya. Pénurie d'eau propre sur toute l'île — monde ouvert, soleil, touristes, et les citernes qui baissent. Achète deux bouteilles à un étal EAU sur la carte. Pas l'eau de l'ouest en seau, l'eau propre. Ensuite El May. La citerne. Yallah.");
+      }
+      if (s.step === 1) return say("Deux bouteilles. Un étal EAU — Houmt, Midoun, le port. La pénurie fait monter les prix. Moi je fais monter l'espoir. Va.");
+      if (s.step === 2) return say("El May. Citerne traditionnelle. Entre. Dépose. L'île GTA a besoin d'eau propre, pas de klaxons.");
+      if (s.step === 3) {
+        return win("eau", "Allah ybarek. El May a bu. Les voisins aussi. Tu as fait plus qu'un cousin en clics-clacs avec un seau. Tiens — et bois une gorgée avant la plage. La soif, c'est la vraie Fitna cet été.", w);
+      }
+    }
+
     return say("...");
   }
 
@@ -629,5 +670,5 @@ const Quests = (() => {
     });
   }
 
-  return { DEFS, spawn, talk, mark, panel, hudChip, onEnter, onTrash, step: stepOf };
+  return { DEFS, spawn, talk, mark, panel, hudChip, onEnter, onTrash, onWaterBuy, step: stepOf };
 })();

@@ -39,6 +39,7 @@ const Player = (() => {
     const loaded = p.inventory.length / Math.max(1, p.stats.capacity);
     const cafe = typeof Progress !== "undefined" ? Progress.cafeBonus() : 0;
     let speed = p.baseSpeed * (1 + p.stats.moveBonus + cafe) * (1 - loaded * 0.2);
+    if (typeof Market !== "undefined") speed *= Market.speedPenalty();
     if (p.swim) speed *= 0.52;
 
     let ix = input.x;
@@ -85,6 +86,17 @@ const Player = (() => {
       if (more) return more;
       if (world.ride.boardLock > 0) return null;
       return Traffic.hopOff(world, p);
+    }
+    if (typeof Market !== "undefined" && Market.isOpen()) {
+      p.attacking = false;
+      return null;
+    }
+    const stall = typeof Market !== "undefined" ? Market.nearStall(p, world) : null;
+    if (stall && !world.inside) {
+      p.attacking = false;
+      p.attackTimer = 0;
+      Market.openMarket(stall);
+      return { type: "market", title: stall.name, sub: stall.sub };
     }
     const atDoor = Places.nearDoor(p, world);
     if (atDoor) {
