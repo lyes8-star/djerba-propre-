@@ -21,7 +21,14 @@
     c.imageSmoothingEnabled = false;
   });
 
-  const input = { x: 0, y: 0, keys: {}, _joyActive: false };
+  const input = {
+    moveX: 0, moveY: 0,
+    camX: 0, camY: 0,
+    x: 0, y: 0,
+    keys: {},
+    _joyMoveActive: false,
+    _joyCamActive: false,
+  };
   let state = "title";
   let world = null;
   let player = null;
@@ -632,6 +639,22 @@
     const glHide = document.getElementById("game-gl");
     if (glHide) glHide.style.display = "none";
 
+    const cw = canvas.width;
+    const ch = canvas.height;
+    if (!inside && typeof FPSView !== "undefined") {
+      ctx.imageSmoothingEnabled = false;
+      ctx.save();
+      FX.applyShake(ctx);
+      FPSView.render(ctx, player, world, t, cw, ch, selectedTool);
+      FX.draw(ctx);
+      ctx.restore();
+      FX.drawFlash(ctx, cw, ch);
+      const vw = cw / ZOOM;
+      const vh = ch / ZOOM;
+      cam = { x: player.x + 16 - vw / 2, y: player.y + 20 - vh / 2, vw, vh };
+      return;
+    }
+
     try {
       const W = inside ? inside.w : world.W;
       const H = inside ? inside.h : world.H;
@@ -851,20 +874,31 @@
   }
 
   function syncKeyInput() {
-    let x = 0;
-    let y = 0;
-    if (input.keys.arrowleft || input.keys.a) x -= 1;
-    if (input.keys.arrowright || input.keys.d) x += 1;
-    if (input.keys.arrowup || input.keys.w) y -= 1;
-    if (input.keys.arrowdown || input.keys.s) y += 1;
-    if (!input._joyActive || x || y) {
-      if (!input._joyActive) {
-        input.x = x;
-        input.y = y;
-      } else if (x || y) {
-        input.x = x;
-        input.y = y;
-      }
+    let mx = 0;
+    let my = 0;
+    if (input.keys.a) mx -= 1;
+    if (input.keys.d) mx += 1;
+    if (input.keys.w) my -= 1;
+    if (input.keys.s) my += 1;
+
+    let cx = 0;
+    let cy = 0;
+    if (input.keys.arrowleft) cx -= 1;
+    if (input.keys.arrowright) cx += 1;
+    if (input.keys.arrowup) cy -= 1;
+    if (input.keys.arrowdown) cy += 1;
+
+    if (!input._joyMoveActive || mx || my) {
+      input.moveX = mx;
+      input.moveY = my;
+    }
+    if (!input._joyCamActive || cx || cy) {
+      input.camX = cx;
+      input.camY = cy;
+    }
+    if (input._joyMoveActive && !mx && !my) {
+      input.x = input.moveX;
+      input.y = input.moveY;
     }
   }
 
@@ -1107,10 +1141,7 @@
       }).catch(() => {});
     }
     UI.cache();
-    UI.setupJoystick(input);
-    const joy = document.getElementById("joystick");
-    joy.addEventListener("touchstart", () => { input._joyActive = true; }, { passive: true });
-    joy.addEventListener("touchend", () => { input._joyActive = false; }, { passive: true });
+    UI.setupControls(input);
     setupKeys();
     bindUI();
     UI.refreshTitleStats();

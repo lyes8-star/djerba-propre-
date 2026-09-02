@@ -2,6 +2,7 @@
 const Player = (() => {
   const PW = 32;
   const PH = 40;
+  const FEET_OFF = 32;
 
   function create(stats) {
     const start = Island.xy("sidi");
@@ -10,6 +11,8 @@ const Player = (() => {
       y: start.y,
       vx: 0,
       vy: 0,
+      angle: -Math.PI / 2,
+      pitch: 0,
       swim: false,
       ride: false,
       attacking: false,
@@ -37,6 +40,13 @@ const Player = (() => {
     }
     p.ride = false;
 
+    const camX = input.camX || 0;
+    const camY = input.camY || 0;
+    if (Math.abs(camX) > 0.04 || Math.abs(camY) > 0.04) {
+      p.angle = (p.angle != null ? p.angle : -Math.PI / 2) + camX * 2.6 * dt;
+      p.pitch = Math.max(-0.45, Math.min(0.45, (p.pitch || 0) + camY * 1.4 * dt));
+    }
+
     if (typeof Interactions !== "undefined" && Interactions.isSitting()) {
       p.vx *= Math.exp(-10 * dt);
       p.vy *= Math.exp(-10 * dt);
@@ -50,6 +60,21 @@ const Player = (() => {
       return;
     }
 
+    let mx = input.moveX != null ? input.moveX : input.x;
+    let my = input.moveY != null ? input.moveY : input.y;
+    const joyMag = Math.hypot(mx, my);
+    if (joyMag > 1) {
+      mx /= joyMag;
+      my /= joyMag;
+    }
+    const ang = p.angle != null ? p.angle : -Math.PI / 2;
+    const fwd = -my;
+    const str = mx;
+    const cos = Math.cos(ang);
+    const sin = Math.sin(ang);
+    input.x = cos * fwd - sin * str;
+    input.y = sin * fwd + cos * str;
+
     if (typeof Physics !== "undefined") {
       Physics.tryJump(p, input);
       Physics.move(p, dt, input, world);
@@ -60,35 +85,34 @@ const Player = (() => {
       if (typeof Market !== "undefined") speed *= Market.speedPenalty();
       if (p.swim) speed *= 0.52;
 
-      let ix = input.x;
-      let iy = input.y;
-      const mag = Math.hypot(ix, iy);
-      if (mag > 1) {
-        ix /= mag;
-        iy /= mag;
-      }
-
-      p.vx = ix * speed;
-      p.vy = iy * speed;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-
-      if (ix > 0.1) p.facing = 1;
-      if (ix < -0.1) p.facing = -1;
+      p.vx = input.x * speed;
+      p.vy = input.y * speed;
 
       if (world.inside) {
         p.swim = false;
+        const nx = p.x + p.vx * dt;
+        p.x = nx;
+        Places.collide(p, world);
+        const ny = p.y + p.vy * dt;
+        p.y = ny;
         Places.collide(p, world);
       } else {
-        const c = Island.clampPlay(p.x + 16, p.y + 28);
+        const nx = p.x + p.vx * dt;
+        p.x = nx;
+        if (!p.swim) Places.collide(p, world);
+        const ny = p.y + p.vy * dt;
+        p.y = ny;
+        const c = Island.clampPlay(p.x + 16, p.y + FEET_OFF);
         p.x = c.x - 16;
-        p.y = c.y - 28;
+        p.y = c.y - FEET_OFF;
         p.swim = !!c.swim;
         p.x = Math.max(8, Math.min(world.W - PW, p.x));
         p.y = Math.max(8, Math.min(world.H - PH, p.y));
         if (!p.swim) Places.collide(p, world);
       }
     }
+
+    if (Math.abs(p.vx) > 0.1) p.facing = p.vx >= 0 ? 1 : -1;
     Places.tick(world, p, dt);
 
     if (p.attackTimer > 0) {
@@ -136,16 +160,17 @@ const Player = (() => {
       const taxi = Traffic.nearestTaxi(world, p, Traffic.BOARD_RANGE || 52);
       if (taxi) {
         const td = Math.hypot(taxi.px - (p.x + 16), taxi.py - (p.y + 20));
+        const facingTaxi = World.inFront(p, taxi.px, taxi.py, 56, 1.6);
         const npc = Npc.nearest(world, p, 36);
         const nd = npc
           ? Math.hypot(npc.x + 16 - (p.x + 16), npc.y + 20 - (p.y + 20))
           : 999;
         const qHere = npc && npc.qRole && typeof Quests !== "undefined" && Quests.mark(npc) && nd < 36;
-        if (td < 40 && !qHere) {
+        if (td < 40 && !qHere && facingTaxi) {
           p.cooldown = 0.4;
           return Traffic.board(world, p, taxi);
         }
-        if (td < 52 && td <= nd + 6 && !qHere) {
+        if (td < 52 && td <= nd + 6 && !qHere && facingTaxi) {
           p.cooldown = 0.4;
           return Traffic.board(world, p, taxi);
         }

@@ -91,16 +91,23 @@ const World = (() => {
   function nearestBin(world, player, maxD) {
     const px = player.x + 16;
     const py = player.y + 20;
+    const lim = maxD != null ? maxD : Infinity;
     let best = null;
-    let bestD = maxD != null ? maxD : Infinity;
+    let bestD = lim;
+    let fallback = null;
+    let fallbackD = lim;
     for (const b of world.bins || []) {
       const d = Math.hypot(b.x + 6 - px, b.y + 8 - py);
-      if (d <= bestD) {
+      if (d < fallbackD) {
+        fallback = b;
+        fallbackD = d;
+      }
+      if (d <= lim && inFront(player, b.x + 10, b.y + 18, lim + 10, 1.35) && d < bestD) {
         best = b;
         bestD = d;
       }
     }
-    return best;
+    return best || fallback;
   }
 
   function clampPos(W, H, x, y) {
@@ -222,13 +229,28 @@ const World = (() => {
     return Math.min(100, Math.round((cleaned / world.initial) * 100));
   }
 
+  function inFront(player, tx, ty, range, fov) {
+    const px = player.x + 16;
+    const py = player.y + 20;
+    const dx = tx - px;
+    const dy = ty - py;
+    const d = Math.hypot(dx, dy);
+    if (d > (range != null ? range : 48)) return false;
+    if (player.angle == null) return true;
+    const a = Math.atan2(dy, dx);
+    let diff = a - player.angle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    return Math.abs(diff) < (fov != null ? fov : 0.9);
+  }
+
   function tryPickup(world, player, stats) {
     const range = stats.pinceRange;
     let best = null;
     let bestD = Infinity;
     for (const t of livingRares(world)) {
       const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 20));
-      if (d < range && d < bestD) {
+      if (d < range && d < bestD && inFront(player, t.x + 8, t.y + 10, range + 8)) {
         best = t;
         bestD = d;
       }
@@ -236,7 +258,7 @@ const World = (() => {
     if (!best) {
       for (const t of living(world)) {
         const d = Math.hypot(t.x + 8 - (player.x + 16), t.y + 10 - (player.y + 20));
-        if (d < range && d < bestD) {
+        if (d < range && d < bestD && inFront(player, t.x + 8, t.y + 10, range + 8)) {
           best = t;
           bestD = d;
         }
@@ -327,6 +349,6 @@ const World = (() => {
 
   return {
     create, living, livingRares, cleanliness, tryPickup, trySweep, tryRecycle,
-    nearestBin, followBin, tickSpawn, objectives, stars, POINTS, RARES,
+    nearestBin, followBin, tickSpawn, objectives, stars, POINTS, RARES, inFront,
   };
 })();

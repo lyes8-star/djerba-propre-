@@ -16,8 +16,9 @@ Puis va sur `http://localhost:8080`.
 
 | Mobile | Desktop |
 |--------|---------|
-| Joystick gauche (transparent) | WASD / flèches |
-| Bouton PINCE | Espace ou E |
+| Joystick **MOVE** (gauche) | WASD |
+| Joystick **CAM** (droite) | Flèches |
+| Bouton PINCE / PARLER | Espace ou E |
 | **OBJ** | Objectifs (pop-up) |
 | **MENU** | Outils, upgrades, défis, shop |
 | **||** | Pause |

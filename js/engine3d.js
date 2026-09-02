@@ -784,7 +784,9 @@ const Engine3D = (() => {
     const bob = state === "walk" ? Math.sin(t * 12) * 0.4 : 0;
     playerGrp.position.set(gx(px), gy + bob, gz(pz));
 
-    if (Math.hypot(player.vx, player.vy) > 4) {
+    if (player.angle != null) {
+      camYaw = player.angle + Math.PI / 2;
+    } else if (Math.hypot(player.vx, player.vy) > 4) {
       camYaw = Math.atan2(player.vx, player.vy);
     } else if (player.facing != null) {
       camYaw = player.facing < 0 ? Math.PI : 0;
