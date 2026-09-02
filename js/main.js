@@ -108,6 +108,9 @@
       }
       AudioSys.setTheme("title");
       AudioSys.startMusic("title");
+      UI.refreshTitleStats();
+      const firstBtn = document.querySelector("#title-nav .menu-btn:not(.hidden)");
+      if (firstBtn) firstBtn.focus();
     }
   }
 
@@ -135,6 +138,7 @@
   }
 
   function handleTitlePress(e) {
+    if (e && e.target && e.target.closest && e.target.closest("#title-menu, #title-settings")) return;
     AudioSys.unlock();
     if (!introAudio) {
       introAudio = true;
@@ -151,10 +155,24 @@
       if (elapsed > 1.1) setIntroPhase("menu");
       return;
     }
-    if (introPhase === "menu") {
+  }
+
+  function titleMenuClick(fn) {
+    return () => {
+      AudioSys.unlock();
       AudioSys.sfx("click");
-      launchOpenWorld();
-    }
+      fn();
+    };
+  }
+
+  function hasContinueSave() {
+    const s = Progress.get();
+    return s.level > 1 || s.coins > 350 || s.campaign.unlocked > 1 || Progress.questsDone() > 0;
+  }
+
+  function launchContinue() {
+    quickPlay = false;
+    openMap(Progress.get().campaign.unlocked || 1);
   }
 
   function drawTitleFrame(ts) {
@@ -235,7 +253,11 @@
       ? `ETOILES ${"*".repeat(st)}${".".repeat(3 - st)}`
       : "---";
     document.getElementById("map-stars-total").textContent = `ETOILES ${Progress.totalStars()}/24`;
-    document.getElementById("btn-map-play").disabled = !unlocked;
+    const playBtn = document.getElementById("btn-map-play");
+    if (playBtn) {
+      playBtn.disabled = !unlocked;
+      playBtn.textContent = world && player ? "FERMER" : "JOUER";
+    }
   }
 
   function openMap(selectId) {
@@ -292,11 +314,46 @@
 
   function launchOpenWorld() {
     AudioSys.unlock();
+    quickPlay = true;
     beginMission(0);
   }
 
   function launchCampaignFromTitle() {
-    launchOpenWorld();
+    AudioSys.unlock();
+    quickPlay = false;
+    const p = Progress.get();
+    if (!p.campaign.introSeen) {
+      startStory(Campaign.INTRO, "intro", "PROLOGUE");
+      return;
+    }
+    openMap(p.campaign.unlocked || 1);
+  }
+
+  function openTitleMap() {
+    quickPlay = false;
+    openMap(Progress.get().campaign.unlocked || 1);
+  }
+
+  function openTitleSettings(open) {
+    const panel = document.getElementById("title-settings");
+    if (!panel) return;
+    panel.classList.toggle("hidden", !open);
+    if (open) document.getElementById("btn-settings-close")?.focus();
+  }
+
+  function syncSettingsUi() {
+    const musicBtn = document.getElementById("btn-toggle-music");
+    const sfxBtn = document.getElementById("btn-toggle-sfx");
+    if (musicBtn) {
+      const on = AudioSys.isMusicEnabled();
+      musicBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      musicBtn.textContent = on ? "Activée" : "Coupée";
+    }
+    if (sfxBtn) {
+      const on = AudioSys.isSfxEnabled();
+      sfxBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      sfxBtn.textContent = on ? "Activés" : "Coupés";
+    }
   }
 
   function startMissionFlow(id) {
@@ -393,6 +450,7 @@
     quickPlay = false;
     introPhase = "menu";
     introAudio = true;
+    openTitleSettings(false);
     setIntroPhase("menu");
     AudioSys.setTheme("title");
     AudioSys.startMusic("title");
@@ -756,9 +814,17 @@
       input.keys[e.key.toLowerCase()] = true;
       const k = e.key.toLowerCase();
       if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(k)) e.preventDefault();
-      if (state === "title" && (e.key === " " || e.key === "Enter")) {
+      if (state === "title" && introPhase === "cine" && (e.key === " " || e.key === "Enter")) {
         e.preventDefault();
-        handleTitlePress({ target: document.getElementById("btn-play") });
+        handleTitlePress({ target: document.getElementById("intro-veil") });
+        return;
+      }
+      if (state === "title" && introPhase === "menu" && e.key === "Escape") {
+        const settings = document.getElementById("title-settings");
+        if (settings && !settings.classList.contains("hidden")) {
+          e.preventDefault();
+          openTitleSettings(false);
+        }
         return;
       }
       if (state === "story" && (e.key === " " || e.key === "Enter")) {
@@ -819,15 +885,45 @@
   }
 
   function bindUI() {
-    document.getElementById("btn-play").addEventListener("click", (e) => {
-      handleTitlePress(e);
-    });
-    const screenTitle = document.getElementById("screen-title");
-    if (screenTitle) {
-      screenTitle.addEventListener("click", (e) => {
-        if (state !== "title" || introPhase !== "cine") return;
-        if (e.target.closest("#btn-play")) return;
-        handleTitlePress(e);
+    const introVeil = document.getElementById("intro-veil");
+    if (introVeil) {
+      introVeil.addEventListener("click", (e) => handleTitlePress(e));
+    }
+    const btnPlay = document.getElementById("btn-play");
+    if (btnPlay) {
+      btnPlay.addEventListener("click", titleMenuClick(launchOpenWorld));
+    }
+    const btnSettings = document.getElementById("btn-settings");
+    if (btnSettings) {
+      btnSettings.addEventListener("click", titleMenuClick(() => {
+        syncSettingsUi();
+        openTitleSettings(true);
+      }));
+    }
+    const btnSettingsClose = document.getElementById("btn-settings-close");
+    if (btnSettingsClose) {
+      btnSettingsClose.addEventListener("click", titleMenuClick(() => openTitleSettings(false)));
+    }
+    const titleSettings = document.getElementById("title-settings");
+    if (titleSettings) {
+      titleSettings.addEventListener("click", (e) => {
+        if (e.target === titleSettings) openTitleSettings(false);
+      });
+    }
+    const btnToggleMusic = document.getElementById("btn-toggle-music");
+    if (btnToggleMusic) {
+      btnToggleMusic.addEventListener("click", () => {
+        AudioSys.setMusicEnabled(!AudioSys.isMusicEnabled());
+        syncSettingsUi();
+        AudioSys.sfx("click");
+      });
+    }
+    const btnToggleSfx = document.getElementById("btn-toggle-sfx");
+    if (btnToggleSfx) {
+      btnToggleSfx.addEventListener("click", () => {
+        AudioSys.setSfxEnabled(!AudioSys.isSfxEnabled());
+        syncSettingsUi();
+        if (AudioSys.isSfxEnabled()) AudioSys.sfx("click");
       });
     }
     document.getElementById("btn-story-next").addEventListener("click", () => {
@@ -847,7 +943,9 @@
       if (world && player) {
         UI.showScreen("screen-game", true);
         resumeGame();
-      } else launchOpenWorld();
+      } else {
+        startMissionFlow(selectedMapId);
+      }
     });
     mapCanvas.addEventListener("click", (e) => {
       const rect = mapCanvas.getBoundingClientRect();

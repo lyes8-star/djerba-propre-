@@ -132,7 +132,21 @@ const UI = (() => {
   function refreshTitleStats() {
     const s = Progress.get();
     const qn = Progress.questsDone();
-    els.titleStats.innerHTML = `NV.${s.level} · $${s.coins} · ${qn}/11 quêtes`;
+    if (els.titleStats) {
+      els.titleStats.innerHTML = `
+        <div class="title-stat">
+          <span class="title-stat-value">NV.${s.level}</span>
+          <span class="title-stat-label">Niveau</span>
+        </div>
+        <div class="title-stat">
+          <span class="title-stat-value">$${s.coins}</span>
+          <span class="title-stat-label">Pièces</span>
+        </div>
+        <div class="title-stat">
+          <span class="title-stat-value">${qn}/11</span>
+          <span class="title-stat-label">Quêtes</span>
+        </div>`;
+    }
   }
 
   function renderMarketDrink() {

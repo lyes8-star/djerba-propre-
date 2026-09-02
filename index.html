@@ -35,13 +35,47 @@
         <p class="intro-skip blink hidden" id="intro-skip">Appuyez pour continuer</p>
       </div>
       <div id="title-menu" class="title-menu hidden">
-        <h1 class="logo">
-          <span class="logo-main">DJERBA 2</span>
-          <span class="logo-sub">EAU PROPRE</span>
-        </h1>
-        <p class="tagline">Monde libre · Explore l'île</p>
-        <button id="btn-play" class="btn btn-primary btn-play" type="button">Jouer</button>
-        <div class="title-stats-quiet" id="title-stats"></div>
+        <header class="title-hero">
+          <p class="title-studio">FITNA GAMES</p>
+          <h1 class="logo">
+            <span class="logo-main">DJERBA 2</span>
+            <span class="logo-sub">EAU PROPRE</span>
+          </h1>
+          <p class="tagline">Monde libre · Explore l'île</p>
+        </header>
+        <div class="title-dock pixel-frame">
+          <nav class="title-nav" id="title-nav" aria-label="Menu principal">
+            <button id="btn-play" class="menu-btn menu-btn-primary" type="button">
+              <span class="menu-btn-icon" aria-hidden="true">▶</span>
+              <span class="menu-btn-body">
+                <span class="menu-btn-label">Jouer</span>
+                <span class="menu-btn-hint">Monde libre · sans limite de temps</span>
+              </span>
+            </button>
+          </nav>
+          <div class="title-stats-bar" id="title-stats" aria-live="polite"></div>
+          <footer class="title-footer">
+            <button id="btn-settings" class="title-link-btn" type="button">Paramètres</button>
+            <span class="title-version">v2.0</span>
+          </footer>
+        </div>
+      </div>
+      <div id="title-settings" class="title-settings hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="title-settings-sheet pixel-frame">
+          <div class="title-settings-head">
+            <h2 id="settings-title">Paramètres</h2>
+            <button id="btn-settings-close" class="btn btn-secondary btn-mini" type="button" aria-label="Fermer">✕</button>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Musique</span>
+            <button id="btn-toggle-music" class="settings-toggle" type="button" aria-pressed="true">Activée</button>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Effets sonores</span>
+            <button id="btn-toggle-sfx" class="settings-toggle" type="button" aria-pressed="true">Activés</button>
+          </div>
+          <p class="settings-note">Les réglages sont enregistrés sur cet appareil.</p>
+        </div>
       </div>
     </section>
 
@@ -183,9 +217,26 @@
     <section id="screen-pause" class="screen overlay-screen">
       <div class="pause-card pixel-frame">
         <h2>Pause</h2>
-        <button id="btn-resume" class="btn btn-primary">Continuer</button>
-        <button id="btn-map-pause" class="btn btn-secondary">Carte</button>
-        <button id="btn-quit" class="btn btn-secondary">Quitter</button>
+        <nav class="menu-stack" aria-label="Menu pause">
+          <button id="btn-resume" class="menu-btn menu-btn-primary" type="button">
+            <span class="menu-btn-icon" aria-hidden="true">▶</span>
+            <span class="menu-btn-body">
+              <span class="menu-btn-label">Reprendre</span>
+            </span>
+          </button>
+          <button id="btn-map-pause" class="menu-btn menu-btn-secondary" type="button">
+            <span class="menu-btn-icon" aria-hidden="true">⌖</span>
+            <span class="menu-btn-body">
+              <span class="menu-btn-label">Carte</span>
+            </span>
+          </button>
+          <button id="btn-quit" class="menu-btn menu-btn-ghost" type="button">
+            <span class="menu-btn-icon" aria-hidden="true">↩</span>
+            <span class="menu-btn-body">
+              <span class="menu-btn-label">Menu principal</span>
+            </span>
+          </button>
+        </nav>
       </div>
     </section>
   </div>

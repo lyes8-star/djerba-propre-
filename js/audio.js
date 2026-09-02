@@ -17,6 +17,51 @@ const AudioSys = (() => {
   let ambTarget = { ocean: 0, seagulls: 0, wind: 0, rain: 0, crowd: 0, beach: 0, medina: 0 };
   let ambCurrent = { ocean: 0, seagulls: 0, wind: 0, rain: 0, crowd: 0, beach: 0, medina: 0 };
   let oneShots = {};
+  const SETTINGS_KEY = "djerba2-audio";
+  let musicEnabled = true;
+  let sfxEnabled = true;
+
+  (function loadAudioSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.music === "boolean") musicEnabled = s.music;
+      if (typeof s.sfx === "boolean") sfxEnabled = s.sfx;
+    } catch (_) {}
+  })();
+
+  function saveAudioSettings() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ music: musicEnabled, sfx: sfxEnabled }));
+    } catch (_) {}
+  }
+
+  function applyAudioSettings() {
+    if (!ctx) return;
+    if (musicGain) musicGain.gain.value = musicEnabled ? 0.22 : 0;
+    if (sfxGain) sfxGain.gain.value = sfxEnabled ? 0.48 : 0;
+    if (!musicEnabled) {
+      Object.values(loops).forEach((l) => {
+        if (l && l.el) l.el.volume = 0;
+      });
+    }
+  }
+
+  function setMusicEnabled(on) {
+    musicEnabled = !!on;
+    saveAudioSettings();
+    applyAudioSettings();
+  }
+
+  function setSfxEnabled(on) {
+    sfxEnabled = !!on;
+    saveAudioSettings();
+    applyAudioSettings();
+  }
+
+  function isMusicEnabled() { return musicEnabled; }
+  function isSfxEnabled() { return sfxEnabled; }
 
   /* Quart de ton (50 cents) : le grain maghrébin, pas du do-ré-mi occidental */
   const QT = Math.pow(2, -50 / 1200);
@@ -249,6 +294,7 @@ const AudioSys = (() => {
     sfxGain.gain.value = 0.48;
     sfxGain.connect(master);
     noiseBuf = makeNoise(1.2);
+    applyAudioSettings();
     return true;
   }
 
@@ -289,7 +335,10 @@ const AudioSys = (() => {
     for (const key of Object.keys(ambTarget)) {
       ambCurrent[key] += (ambTarget[key] - ambCurrent[key]) * k;
       const loop = loops[key];
-      if (loop) loop.el.volume = Math.max(0, Math.min(1, ambCurrent[key] * loop.base));
+      if (loop) {
+        const vol = musicEnabled ? Math.max(0, Math.min(1, ambCurrent[key] * loop.base)) : 0;
+        loop.el.volume = vol;
+      }
     }
   }
 
@@ -311,6 +360,7 @@ const AudioSys = (() => {
   }
 
   function playOneShot(name, path, vol) {
+    if (!sfxEnabled) return;
     if (!oneShots[name]) oneShots[name] = new Audio(path);
     const a = oneShots[name].cloneNode();
     a.volume = vol != null ? vol : 0.35;
@@ -583,6 +633,7 @@ const AudioSys = (() => {
   }
 
   function sfx(name) {
+    if (!sfxEnabled) return;
     if (!ensure()) return;
     unlock();
     const t = ctx.currentTime;
@@ -648,5 +699,8 @@ const AudioSys = (() => {
     }
   }
 
-  return { unlock, startMusic, stopMusic, setTheme, sfx, ensure, updateAmbience, startAmbience };
+  return {
+    unlock, startMusic, stopMusic, setTheme, sfx, ensure, updateAmbience, startAmbience,
+    setMusicEnabled, setSfxEnabled, isMusicEnabled, isSfxEnabled,
+  };
 })();
