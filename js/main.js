@@ -60,6 +60,8 @@
   let introPhase = "cine";
   let introStart = 0;
   let introAudio = false;
+  let title3d = false;
+  let titleLastFrame = 0;
 
   function fitTitleBg() {
     const w = Math.max(280, Math.round((titleBg.clientWidth || 320) / 2));
@@ -98,8 +100,10 @@
       cineLogo.classList.add("hidden");
       skip.classList.add("hidden");
       menu.classList.remove("hidden");
-      titleBg.classList.remove("lit");
-      titleBg.classList.add("menu");
+      if (!title3d) {
+        titleBg.classList.remove("lit");
+        titleBg.classList.add("menu");
+      }
       AudioSys.setTheme("title");
       AudioSys.startMusic("title");
     }
@@ -119,7 +123,7 @@
     if (t > 2.2) skip.classList.remove("hidden");
     if (t > 3.05) {
       veil.classList.add("dim");
-      titleBg.classList.add("lit");
+      if (!title3d) titleBg.classList.add("lit");
     }
     if (t > 3.6) {
       studio.classList.add("hidden");
@@ -155,15 +159,41 @@
   function drawTitleFrame(ts) {
     if (state !== "title") return;
     animTime = ts / 1000;
-    fitTitleBg();
+    const dt = titleLastFrame ? Math.min(0.05, (ts - titleLastFrame) / 1000) : 0.016;
+    titleLastFrame = ts;
     tickIntro(ts);
-    Sprites.drawCinematic(titleBgCtx, titleBg.width, titleBg.height, animTime);
+    if (title3d && typeof Engine3D !== "undefined" && Engine3D.titleActive()) {
+      Engine3D.renderTitle(animTime, dt);
+    } else {
+      fitTitleBg();
+      Sprites.drawCinematic(titleBgCtx, titleBg.width, titleBg.height, animTime);
+    }
     titleRaf = requestAnimationFrame(drawTitleFrame);
+  }
+
+  function stopTitle3d() {
+    if (title3d && typeof Engine3D !== "undefined") {
+      Engine3D.dispose();
+      const wrap = document.getElementById("title-3d-wrap");
+      if (wrap) wrap.innerHTML = "";
+    }
+    title3d = false;
+    titleLastFrame = 0;
+    titleBg.style.display = "";
   }
 
   function startTitleLoop() {
     cancelAnimationFrame(titleRaf);
     cancelAnimationFrame(mapRaf);
+    titleLastFrame = 0;
+    const wrap = document.getElementById("title-3d-wrap");
+    if (typeof Engine3D !== "undefined" && wrap && Engine3D.initTitle(wrap)) {
+      title3d = true;
+      titleBg.style.display = "none";
+    } else {
+      title3d = false;
+      titleBg.style.display = "";
+    }
     titleRaf = requestAnimationFrame(drawTitleFrame);
   }
 
@@ -346,6 +376,7 @@
     UI.drawAvatar(0);
     UI.toggleObjectives(true);
     const wrap = document.getElementById("canvas-wrap");
+    stopTitle3d();
     if (typeof Engine3D !== "undefined" && wrap && Engine3D.init(wrap)) {
       Engine3D.buildWorld(world);
       canvas.classList.add("hidden-2d");
@@ -357,7 +388,7 @@
 
   function goTitle() {
     state = "title";
-    if (typeof Engine3D !== "undefined") Engine3D.dispose();
+    if (typeof Engine3D !== "undefined" && Engine3D.active()) Engine3D.dispose();
     canvas.classList.remove("hidden-2d");
     quickPlay = false;
     introPhase = "menu";
