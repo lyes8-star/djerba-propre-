@@ -345,6 +345,11 @@
     UI.updateHud(Progress.get(), world, timeLeft);
     UI.drawAvatar(0);
     UI.toggleObjectives(true);
+    const wrap = document.getElementById("canvas-wrap");
+    if (typeof Engine3D !== "undefined" && wrap && Engine3D.init(wrap)) {
+      Engine3D.buildWorld(world);
+      canvas.classList.add("hidden-2d");
+    }
     lastTs = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
@@ -352,6 +357,8 @@
 
   function goTitle() {
     state = "title";
+    if (typeof Engine3D !== "undefined") Engine3D.dispose();
+    canvas.classList.remove("hidden-2d");
     quickPlay = false;
     introPhase = "menu";
     introAudio = true;
@@ -510,9 +517,19 @@
 
   function checkObjectives() {}
 
-  function render(t) {
+  function render(t, dt) {
     fitGameCanvas();
     const inside = world.inside;
+    if (!inside && typeof Engine3D !== "undefined" && Engine3D.active()) {
+      canvas.classList.add("hidden-2d");
+      const gl = document.getElementById("game-gl");
+      if (gl) gl.style.display = "block";
+      Engine3D.render(world, player, t, dt);
+      return;
+    }
+    canvas.classList.remove("hidden-2d");
+    const glHide = document.getElementById("game-gl");
+    if (glHide) glHide.style.display = "none";
     const W = inside ? inside.w : world.W;
     const H = inside ? inside.h : world.H;
     const vw = canvas.width / ZOOM;
@@ -605,7 +622,7 @@
 
     checkObjectives();
     if (state !== "play") return;
-    render(animTime);
+    render(animTime, dt);
     UI.updateHud(Progress.get(), world, timeLeft);
     const indoor = !!world.inside;
     const speaker = (world.npcs || []).find((n) => n.pages && (indoor ? n.indoor : !n.indoor));

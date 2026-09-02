@@ -89,6 +89,7 @@ const FX = (() => {
 
   function hitShake(amount = 0.28) {
     shake = Math.max(shake, amount);
+    if (typeof Engine3D !== "undefined" && Engine3D.active()) Engine3D.hitShake(amount);
   }
 
   function update(dt) {
