@@ -927,6 +927,11 @@
 
   function init() {
     Atlas.bake();
+    if (typeof Textures !== "undefined") {
+      Textures.loadAll().then(() => {
+        Textures.injectAtlasTiles();
+      }).catch(() => {});
+    }
     UI.cache();
     UI.setupJoystick(input);
     const joy = document.getElementById("joystick");
