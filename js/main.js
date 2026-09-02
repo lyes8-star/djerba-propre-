@@ -508,6 +508,13 @@
     } else if (res.type === "market") {
       AudioSys.sfx("click");
       UI.toast(`${res.title || "MARCHÉ"}<br/>${res.sub || "Eau propre"} · pénurie`);
+    } else if (res.type === "interact") {
+      AudioSys.sfx(res.thirst ? "splash" : "click");
+      UI.toast(`${res.label || "ACTION"}<br/>${res.text || ""}`);
+      if (res.coins) {
+        Progress.addCoins(res.coins);
+        FX.floatText(player.x, player.y - 8, `+$${res.coins}`, "#ffd24a");
+      }
     } else if (res.type === "door") {
       AudioSys.sfx("click");
       if (res.dir === "in") UI.toast((res.title || "SALLE") + "<br/>Porte ouverte");
@@ -569,6 +576,21 @@
         if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
       }
       if (typeof Market !== "undefined") Market.drawStalls(ctx, cam, t);
+      if (typeof Interactions !== "undefined") {
+        for (const s of Interactions.spots) {
+          const sx = s.x - cam.x;
+          const sy = s.y - cam.y;
+          if (sx < -40 || sy < -40 || sx > cam.vw + 40 || sy > cam.vh + 40) continue;
+          const pulse = 0.5 + Math.sin(t * 4 + s.x * 0.01) * 0.5;
+          ctx.fillStyle = `rgba(72, 200, 120, ${0.35 + pulse * 0.35})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy - 8, 5 + pulse * 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
       const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
       for (const car of world.cars || []) actors.push({ car, y: car.y });
       actors.push({ y: player.y, player: true });
@@ -592,7 +614,11 @@
     animTime = ts / 1000;
 
     if (typeof Traffic !== "undefined" && !world.inside) Traffic.update(world, dt, player);
+    const wasSwim = player.swim;
+    if (typeof WorldSim !== "undefined") WorldSim.tick(dt, player);
+    if (typeof Interactions !== "undefined") Interactions.tick(dt, player);
     Player.update(player, dt, input, world);
+    if (!wasSwim && player.swim) AudioSys.sfx("splash");
     Npc.update(world, dt, player, animTime);
     if (typeof Market !== "undefined" && !world.inside) {
       const thirstToast = Market.tick(dt, player, world);
@@ -616,6 +642,7 @@
     AudioSys.setTheme(playMusicTheme());
     if (!world.ride && !player.swim && Math.hypot(player.vx, player.vy) > 20 && Math.random() < 0.35) {
       FX.dust(player.x + 12, player.y + 34);
+      if (Math.random() < 0.08) AudioSys.sfx("footstep");
     }
     if (player.swim && Math.hypot(player.vx, player.vy) > 12 && Math.random() < 0.35) {
       FX.glint(player.x + 8 + Math.random() * 12, player.y + 22);
@@ -654,11 +681,13 @@
     const qHere = nearNpc && nearNpc.qRole && typeof Quests !== "undefined" && Quests.mark(nearNpc) && npcD < 36;
     const nearBin = World.nearestBin(world, player, 40);
     const nearStall = !world.inside && typeof Market !== "undefined" ? Market.nearStall(player, world) : null;
+    const nearSpot = !world.inside && typeof Interactions !== "undefined" ? Interactions.near(player, world) : null;
     if (world.ride) {
       const more = world.ride.pages && world.ride.page < world.ride.pages.length - 1;
       UI.setToolLabel(more ? "SUITE" : "SORTIR");
     } else if (door) UI.setToolLabel(world.inside ? "SORTIR" : "ENTRER");
     else if (nearStall && !player.swim) UI.setToolLabel("MARCHE");
+    else if (nearSpot && !player.swim) UI.setToolLabel(nearSpot.label);
     else if (nearTaxi && !player.swim && taxiD < 40 && !qHere) UI.setToolLabel("TAXI");
     else if (nearTaxi && !player.swim && taxiD <= npcD + 6 && !qHere) UI.setToolLabel("TAXI");
     else if (nearBin && player.inventory.length > 0) UI.setToolLabel("VIDER");

@@ -63,6 +63,12 @@ const Engine3D = (() => {
   let barkMat = null;
   let leavesMat = null;
   let rockMat = null;
+  let skyDome = null;
+  let hemiLight = null;
+  let ambLight = null;
+  let rainSystem = null;
+  let waterShader = null;
+  const sunDir = new THREE.Vector3(0.4, 0.8, 0.3);
   const trashMesh = new Map();
   const npcMesh = new Map();
   const carMesh = new Map();
@@ -107,10 +113,34 @@ const Engine3D = (() => {
     }
     if (water) {
       const wm = Textures.waterMaterial();
-      if (wm) {
+      if (wm && !waterShader) {
         water.material = wm;
         if (wm.normalMap) Textures.bindWaterNormal(wm.normalMap);
       }
+    }
+  }
+
+  function applyWorldSim(sim, dt) {
+    if (!sim || !scene) return;
+    if (scene.fog) {
+      scene.fog.color.setHex(sim.sky.fog);
+      scene.fog.near = 700 + sim.cloudCover * 180;
+    }
+    if (sun) {
+      sun.intensity = sim.sky.sun;
+      sun.position.set(sim.sun.x * 2800 + 400, sim.sun.y * 2600 + 300, sim.sun.z * 2200);
+      sunDir.set(sim.sun.x, Math.max(0.05, sim.sun.y), sim.sun.z).normalize();
+    }
+    if (hemiLight) hemiLight.intensity = sim.sky.ambient;
+    if (ambLight) ambLight.intensity = 0.08 + sim.dayFactor * 0.2;
+    updateSky(sim);
+    updateRain(sim, dt || 0.016);
+    if (waterShader && typeof WaterEngine !== "undefined") {
+      WaterEngine.tick(waterShader, performance.now() / 1000, sunDir, sim.dayFactor);
+    }
+    if (rainSystem && rainSystem.visible && window.__player) {
+      const p = window.__player;
+      rainSystem.position.set(p.x + 16, 0, p.y + 20);
     }
   }
 
@@ -142,11 +172,71 @@ const Engine3D = (() => {
     const dome = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
       vertexColors: true, side: THREE.BackSide, fog: false,
     }));
+    skyDome = dome;
     scene.add(dome);
   }
 
+  function updateSky(sim) {
+    if (!skyDome || !sim) return;
+    const geo = skyDome.geometry;
+    const pos = geo.attributes.position;
+    const colors = [];
+    const cTop = new THREE.Color(sim.sky.top);
+    const cMid = new THREE.Color(sim.sky.mid);
+    const cHor = new THREE.Color(sim.sky.horizon);
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      const t = THREE.MathUtils.smoothstep(y, -200, 800);
+      const c = cHor.clone().lerp(cMid, t * 0.55).lerp(cTop, t);
+      colors.push(c.r, c.g, c.b);
+    }
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geo.attributes.color.needsUpdate = true;
+  }
+
+  function updateRain(sim, dt) {
+    if (!scene) return;
+    const intensity = (sim.rainIntensity || 0) + (sim.sandIntensity || 0) * 0.5;
+    if (intensity < 0.08) {
+      if (rainSystem) rainSystem.visible = false;
+      return;
+    }
+    if (!rainSystem) {
+      const n = 1200;
+      const pos = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * 2000;
+        pos[i * 3 + 1] = Math.random() * 400 + 80;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 2000;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      rainSystem = new THREE.Points(geo, new THREE.PointsMaterial({
+        color: sim.sandIntensity > 0.3 ? 0xd8c090 : 0xa8d8ff,
+        size: sim.sandIntensity > 0.3 ? 2.2 : 1.4,
+        transparent: true,
+        opacity: 0.55,
+      }));
+      rainSystem.userData.vel = [];
+      for (let i = 0; i < n; i++) rainSystem.userData.vel.push(80 + Math.random() * 60);
+      scene.add(rainSystem);
+    }
+    rainSystem.visible = true;
+    rainSystem.material.opacity = Math.min(0.7, intensity);
+    rainSystem.material.color.setHex(sim.sandIntensity > 0.3 ? 0xd8c090 : 0xa8d8ff);
+    const pos = rainSystem.geometry.attributes.position;
+    const vel = rainSystem.userData.vel;
+    for (let i = 0; i < vel.length; i++) {
+      let y = pos.getY(i) - vel[i] * dt;
+      if (y < 20) y = 280 + Math.random() * 120;
+      pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
+  }
+
   function buildLights() {
-    scene.add(new THREE.HemisphereLight(0x9ad8ff, 0xf0d090, 0.55));
+    hemiLight = new THREE.HemisphereLight(0x9ad8ff, 0xf0d090, 0.55);
+    scene.add(hemiLight);
     sun = new THREE.DirectionalLight(0xfff4d8, 1.15);
     sun.position.set(1800, 2400, 1200);
     sun.castShadow = true;
@@ -161,7 +251,8 @@ const Engine3D = (() => {
     sun.shadow.bias = -0.0004;
     scene.add(sun);
     scene.add(sun.target);
-    scene.add(new THREE.AmbientLight(0x6080a0, 0.22));
+    ambLight = new THREE.AmbientLight(0x6080a0, 0.22);
+    scene.add(ambLight);
   }
 
   function buildTerrain() {
@@ -192,9 +283,14 @@ const Engine3D = (() => {
     terrain.receiveShadow = true;
     root.add(terrain);
 
-    const wGeo = new THREE.PlaneGeometry(W + 800, H + 800, 32, 24);
+    const wGeo = new THREE.PlaneGeometry(W + 800, H + 800, 64, 48);
     wGeo.rotateX(-Math.PI / 2);
-    water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78, roughness: 0.1 }));
+    if (typeof WaterEngine !== "undefined") {
+      waterShader = WaterEngine.createMaterial(sunDir, 1);
+      water = new THREE.Mesh(wGeo, waterShader);
+    } else {
+      water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78, roughness: 0.1 }));
+    }
     water.position.y = -5.5;
     root.add(water);
   }
@@ -364,45 +460,21 @@ const Engine3D = (() => {
   }
 
   function makePlayerMesh() {
+    if (typeof Characters3D !== "undefined") {
+      const g = Characters3D.build("player", { hat: true, tool: true });
+      g.name = "player";
+      return g;
+    }
     const g = new THREE.Group();
     g.name = "player";
-    const gy = 0;
-    const leg = box(5, 10, 4, 0x2a4a8a, -3, gy + 5, 0);
-    const leg2 = box(5, 10, 4, 0x2a4a8a, 3, gy + 5, 0);
-    const body = box(12, 12, 7, 0x48b868, 0, gy + 16, 0);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(5, 8, 6), mat(0xf0c8a0));
-    head.position.set(0, gy + 27, 0);
-    head.castShadow = true;
-    const hat = box(10, 2, 10, 0x2db84a, 0, gy + 31, 0);
-    hat.name = "hat";
-    hat.visible = false;
-    const goldHat = box(11, 2.5, 11, 0xffd24a, 0, gy + 31.5, 0);
-    goldHat.name = "goldHat";
-    goldHat.visible = false;
-    const tool = box(2, 10, 2, 0x888888, 8, gy + 14, 4);
-    tool.name = "tool";
-    g.add(leg, leg2, body, head, hat, goldHat, tool);
-    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     return g;
   }
 
   function makeNpcMesh(n) {
-    const g = new THREE.Group();
-    const colors = {
-      kid: 0xf0a848, emma: 0xe878a8, marc: 0x48a8e8, khaled: 0xd87848,
-      hedi: 0xf0d848, amina: 0xa878d8, lalla: 0xd84888,
-    };
-    const col = colors[n.qRole] || colors[n.style] || 0x88a8c8;
-    const body = box(10, 14, 6, col, 0, 9, 0);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(4.5, 7, 5), mat(0xf0c8a0));
-    head.position.y = 20;
-    g.add(body, head);
-    if (n.qRole) {
-      const mark = new THREE.Mesh(new THREE.SphereGeometry(3, 6, 4), mat(0xffd24a, { emissive: 0xffd24a, emissiveI: 0.35 }));
-      mark.position.set(0, 28, 0);
-      mark.name = "questMark";
-      g.add(mark);
+    if (typeof Characters3D !== "undefined") {
+      return Characters3D.build(Characters3D.npcStyle(n), { quest: !!n.qRole });
     }
+    const g = new THREE.Group();
     return g;
   }
 
@@ -545,7 +617,13 @@ const Engine3D = (() => {
       }
       const gy = groundY(n.x + 16, n.y + 20);
       m.position.set(gx(n.x + 16), gy, gz(n.y + 20));
-      m.rotation.y = n.facing < 0 ? Math.PI : 0;
+      const moving = Math.hypot(n.vx || 0, n.vy || 0) > 6;
+      const phase = (n.x + n.y) * 0.01 + t * (moving ? 9 : 1);
+      if (typeof Characters3D !== "undefined") {
+        Characters3D.animate(m, moving ? "walk" : "idle", phase, n.facing || 1, false);
+      } else {
+        m.rotation.y = n.facing < 0 ? Math.PI : 0;
+      }
       const qm = m.getObjectByName("questMark");
       if (qm && typeof Quests !== "undefined") {
         qm.visible = !!Quests.mark(n);
@@ -590,8 +668,9 @@ const Engine3D = (() => {
     const px = player.x + 16;
     const pz = player.y + 20;
     const gy = groundY(px, pz);
-    const walk = Math.hypot(player.vx, player.vy) > 8;
-    const bob = walk ? Math.sin(t * 12) * 0.8 : 0;
+    const phase = (player.phys && player.phys.walkPhase) || t * 8;
+    const state = player.animState || (player.swim ? "swim" : (Math.hypot(player.vx, player.vy) > 8 ? "walk" : "idle"));
+    const bob = state === "walk" ? Math.sin(t * 12) * 0.4 : 0;
     playerGrp.position.set(gx(px), gy + bob, gz(pz));
 
     if (Math.hypot(player.vx, player.vy) > 4) {
@@ -599,16 +678,16 @@ const Engine3D = (() => {
     } else if (player.facing != null) {
       camYaw = player.facing < 0 ? Math.PI : 0;
     }
-    playerGrp.rotation.y = camYaw;
 
-    const hat = playerGrp.getObjectByName("hat");
-    const goldHat = playerGrp.getObjectByName("goldHat");
-    const tool = playerGrp.getObjectByName("tool");
-    if (hat) hat.visible = !gold;
-    if (goldHat) goldHat.visible = !!gold;
-    if (tool) {
-      tool.visible = player.attacking;
-      tool.rotation.x = player.attacking ? -0.6 : 0;
+    if (typeof Characters3D !== "undefined") {
+      Characters3D.animate(playerGrp, state, phase, player.facing || 1, player.attacking);
+      const hat = playerGrp.getObjectByName("hat");
+      if (hat && hat.material) {
+        hat.visible = true;
+        hat.material.color.setHex(gold ? 0xffd24a : 0x2db84a);
+      }
+    } else {
+      playerGrp.rotation.y = camYaw;
     }
   }
 
@@ -653,12 +732,13 @@ const Engine3D = (() => {
     if (!active || !renderer) return;
     if (!built) buildWorld(world);
     const gold = Progress.get().cosmetics.hat_gold;
+    if (typeof WorldSim !== "undefined") applyWorldSim(WorldSim.state(), dt || 0.016);
     syncTrash(world, t);
     syncNpcs(world, t);
     syncCars(world);
     syncPlayer(player, t, gold);
     updateCamera(player, dt || 0.016);
-    if (water) water.position.y = -5.5 + Math.sin(t * 0.6) * 0.25;
+    if (water && !waterShader) water.position.y = -5.5 + Math.sin(t * 0.6) * 0.25;
     if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
     renderer.render(scene, camera);
   }
@@ -689,5 +769,5 @@ const Engine3D = (() => {
     playerGrp = null;
   }
 
-  return { init, buildWorld, render, resize, dispose, hitShake, active: () => active };
+  return { init, buildWorld, render, resize, dispose, hitShake, applyWorldSim, active: () => active };
 })();

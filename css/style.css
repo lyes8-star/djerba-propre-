@@ -1115,6 +1115,13 @@ button.hud-chip {
   animation: pulse 0.45s ease-in-out infinite;
 }
 
+.hud-weather {
+  font-size: 7px;
+  min-width: 54px;
+  color: #d8e8ff;
+  border-color: #6888b8;
+}
+
 .market-overlay {
   position: absolute;
   inset: 0;
