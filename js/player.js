@@ -2,6 +2,7 @@
 const Player = (() => {
   const PW = 32;
   const PH = 40;
+  const FEET_OFF = 32;
 
   function create(stats) {
     const start = Island.xy("sidi");
@@ -64,23 +65,31 @@ const Player = (() => {
     const sin = Math.sin(p.angle);
     p.vx = (cos * fwd - sin * str) * speed;
     p.vy = (sin * fwd + cos * str) * speed;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-
-    if (Math.abs(p.vx) > 0.1) p.facing = p.vx >= 0 ? 1 : -1;
 
     if (world.inside) {
       p.swim = false;
+      const nx = p.x + p.vx * dt;
+      p.x = nx;
+      Places.collide(p, world);
+      const ny = p.y + p.vy * dt;
+      p.y = ny;
       Places.collide(p, world);
     } else {
-      const c = Island.clampPlay(p.x + 16, p.y + 28);
+      const nx = p.x + p.vx * dt;
+      p.x = nx;
+      if (!p.swim) Places.collide(p, world);
+      const ny = p.y + p.vy * dt;
+      p.y = ny;
+      const c = Island.clampPlay(p.x + 16, p.y + FEET_OFF);
       p.x = c.x - 16;
-      p.y = c.y - 28;
+      p.y = c.y - FEET_OFF;
       p.swim = !!c.swim;
       p.x = Math.max(8, Math.min(world.W - PW, p.x));
       p.y = Math.max(8, Math.min(world.H - PH, p.y));
       if (!p.swim) Places.collide(p, world);
     }
+
+    if (Math.abs(p.vx) > 0.1) p.facing = p.vx >= 0 ? 1 : -1;
     Places.tick(world, p, dt);
 
     if (p.attackTimer > 0) {
@@ -110,16 +119,17 @@ const Player = (() => {
       const taxi = Traffic.nearestTaxi(world, p, Traffic.BOARD_RANGE || 52);
       if (taxi) {
         const td = Math.hypot(taxi.px - (p.x + 16), taxi.py - (p.y + 20));
+        const facingTaxi = World.inFront(p, taxi.px, taxi.py, 56, 1.6);
         const npc = Npc.nearest(world, p, 36);
         const nd = npc
           ? Math.hypot(npc.x + 16 - (p.x + 16), npc.y + 20 - (p.y + 20))
           : 999;
         const qHere = npc && npc.qRole && typeof Quests !== "undefined" && Quests.mark(npc) && nd < 36;
-        if (td < 40 && !qHere) {
+        if (td < 40 && !qHere && facingTaxi) {
           p.cooldown = 0.4;
           return Traffic.board(world, p, taxi);
         }
-        if (td < 52 && td <= nd + 6 && !qHere) {
+        if (td < 52 && td <= nd + 6 && !qHere && facingTaxi) {
           p.cooldown = 0.4;
           return Traffic.board(world, p, taxi);
         }

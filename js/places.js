@@ -202,6 +202,83 @@ const Places = (() => {
     return { x: p.x + 8, y: p.y + 26, w: 16, h: 12 };
   }
 
+  const ROOM_WALL = {
+    home: "#ece4d4", shop: "#c8a870", cafe: "#ece4d4", cabaret: "#5a2848",
+    hotel: "#f0f4fc", airport: "#b0b8c8", mosque: "#fcfcfc", synagogue: "#f4f8ff",
+    fort: "#d4a85c", museum: "#ece4d4", menzel: "#e8dcc8", kiln: "#c87848",
+    mill: "#c8a060", cistern: "#a88858", cemetery: "#d8d0c0", graffiti: "#f8f0ff",
+    oven: "#c87848", workshop: "#c8a870",
+  };
+
+  function wallSegments() {
+    if (wallSegments._cache) return wallSegments._cache;
+    const out = [];
+    for (let i = 0; i < BUILDINGS.length; i++) {
+      const b = BUILDINGS[i];
+      const door = doorRect(b);
+      const col = ROOM_WALL[b.room] || "#ece4d4";
+      const h = b.h;
+      const x0 = b.x;
+      const y0 = b.y;
+      const x1 = b.x + b.w;
+      const y1 = b.y + b.h;
+      out.push({ ax: x0, ay: y0, bx: x1, by: y0, h, color: col, kind: "wall" });
+      out.push({ ax: x0, ay: y0, bx: x0, by: y1, h, color: col, kind: "wall" });
+      out.push({ ax: x1, ay: y0, bx: x1, by: y1, h, color: col, kind: "wall" });
+      const dL = door.x;
+      const dR = door.x + door.w;
+      if (door.y >= y1 - 8) {
+        if (dL > x0 + 2) out.push({ ax: x0, ay: y1, bx: dL, by: y1, h: h * 0.32, color: col, kind: "wall" });
+        if (dR < x1 - 2) out.push({ ax: dR, ay: y1, bx: x1, by: y1, h: h * 0.32, color: col, kind: "wall" });
+        out.push({ ax: dL, ay: door.y, bx: dL, by: y1, h: door.h + 6, color: "#5a4030", kind: "frame" });
+        out.push({ ax: dR, ay: door.y, bx: dR, by: y1, h: door.h + 6, color: "#5a4030", kind: "frame" });
+        out.push({ ax: dL, ay: door.y, bx: dR, by: door.y, h: door.h + 4, color: "#3a2818", kind: "lintel" });
+      } else {
+        out.push({ ax: x0, ay: y1, bx: x1, by: y1, h, color: col, kind: "wall" });
+      }
+    }
+    wallSegments._cache = out;
+    return out;
+  }
+
+  function interiorWallSegments(w, h, room) {
+    const col = ROOM_WALL[room] || "#ece4d4";
+    const doorX = w / 2 - 14;
+    const doorW = 28;
+    const doorY = h - 36;
+    return [
+      { ax: 0, ay: 0, bx: w, by: 0, h: 58, color: col, kind: "wall" },
+      { ax: 0, ay: 0, bx: 0, by: h, h: 58, color: col, kind: "wall" },
+      { ax: w, ay: 0, bx: w, by: h, h: 58, color: col, kind: "wall" },
+      { ax: 0, ay: h, bx: doorX, by: h, h: 40, color: col, kind: "wall" },
+      { ax: doorX + doorW, ay: h, bx: w, by: h, h: 40, color: col, kind: "wall" },
+      { ax: doorX, ay: doorY, bx: doorX, by: h, h: 36, color: "#5a4030", kind: "frame" },
+      { ax: doorX + doorW, ay: doorY, bx: doorX + doorW, by: h, h: 36, color: "#5a4030", kind: "frame" },
+    ];
+  }
+
+  function facingDoor(player, door) {
+    const cx = door.x + door.w * 0.5;
+    const cy = door.y + door.h * 0.5;
+    const px = player.x + 16;
+    const py = player.y + 32;
+    const toDoor = Math.atan2(cy - py, cx - px);
+    let diff = toDoor - (player.angle || 0);
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    return Math.abs(diff) < 0.85;
+  }
+
+  function movingForward(player, minSpeed) {
+    const spd = Math.hypot(player.vx || 0, player.vy || 0);
+    if (spd < (minSpeed == null ? 5 : minSpeed)) return false;
+    const moveAng = Math.atan2(player.vy, player.vx);
+    let diff = moveAng - (player.angle || 0);
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    return Math.abs(diff) < 0.75;
+  }
+
   function overlap(a, b) {
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   }
@@ -324,6 +401,8 @@ const Places = (() => {
     player.y = ROOM.h - 70;
     player.vx = 0;
     player.vy = 0;
+    player.angle = -Math.PI / 2;
+    player.pitch = 0;
     spawnIndoor(world, b.room);
     if (typeof Quests !== "undefined") Quests.onEnter(world, b);
   }
@@ -335,6 +414,8 @@ const Places = (() => {
     player.y = d.outY;
     player.vx = 0;
     player.vy = 0;
+    player.angle = -Math.PI / 2;
+    player.pitch = 0;
     world.inside = null;
     world.doorCd = 0.28;
   }
@@ -387,11 +468,15 @@ const Places = (() => {
     const n = nearDoor(player, world);
     if (!n) return;
     if (world.inside || n.exit) {
-      if (player.vy > 6) tryDoor(player, world);
-    } else if (player.vy < -4) {
+      if (movingForward(player, 4) || player.vy > 6) tryDoor(player, world);
+    } else if (movingForward(player, 4) || player.vy < -4) {
       tryDoor(player, world);
     }
   }
 
-  return { BUILDINGS, TOWN, SITES, ROOM, nearDoor, tryDoor, collide, tick, doorRect };
+  return {
+    BUILDINGS, TOWN, SITES, ROOM, nearDoor, tryDoor, collide, tick, doorRect,
+    solidRect, approachRect, feet, wallSegments, interiorWallSegments, ROOM_WALL,
+    facingDoor, movingForward,
+  };
 })();
