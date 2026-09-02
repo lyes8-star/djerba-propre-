@@ -12,7 +12,7 @@ const UI = (() => {
     els.score = document.getElementById("hud-score");
     els.stars = document.getElementById("hud-stars");
     els.coins = document.getElementById("hud-coins");
-    els.objList = document.getElementById("obj-list");
+    els.objList = null;
     els.toast = document.getElementById("toast");
     els.talkBox = document.getElementById("hud-talk");
     els.talkWho = document.getElementById("talk-who");
@@ -25,9 +25,9 @@ const UI = (() => {
     els.joyStick = document.getElementById("joy-stick");
     els.btnAction = document.getElementById("btn-action");
     els.actionLabel = document.getElementById("btn-action-label");
-    els.avatar = document.getElementById("hud-avatar");
-    els.bag = document.getElementById("hud-bag");
-    els.objPopup = document.getElementById("hud-objectives");
+    els.avatar = null;
+    els.bag = null;
+    els.objPopup = null;
     els.water = document.getElementById("hud-water");
     els.weather = document.getElementById("hud-weather");
     els.marketOverlay = document.getElementById("market-overlay");
@@ -64,29 +64,12 @@ const UI = (() => {
 
     function updateHud(progress, world, timeLeft) {
     const st = progress;
-    els.level.textContent = `NV.${st.level}`;
-    els.xpFill.style.width = `${Math.min(100, (st.xp / st.xpToNext) * 100)}%`;
-    if (els.xpLabel) els.xpLabel.textContent = `${st.xp}/${st.xpToNext}`;
+    if (els.level) els.level.textContent = `NV.${st.level}`;
+    if (els.xpFill) els.xpFill.style.width = `${Math.min(100, (st.xp / st.xpToNext) * 100)}%`;
     const zone = window.__player ? Island.zoneLabel(Sprites.zoneAt(window.__player.x, window.__player.y)) : "DJERBA";
-    els.timer.textContent = zone;
+    if (els.timer) els.timer.textContent = zone;
     if (els.timerBox) els.timerBox.classList.remove("urgent");
-    const scoreTxt = world.score.toLocaleString("fr-FR");
-    if (els.score.textContent !== scoreTxt) {
-      els.score.textContent = scoreTxt;
-      els.score.classList.remove("bump");
-      void els.score.offsetWidth;
-      els.score.classList.add("bump");
-    }
-    const clean = World.cleanliness(world);
-    els.stars.textContent = starString(World.stars(world.score, clean));
-    els.coins.textContent = `$${st.coins}`;
-    if (els.bag && window.__player) {
-      const p = window.__player;
-      let bagTxt = `BAG ${p.inventory.length}/${p.stats.capacity}`;
-      const cafeMs = Progress.cafeLeft();
-      if (cafeMs > 0) bagTxt += ` · CAFE ${Math.ceil(cafeMs / 1000)}s`;
-      els.bag.textContent = bagTxt;
-    }
+    if (els.coins) els.coins.textContent = `$${st.coins}`;
     if (els.water) {
       const thirst = Math.round((st.water && st.water.thirst) || 100);
       const bottles = Progress.waterStockTotal();
@@ -95,27 +78,21 @@ const UI = (() => {
       els.water.classList.toggle("low", thirst <= 25);
       els.water.classList.toggle("crit", thirst <= 10);
     }
-    if (els.weather && typeof WorldSim !== "undefined") {
-      els.weather.textContent = WorldSim.label();
-    }
 
     const missionLabel = document.getElementById("hud-mission");
+    const questBar = document.getElementById("hud-quest-bar");
     if (missionLabel && typeof Quests !== "undefined") {
-      missionLabel.textContent = Quests.hudChip() || "LIBRE";
+      const qPanel = Quests.panel();
+      let questText = "Explore l'île";
+      if (qPanel.active.length) {
+        const q = qPanel.active[0];
+        questText = q.value ? `${q.label} — ${q.value}` : q.label;
+      } else if (qPanel.done.length) {
+        questText = `Quêtes ${qPanel.done.length}/${qPanel.total} terminées`;
+      }
+      missionLabel.textContent = questText;
+      if (questBar) questBar.classList.remove("hidden");
     }
-
-    const qPanel = typeof Quests !== "undefined" ? Quests.panel() : { active: [], todo: [], done: [], total: 0 };
-    const dailies = Progress.dailyList();
-    const qHtml = []
-      .concat(qPanel.active.map((o) => `<li class="q-active">[>] ${o.label}<span class="q-hint">${o.value}</span></li>`))
-      .concat(qPanel.todo.map((o) => `<li class="q">[  ] ${o.label}</li>`))
-      .concat(qPanel.done.length ? [`<li class="done">[OK] ${qPanel.done.length}/${qPanel.total} quetes</li>`] : [])
-      .concat(dailies.map((o) => {
-        const done = o.cur >= o.need;
-        return `<li class="${done ? "done" : ""}">${done ? "[OK] " : "[  ] "}${o.label} ${Math.min(o.cur, o.need)}/${o.need}</li>`;
-      }))
-      .join("");
-    els.objList.innerHTML = qHtml;
   }
 
   function toast(html, ms = 1800) {
@@ -155,8 +132,6 @@ const UI = (() => {
   function refreshTitleStats() {
     const s = Progress.get();
     const qn = Progress.questsDone();
-    const bottles = Progress.waterStockTotal();
-    const stars = Progress.totalStars();
     if (els.titleStats) {
       els.titleStats.innerHTML = `
         <div class="title-stat">
@@ -168,27 +143,9 @@ const UI = (() => {
           <span class="title-stat-label">Pièces</span>
         </div>
         <div class="title-stat">
-          <span class="title-stat-value">${qn}/11 · 💧${bottles}</span>
-          <span class="title-stat-label">Quêtes · Eau</span>
+          <span class="title-stat-value">${qn}/11</span>
+          <span class="title-stat-label">Quêtes</span>
         </div>`;
-    }
-    const continueBtn = document.getElementById("btn-continue");
-    if (continueBtn) {
-      const show = s.level > 1 || s.coins > 350 || s.campaign.unlocked > 1 || qn > 0;
-      continueBtn.classList.toggle("hidden", !show);
-    }
-    const continueHint = document.getElementById("title-continue-hint");
-    if (continueHint) {
-      const unlocked = s.campaign.unlocked || 1;
-      const m = typeof Campaign !== "undefined" ? Campaign.get(unlocked) : null;
-      continueHint.textContent = m ? `Chapitre ${unlocked} · ${m.name}` : "Reprendre la campagne";
-    }
-    const campaignHint = document.getElementById("title-campaign-hint");
-    if (campaignHint) {
-      const unlocked = s.campaign.unlocked || 1;
-      campaignHint.textContent = s.campaign.introSeen
-        ? `Chapitre ${unlocked}/8 · ${stars}/24 étoiles`
-        : "8 chapitres · île de Djerba";
     }
   }
 
@@ -221,6 +178,7 @@ const UI = (() => {
     const items = Market.catalog(stall);
     const stock = Progress.get().water.stock || {};
     const total = Progress.waterStockTotal();
+    const coins = Progress.get().coins;
     if (els.marketTitle) els.marketTitle.textContent = stall.name.toUpperCase();
     if (els.marketSub) els.marketSub.textContent = `${stall.sub} · Monde ouvert Djerba 2`;
     if (els.marketCrisis) {
@@ -233,7 +191,7 @@ const UI = (() => {
       return `<div class="shop-row market-row">
         <div class="tool-icon">${item.icon}</div>
         <div class="tool-info"><strong>${item.name}</strong><span>$${item.cost} · ${item.blurb}${owned ? ` · x${owned}` : ""}</span></div>
-        <button class="btn-buy" data-water="${item.id}" ${s.coins < item.cost ? "disabled" : ""}>BUY</button>
+        <button class="btn-buy" data-water="${item.id}" ${coins < item.cost ? "disabled" : ""}>Acheter</button>
       </div>`;
     }).join("");
     els.marketList.querySelectorAll("[data-water]").forEach((btn) => {
@@ -273,152 +231,59 @@ const UI = (() => {
     Sprites.drawAvatar(ctx, Progress.get().cosmetics.hat_gold, t || 0);
   }
 
-  function openPanel(name) {
+  function openPanel() {
     const s = Progress.get();
     const tools = Progress.TOOL_DEFS;
-    let html = "";
+    const equipped = window.__getTool ? window.__getTool() : "pince";
+    const qPanel = typeof Quests !== "undefined" ? Quests.panel() : { active: [], todo: [], done: [], total: 0 };
 
-    if (name === "outils") {
-      const equipped = window.__getTool ? window.__getTool() : "pince";
-      const bagNow = window.__player ? window.__player.inventory.length : 0;
-      const stats = Progress.toolStats();
-      html = `<h3>OUTILS</h3>`;
-      for (const id of ["pince", "sac", "balai", "brouette"]) {
-        const d = tools[id];
-        const on = d.equip && equipped === id;
-        html += `<div class="tool-row${on ? " equipped" : ""}">
-          <div class="tool-icon">${d.icon}</div>
-          <div class="tool-info"><strong>${d.name}${on ? " · EQUIPE" : ""}</strong><span>${d.desc(s.tools[id])}</span></div>
-          ${d.equip
-            ? `<button class="btn-buy" data-equip="${id}" ${on ? "disabled" : ""}>${on ? "OK" : "EQUIPER"}</button>`
-            : `<span class="tool-passive">PASSIF</span>`}
-        </div>`;
-      }
-      html += `<p style="font-size:6px;opacity:.8;margin:8px 0 0;line-height:1.6">BAG ${bagNow}/${stats.capacity} · marche +${Math.round(stats.moveBonus * 100)}%<br>Pince ramasse · Balai balaye · Vider a une poubelle de ville</p>`;
+    let html = `<div class="menu-section"><h3>Quête</h3>`;
+    if (qPanel.active.length) {
+      const q = qPanel.active[0];
+      html += `<div class="quest-active">
+        <strong>${q.label}</strong>
+        <span>${q.value || "Parle aux habitants avec !"}</span>
+      </div>`;
+    } else {
+      html += `<p class="menu-hint">Parle aux habitants marqués ! pour découvrir des quêtes.</p>`;
     }
+    if (qPanel.done.length || qPanel.todo.length) {
+      html += `<p class="menu-meta">${qPanel.done.length}/${qPanel.total} quêtes terminées</p>`;
+    }
+    html += `</div>`;
 
-    if (name === "ameliorations") {
-      html = `<h3>UPGRADES</h3>`;
-      for (const id of ["pince", "sac", "balai", "brouette"]) {
-        const d = tools[id];
-        const lv = s.tools[id];
-        const cost = d.cost * lv;
-        const max = lv >= d.maxLevel;
-        html += `<div class="tool-row">
-          <div class="tool-icon">${d.icon}</div>
-          <div class="tool-info"><strong>${d.name} LV.${lv}</strong><span>${d.desc(lv)}</span></div>
-          <button class="btn-buy" data-upgrade="${id}" ${max || s.coins < cost ? "disabled" : ""}>
-            ${max ? "MAX" : "$" + cost}
-          </button>
-        </div>`;
-      }
+    html += `<div class="menu-section"><h3>Outil</h3><div class="tool-toggle">`;
+    for (const id of ["pince", "balai"]) {
+      const d = tools[id];
+      const on = equipped === id;
+      html += `<button class="tool-btn${on ? " on" : ""}" data-equip="${id}">${d.icon} ${d.name}</button>`;
     }
-
-    if (name === "defis") {
-      const d = s.daily;
-      html = `<h3>DEFIS DU JOUR</h3>`;
-      for (const row of Progress.dailyList()) {
-        const ok = row.cur >= row.need;
-        html += `<div class="daily-row"><div class="tool-info">
-          <strong>${row.label}</strong>
-          <span>${Math.min(row.cur, row.need)}/${row.need}${ok ? " · OK" : ""}</span>
-        </div></div>`;
-      }
-      html += `<button class="btn-claim" id="btn-claim-daily" ${Progress.canClaimDaily() ? "" : "disabled"}>
-          ${d.claimed ? "DEJA PRIS" : "RECUPERER"}
-        </button>`;
+    html += `</div>`;
+    if (window.__player) {
+      const p = window.__player;
+      html += `<p class="menu-meta">Sac ${p.inventory.length}/${p.stats.capacity}</p>`;
     }
-
-    if (name === "boutique") {
-      html = `<h3>SHOP</h3>`;
-      const cafeMs = Progress.cafeLeft();
-      for (const item of Progress.SHOP_ITEMS) {
-        let extra = item.blurb || "";
-        let owned = false;
-        if (item.id === "hat_gold") owned = s.cosmetics.hat_gold;
-        if (item.id === "boost_xp" && s.boosts.xpCharges > 0) extra = `${s.boosts.xpCharges} gains restants`;
-        if (item.id === "cafe" && cafeMs > 0) extra = `Encore ${Math.ceil(cafeMs / 1000)}s`;
-        html += `<div class="shop-row">
-          <div class="tool-icon">${item.icon}</div>
-          <div class="tool-info"><strong>${item.name}</strong><span>$${item.cost} · ${extra}</span></div>
-          <button class="btn-buy" data-shop="${item.id}" ${owned || s.coins < item.cost ? "disabled" : ""}>
-            ${owned ? "OK" : "BUY"}
-          </button>
-        </div>`;
-      }
-    }
+    html += `</div>`;
 
     els.panelContent.innerHTML = html;
     els.panelOverlay.classList.remove("hidden");
-
-    els.panelContent.querySelectorAll("[data-upgrade]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-upgrade");
-        const res = Progress.upgradeTool(id);
-        if (res.ok) {
-          AudioSys.sfx("upgrade");
-          toast(`UPGRADE!<br/>${tools[id].name} LV.${res.level}<span class="bonus">${tools[id].desc(res.level)}</span>`, 2200);
-          if (window.__playerRefresh) window.__playerRefresh();
-          openPanel("ameliorations");
-          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
-          els.coins.textContent = `$${Progress.get().coins}`;
-        } else toast(res.reason || "Impossible");
-      });
-    });
 
     els.panelContent.querySelectorAll("[data-equip]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-equip");
         if (window.__setTool) window.__setTool(id);
         AudioSys.sfx("click");
-        openPanel("outils");
+        openPanel();
       });
     });
-
-    els.panelContent.querySelectorAll("[data-shop]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-shop");
-        const res = Progress.buyShopItem(id);
-        if (res.ok) {
-          AudioSys.sfx("upgrade");
-          if (id === "hat_gold") toast("CASQUETTE OR<br/>equipee");
-          else if (id === "boost_xp") toast("XP x2<br/>5 prochains gains");
-          else if (id === "cafe") toast("CAFE SERRE<br/>+25% vitesse 90s");
-          else toast("ACHAT OK!");
-          openPanel("boutique");
-          els.coins.textContent = `$${Progress.get().coins}`;
-          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
-        } else toast(res.reason || "Impossible");
-      });
-    });
-
-    const claim = document.getElementById("btn-claim-daily");
-    if (claim) {
-      claim.addEventListener("click", () => {
-        const res = Progress.claimDaily();
-        if (res.ok) {
-          AudioSys.sfx("levelup");
-          toast(`RECOMPENSE!<br/>+$${res.coins} +${res.xp} XP`);
-          openPanel("defis");
-          els.coins.textContent = `$${Progress.get().coins}`;
-          if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
-        }
-      });
-    }
   }
 
   function closePanel() {
     els.panelOverlay.classList.add("hidden");
   }
 
-  function toggleObjectives(forceOn) {
-    if (!els.objPopup) return;
-    if (forceOn) els.objPopup.classList.remove("hidden");
-    else els.objPopup.classList.toggle("hidden");
-    if (!els.objPopup.classList.contains("hidden")) {
-      clearTimeout(toggleObjectives._t);
-      toggleObjectives._t = setTimeout(() => els.objPopup.classList.add("hidden"), 7000);
-    }
+  function toggleObjectives() {
+    if (window.__world) updateHud(Progress.get(), window.__world, window.__timeLeft || 0);
   }
 
   function setupJoystick(input) {
