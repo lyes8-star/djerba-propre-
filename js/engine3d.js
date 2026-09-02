@@ -7,34 +7,36 @@ const Engine3D = (() => {
 
   const COL = {
     [TILE.WATER]: new THREE.Color(0x1a7fd4),
-    [TILE.SAND]: new THREE.Color(0xe8c872),
-    [TILE.GRASS]: new THREE.Color(0x3fa84f),
-    [TILE.BEACH]: new THREE.Color(0xf2dc9a),
-    [TILE.COBBLE]: new THREE.Color(0xb8a898),
-    [TILE.PLAZA]: new THREE.Color(0xd8c8b0),
-    [TILE.ROAD]: new THREE.Color(0xc8b090),
+    [TILE.SAND]: new THREE.Color(0xe8c878),
+    [TILE.GRASS]: new THREE.Color(0x2f9640),
+    [TILE.BEACH]: new THREE.Color(0xf8e8b8),
+    [TILE.COBBLE]: new THREE.Color(0xc8bca8),
+    [TILE.PLAZA]: new THREE.Color(0xd8d0c4),
+    [TILE.ROAD]: new THREE.Color(0x5a5a62),
     [TILE.DIRT]: new THREE.Color(0xc9a060),
     [TILE.STONE]: new THREE.Color(0x9a9a9a),
-    [TILE.SHORE]: new THREE.Color(0xf5e4b0),
+    [TILE.SHORE]: new THREE.Color(0xfff4d0),
   };
 
   const HGT = {
     [TILE.WATER]: -6,
-    [TILE.SAND]: 10,
-    [TILE.GRASS]: 20,
-    [TILE.BEACH]: 6,
-    [TILE.COBBLE]: 12,
-    [TILE.PLAZA]: 11,
-    [TILE.ROAD]: 12,
-    [TILE.DIRT]: 9,
-    [TILE.STONE]: 16,
-    [TILE.SHORE]: 4,
+    [TILE.SAND]: 9,
+    [TILE.GRASS]: 16,
+    [TILE.BEACH]: 11,
+    [TILE.COBBLE]: 13,
+    [TILE.PLAZA]: 12,
+    [TILE.ROAD]: 13,
+    [TILE.DIRT]: 10,
+    [TILE.STONE]: 15,
+    [TILE.SHORE]: 9,
   };
 
-  const WATER_LEVEL = -22;
-  const BUILD_SCALE = 2.35;
-  const CAR_SCALE = 2.2;
-  const EYE_H = 30;
+  const WATER_LEVEL = -16;
+  const BUILD_SCALE = 1.55;
+  const CAR_SCALE = 1.35;
+  const NPC_SCALE = 0.86;
+  const PROP_SCALE = 0.78;
+  const EYE_H = 22;
 
   const TRASH_COL = {
     can: 0xc84830, bottle: 0x48b8e8, bag: 0x303030, butt: 0xd8a060,
@@ -58,6 +60,7 @@ const Engine3D = (() => {
   let decoRoot = null;
   let roadRoot = null;
   let grassRoot = null;
+  let lifeRoot = null;
   let active = false;
   let built = false;
   let titleMode = false;
@@ -100,34 +103,43 @@ const Engine3D = (() => {
 
   function sampleHeight(wx, wz) {
     if (typeof Island === "undefined") return 0;
-    if (!Island.contains(wx, wz)) return WATER_LEVEL - 8;
+    if (!Island.contains(wx, wz)) return WATER_LEVEL - 10;
     const t = Island.tileAt(wx, wz);
-    if (t === TILE.WATER) return WATER_LEVEL - 6;
-    let h = HGT[t] != null ? HGT[t] : 8;
+    if (t === TILE.WATER) return WATER_LEVEL - 8;
+    let h = HGT[t] != null ? HGT[t] : 9;
     const n1 = Math.sin(wx * 0.0075) * Math.cos(wz * 0.0068);
     const n2 = Math.sin(wx * 0.017 + 0.8) * Math.cos(wz * 0.014 + 0.5);
-    const n3 = Math.sin(wx * 0.032 + wz * 0.021) * 0.45;
+    const n3 = Math.sin(wx * 0.032 + wz * 0.021) * 0.4;
     if (t === TILE.GRASS || t === TILE.DIRT) {
-      h += n1 * 7 + n2 * 4 + n3 * 3;
+      h += n1 * 4 + n2 * 2.5 + n3 * 2;
     } else if (t === TILE.SAND || t === TILE.BEACH || t === TILE.SHORE) {
-      h += n1 * 2.2 + n2 * 1.2;
-      if (t === TILE.BEACH || t === TILE.SHORE) {
-        let nearWater = false;
-        for (let a = 0; a < 6; a++) {
-          const ang = a * Math.PI / 3;
-          const nx = wx + Math.cos(ang) * 48;
-          const nz = wz + Math.sin(ang) * 48;
-          if (!Island.contains(nx, nz) || Island.tileAt(nx, nz) === TILE.WATER) {
-            nearWater = true;
-            break;
-          }
-        }
-        if (nearWater) h = Math.min(h, 5 + n1 * 1.5);
-      }
-    } else if (t === TILE.STONE || t === TILE.COBBLE) {
-      h += n1 * 2.5 + n2 * 1.5;
+      h += n1 * 1.5 + n2 * 0.8;
+    } else if (t === TILE.STONE || t === TILE.COBBLE || t === TILE.PLAZA) {
+      h += n1 * 1.2 + n2 * 0.8;
     }
-    return h;
+    let nearCoast = false;
+    for (let a = 0; a < 8; a++) {
+      const ang = a * Math.PI / 4;
+      const nx = wx + Math.cos(ang) * 40;
+      const nz = wz + Math.sin(ang) * 40;
+      if (!Island.contains(nx, nz) || Island.tileAt(nx, nz) === TILE.WATER) {
+        nearCoast = true;
+        break;
+      }
+    }
+    if (nearCoast && (t === TILE.BEACH || t === TILE.SHORE || t === TILE.SAND)) {
+      h = Math.max(h, WATER_LEVEL + 12);
+    }
+    return Math.max(h, WATER_LEVEL + 7);
+  }
+
+  function surfaceY(wx, wz, opts) {
+    const gy = sampleHeight(wx, wz);
+    if (!opts) return gy;
+    const t = Island.tileAt(wx, wz);
+    if (opts.road && t === TILE.ROAD) return gy + 1.5;
+    if (opts.car) return gy + (t === TILE.ROAD ? 1.6 : 0.4);
+    return gy;
   }
 
   function mat(color, opts = {}) {
@@ -323,9 +335,18 @@ const Engine3D = (() => {
       const t = Island.tileAt(x, z);
       const h = sampleHeight(x, z);
       pos.setY(i, h);
-      const c = (COL[t] || COL[TILE.SAND]).clone();
-      if (t === TILE.GRASS) c.offsetHSL(0, 0.02, (Math.sin(x * 0.02 + z * 0.015) * 0.06));
-      else c.offsetHSL(0, 0, (Math.random() - 0.5) * 0.04);
+      let c = (COL[t] || COL[TILE.SAND]).clone();
+      if (t === TILE.GRASS) {
+        c.offsetHSL(0, 0.04, Math.sin(x * 0.02 + z * 0.015) * 0.05);
+      } else if (t === TILE.BEACH || t === TILE.SHORE) {
+        c.offsetHSL(0, -0.02, 0.04);
+      } else if (t === TILE.ROAD) {
+        c.multiplyScalar(0.85);
+      } else if (t === TILE.COBBLE || t === TILE.PLAZA) {
+        c.offsetHSL(0, -0.03, 0.02);
+      } else {
+        c.offsetHSL(0, 0, (Math.random() - 0.5) * 0.03);
+      }
       colors.push(c.r, c.g, c.b);
     }
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
@@ -339,13 +360,13 @@ const Engine3D = (() => {
     terrain.position.set(islandOx, 0, islandOz);
     root.add(terrain);
 
-    const wGeo = new THREE.PlaneGeometry(W + 800, H + 800, 64, 48);
+    const wGeo = new THREE.PlaneGeometry(W + 400, H + 400, 48, 36);
     wGeo.rotateX(-Math.PI / 2);
     if (typeof WaterEngine !== "undefined") {
       waterShader = WaterEngine.createMaterial(sunDir, 1);
       water = new THREE.Mesh(wGeo, waterShader);
     } else {
-      water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78, roughness: 0.1 }));
+      water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.72, roughness: 0.1 }));
     }
     water.position.set(islandOx, WATER_LEVEL, islandOz);
     root.add(water);
@@ -359,9 +380,9 @@ const Engine3D = (() => {
     const wall = plasterMat || mat(0xf5efe0, { texKey: "plaster", smooth: true });
     const roof = roofMat || mat(0xc85838, { texKey: "roof", smooth: true });
     const wood = woodMat || mat(0x6a5030, { texKey: "wood", repeat: 2 });
-    const h = Math.max(42, b.h * 1.05 * BUILD_SCALE);
-    const w = b.w * 0.98;
-    const d = b.h * 0.95;
+    const h = Math.max(28, b.h * 0.72 * BUILD_SCALE);
+    const w = b.w * 0.95;
+    const d = b.h * 0.92;
     g.add(box(w, h, d, wall, 0, gy + h / 2, 0));
     g.add(box(w * 1.08, h * 0.2, d * 1.08, roof, 0, gy + h + h * 0.1, 0));
     const doorW = (b.doorW || 20) * 1.1;
@@ -471,6 +492,70 @@ const Engine3D = (() => {
     buildRoads();
     buildGrass();
     buildDeco();
+    buildAmbientLife();
+  }
+
+  function buildAmbientLife() {
+    if (lifeRoot) {
+      root.remove(lifeRoot);
+      disposeGroup(lifeRoot);
+      lifeRoot = null;
+    }
+    lifeRoot = new THREE.Group();
+    const anchors = ["sidi", "houmt", "ajim", "midoun", "portHoumt"];
+    anchors.forEach((name, i) => {
+      const p = Island.xy(name);
+      for (let b = 0; b < 3; b++) {
+        const bird = new THREE.Mesh(
+          new THREE.SphereGeometry(1.2, 5, 4),
+          new THREE.MeshStandardMaterial({ color: 0xf8f8f8, roughness: 0.9 })
+        );
+        bird.userData.orbit = {
+          cx: p.x + b * 30,
+          cz: p.y + b * 18,
+          r: 50 + b * 22 + i * 8,
+          sp: 0.15 + b * 0.04,
+          phase: i * 2 + b,
+          alt: 28 + b * 6,
+        };
+        lifeRoot.add(bird);
+      }
+    });
+    const ports = [Island.xy("ajim"), Island.xy("portHoumt")];
+    ports.forEach((p, i) => {
+      const boat = new THREE.Group();
+      const hull = box(18, 4, 8, 0x8a5030, 0, 0, 0);
+      const mast = box(1.5, 14, 1.5, 0xf0ece0, 0, 8, 0);
+      boat.add(hull, mast);
+      boat.userData.boat = {
+        cx: p.x + 40 + i * 30,
+        cz: p.y + 60,
+        sp: 0.08 + i * 0.02,
+        phase: i * 1.7,
+      };
+      lifeRoot.add(boat);
+    });
+    root.add(lifeRoot);
+  }
+
+  function tickAmbientLife(t) {
+    if (!lifeRoot) return;
+    for (const obj of lifeRoot.children) {
+      if (obj.userData.orbit) {
+        const o = obj.userData.orbit;
+        const a = t * o.sp + o.phase;
+        const wx = o.cx + Math.cos(a) * o.r;
+        const wz = o.cz + Math.sin(a) * o.r * 0.55;
+        obj.position.set(gx(wx), sampleHeight(wx, wz) + o.alt + Math.sin(t * 3 + o.phase) * 2, gz(wz));
+      } else if (obj.userData.boat) {
+        const b = obj.userData.boat;
+        const a = t * b.sp + b.phase;
+        const wx = b.cx + Math.sin(a) * 12;
+        const wz = b.cz + Math.cos(a) * 8;
+        obj.position.set(gx(wx), WATER_LEVEL + 1.2 + Math.sin(t * 1.2 + b.phase) * 0.4, gz(wz));
+        obj.rotation.y = a;
+      }
+    }
   }
 
   function disposeGroup(grp) {
@@ -504,9 +589,9 @@ const Engine3D = (() => {
       for (let i = 0; i <= steps; i++) {
         const wx = x1 + dx * i;
         const wy = y1 + dy * i;
-        const gy = sampleHeight(wx, wy);
+        const gy = surfaceY(wx, wy, { road: true });
         const seg = new THREE.Mesh(new THREE.BoxGeometry(rw, rh, rw), asphalt);
-        seg.position.set(gx(wx), gy + rh * 0.55, gz(wy));
+        seg.position.set(gx(wx), gy + rh * 0.45, gz(wy));
         seg.receiveShadow = true;
         roadRoot.add(seg);
         if (i % 4 === 2) {
@@ -560,22 +645,24 @@ const Engine3D = (() => {
   }
 
   function buildPalm(x, y, seed) {
+    const S = PROP_SCALE;
     const g = new THREE.Group();
     const gy = groundY(x, y);
+    const trunkH = 32 * S;
     const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(2.8, 4.2, 42, 8),
+      new THREE.CylinderGeometry(2.2 * S, 3.4 * S, trunkH, 8),
       barkMat || mat(0x8a6030, { texKey: "bark", repeat: 2 })
     );
-    trunk.position.set(0, gy + 21, 0);
+    trunk.position.set(0, gy + trunkH / 2, 0);
     trunk.castShadow = true;
     g.add(trunk);
     for (let i = 0; i < 6; i++) {
       const leaf = new THREE.Mesh(
-        new THREE.ConeGeometry(11, 26, 6),
+        new THREE.ConeGeometry(9 * S, 20 * S, 6),
         leavesMat || mat(0x2d9a40, { texKey: "leaves", repeat: 2 })
       );
       const a = (i / 6) * Math.PI * 2 + seed * 0.01;
-      leaf.position.set(Math.cos(a) * 6, gy + 48, Math.sin(a) * 6);
+      leaf.position.set(Math.cos(a) * 5 * S, gy + trunkH + 8 * S, Math.sin(a) * 5 * S);
       leaf.rotation.z = Math.cos(a) * 0.55;
       leaf.rotation.x = Math.sin(a) * 0.55;
       g.add(leaf);
@@ -586,20 +673,22 @@ const Engine3D = (() => {
 
   function buildRock(x, y, seed) {
     const gy = groundY(x, y);
+    const S = PROP_SCALE;
     const m = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(5 + (seed % 4), 0),
+      new THREE.DodecahedronGeometry((4 + (seed % 3)) * S, 0),
       rockMat || mat(0x9a9088, { texKey: "rock", repeat: 2 })
     );
-    m.position.set(gx(x), gy + 3, gz(y));
-    m.scale.set(1.4, 0.85, 1.2);
+    m.position.set(gx(x), gy + 2.5 * S, gz(y));
+    m.scale.set(1.3, 0.8, 1.1);
     m.castShadow = true;
     return m;
   }
 
   function buildBush(x, y) {
     const gy = groundY(x, y);
-    const m = new THREE.Mesh(new THREE.SphereGeometry(7, 10, 8), leavesMat || mat(0x3a9048, { texKey: "leaves", repeat: 2 }));
-    m.position.set(gx(x), gy + 4, gz(y));
+    const S = PROP_SCALE;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(5.5 * S, 10, 8), leavesMat || mat(0x3a9048, { texKey: "leaves", repeat: 2 }));
+    m.position.set(gx(x), gy + 3 * S, gz(y));
     m.scale.y = 0.75;
     return m;
   }
@@ -660,6 +749,7 @@ const Engine3D = (() => {
   function attachFpsHands() {
     if (!camera || camHands) return;
     camHands = buildFpsHands();
+    camHands.scale.setScalar(0.88);
     camera.add(camHands);
     scene.add(camera);
   }
@@ -751,12 +841,14 @@ const Engine3D = (() => {
         buildRoads();
         buildGrass();
         buildDeco();
+        buildAmbientLife();
       });
     } else {
       buildBuildings();
       buildRoads();
       buildGrass();
       buildDeco();
+      buildAmbientLife();
     }
 
     playerGrp = makePlayerMesh();
@@ -927,7 +1019,7 @@ const Engine3D = (() => {
       let m = npcMesh.get(n.id);
       if (!m) {
         m = makeNpcMesh(n);
-        m.scale.setScalar(1.12);
+        m.scale.setScalar(NPC_SCALE);
         npcRoot.add(m);
         npcMesh.set(n.id, m);
       }
@@ -968,9 +1060,26 @@ const Engine3D = (() => {
         carRoot.add(m);
         carMesh.set(id, m);
       }
-      const gy = groundY(c.x, c.y);
-      m.position.set(gx(c.x), gy, gz(c.y));
-      m.rotation.y = c.facing < 0 ? Math.PI : 0;
+      let cx = c.px != null ? c.px : c.x + 24;
+      let cy = c.py != null ? c.py : c.y + 12;
+      if (typeof Island.snapRoad === "function") {
+        const snap = Island.snapRoad(cx, cy);
+        cx = snap.x;
+        cy = snap.y;
+      }
+      const gy = surfaceY(cx, cy, { car: true });
+      m.position.set(gx(cx), gy, gz(cy));
+      let rotY = c.facing < 0 ? Math.PI : 0;
+      const path = c.path;
+      if (path && path.length > 1 && c.pi != null) {
+        const tgt = path[c.pi];
+        if (tgt) {
+          const dx = tgt.x - cx;
+          const dz = tgt.y - cy;
+          if (Math.hypot(dx, dz) > 3) rotY = Math.atan2(dx, dz);
+        }
+      }
+      m.rotation.y = rotY;
     }
     for (const [id, m] of carMesh) {
       if (!alive.has(id)) {
@@ -1077,6 +1186,7 @@ const Engine3D = (() => {
     syncCars(world);
     syncPlayer(player, t, gold);
     updateCamera(player, dt || 0.016);
+    tickAmbientLife(t);
     if (water) {
       water.position.x = islandOx;
       water.position.z = islandOz;
