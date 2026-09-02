@@ -59,6 +59,9 @@ const Engine3D = (() => {
   let camPos = new THREE.Vector3();
   let camTarget = new THREE.Vector3();
   let camYaw = Math.PI * 0.22;
+  let camHands = null;
+  const EYE_H = 26;
+  const FPS_FOV = 74;
   let waterNormalPhase = 0;
   let shakeT = 0;
   let shakeAmp = 0;
@@ -484,6 +487,50 @@ const Engine3D = (() => {
     return g;
   }
 
+  function buildFpsHands() {
+    const g = new THREE.Group();
+    g.name = "fpsHands";
+    const skin = new THREE.MeshStandardMaterial({ color: 0xf0c8a0, roughness: 0.72 });
+    const shirt = new THREE.MeshStandardMaterial({ color: 0x48b868, roughness: 0.78 });
+    const toolM = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.35 });
+    const lArm = new THREE.Mesh(new THREE.BoxGeometry(3.5, 10, 3.5), shirt);
+    lArm.position.set(-5.5, -7, -11);
+    lArm.rotation.x = -0.35;
+    const lHand = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), skin);
+    lHand.position.set(-5.5, -12.5, -11);
+    const rArm = new THREE.Mesh(new THREE.BoxGeometry(3.5, 10, 3.5), shirt);
+    rArm.position.set(5.5, -8, -12);
+    rArm.rotation.x = -0.55;
+    rArm.rotation.z = -0.12;
+    const rHand = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), skin);
+    rHand.position.set(6.5, -13.5, -11.5);
+    const tool = new THREE.Mesh(new THREE.BoxGeometry(1.4, 14, 1.4), toolM);
+    tool.name = "fpsTool";
+    tool.position.set(8.5, -12, -10);
+    tool.rotation.x = -0.85;
+    tool.rotation.z = 0.25;
+    g.add(lArm, lHand, rArm, rHand, tool);
+    g.frustumCulled = false;
+    return g;
+  }
+
+  function attachFpsHands() {
+    if (!camera || camHands) return;
+    camHands = buildFpsHands();
+    camera.add(camHands);
+    scene.add(camera);
+  }
+
+  function updateFpsHands(player, t) {
+    if (!camHands) return;
+    const bob = Math.sin(t * 10) * 0.35;
+    const atk = player.attacking ? Math.sin(t * 24) * 2.5 : 0;
+    camHands.position.y = bob - atk * 0.4;
+    camHands.position.x = atk * 0.15;
+    const tool = camHands.getObjectByName("fpsTool");
+    if (tool) tool.visible = !player.swim;
+  }
+
   function makeNpcMesh(n) {
     if (typeof Characters3D !== "undefined") {
       return Characters3D.build(Characters3D.npcStyle(n), { quest: !!n.qRole });
@@ -544,7 +591,7 @@ const Engine3D = (() => {
     root = new THREE.Group();
     scene.add(root);
 
-    camera = new THREE.PerspectiveCamera(48, 1, 1, 8000);
+    camera = new THREE.PerspectiveCamera(FPS_FOV, 1, 1, 8000);
     buildSky();
     buildLights();
     buildTerrain();
@@ -562,7 +609,9 @@ const Engine3D = (() => {
     }
 
     playerGrp = makePlayerMesh();
+    playerGrp.visible = false;
     root.add(playerGrp);
+    attachFpsHands();
 
     trashRoot = new THREE.Group();
     npcRoot = new THREE.Group();
@@ -783,11 +832,12 @@ const Engine3D = (() => {
     const state = player.animState || (player.swim ? "swim" : (Math.hypot(player.vx, player.vy) > 8 ? "walk" : "idle"));
     const bob = state === "walk" ? Math.sin(t * 12) * 0.4 : 0;
     playerGrp.position.set(gx(px), gy + bob, gz(pz));
+    playerGrp.visible = false;
 
     if (player.angle != null) {
-      camYaw = player.angle + Math.PI / 2;
+      camYaw = player.angle;
     } else if (Math.hypot(player.vx, player.vy) > 4) {
-      camYaw = Math.atan2(player.vx, player.vy);
+      camYaw = Math.atan2(player.vy, player.vx);
     } else if (player.facing != null) {
       camYaw = player.facing < 0 ? Math.PI : 0;
     }
@@ -796,28 +846,28 @@ const Engine3D = (() => {
       Characters3D.animate(playerGrp, state, phase, player.facing || 1, player.attacking);
       const hat = playerGrp.getObjectByName("hat");
       if (hat && hat.material) {
-        hat.visible = true;
         hat.material.color.setHex(gold ? 0xffd24a : 0x2db84a);
       }
-    } else {
-      playerGrp.rotation.y = camYaw;
     }
+    updateFpsHands(player, t);
   }
 
   function updateCamera(player, dt) {
     const px = player.x + 16;
     const pz = player.y + 20;
-    const py = groundY(px, pz) + 14;
-    camTarget.set(gx(px), py, gz(pz));
+    const gy = groundY(px, pz);
+    const yaw = player.angle != null ? player.angle : camYaw;
+    const pitch = player.pitch || 0;
+    const moving = Math.hypot(player.vx || 0, player.vy || 0) > 8;
+    const headBob = moving ? Math.sin(performance.now() * 0.012) * 0.55 : 0;
+    const swimBob = player.swim ? Math.sin(performance.now() * 0.008) * 1.2 : 0;
 
-    const dist = 88;
-    const height = 52;
     const desired = new THREE.Vector3(
-      camTarget.x + Math.sin(camYaw) * dist * 0.55,
-      camTarget.y + height,
-      camTarget.z + Math.cos(camYaw) * dist
+      gx(px),
+      gy + EYE_H + headBob + swimBob,
+      gz(pz)
     );
-    camPos.lerp(desired, 1 - Math.pow(0.001, dt));
+    camPos.lerp(desired, 1 - Math.pow(0.00008, dt));
     if (shakeT > 0) {
       shakeT -= dt;
       camPos.x += (Math.random() - 0.5) * shakeAmp;
@@ -825,9 +875,29 @@ const Engine3D = (() => {
       camPos.z += (Math.random() - 0.5) * shakeAmp;
     }
     camera.position.copy(camPos);
+
+    const cp = Math.cos(pitch);
+    const lookX = Math.cos(yaw) * cp;
+    const lookY = Math.sin(pitch);
+    const lookZ = Math.sin(yaw) * cp;
+    camTarget.set(
+      camPos.x + lookX * 120,
+      camPos.y + lookY * 120,
+      camPos.z + lookZ * 120
+    );
     camera.lookAt(camTarget);
-    sun.position.set(camTarget.x + 600, camTarget.y + 1200, camTarget.z + 400);
-    sun.target.position.copy(camTarget);
+    if (camera.fov !== FPS_FOV) {
+      camera.fov = FPS_FOV;
+      camera.updateProjectionMatrix();
+    }
+
+    const sunFocus = new THREE.Vector3(
+      camPos.x + lookX * 80,
+      gy + 8,
+      camPos.z + lookZ * 80
+    );
+    sun.position.set(sunFocus.x + 600, sunFocus.y + 1200, sunFocus.z + 400);
+    sun.target.position.copy(sunFocus);
     sun.target.updateMatrixWorld();
   }
 
@@ -875,6 +945,7 @@ const Engine3D = (() => {
     carMesh.clear();
     binMesh.length = 0;
     if (renderer) {
+      if (camera && scene) scene.remove(camera);
       renderer.dispose();
       if (renderer.domElement.parentElement) {
         renderer.domElement.parentElement.removeChild(renderer.domElement);
@@ -883,6 +954,7 @@ const Engine3D = (() => {
     }
     scene = null;
     camera = null;
+    camHands = null;
     root = null;
     playerGrp = null;
   }

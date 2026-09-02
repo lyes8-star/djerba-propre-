@@ -235,12 +235,42 @@ const Npc = (() => {
     const a = spawnOne(zone, npcs.length, "chat", styles[0]);
     const b = spawnOne(zone, npcs.length + 1, "chat", styles[1]);
     place(a, x, y);
-    place(b, x + 26, y);
+    place(b, x + 36, y + 8);
     a.facing = 1;
     b.facing = -1;
     a.partner = b;
     b.partner = a;
     npcs.push(a, b);
+  }
+
+  function separateNpcs(npcs, minDist) {
+    const gap = minDist || 52;
+    const gapSq = gap * gap;
+    for (let pass = 0; pass < 6; pass++) {
+      for (let i = 0; i < npcs.length; i++) {
+        for (let j = i + 1; j < npcs.length; j++) {
+          const a = npcs[i];
+          const b = npcs[j];
+          if (a.indoor !== b.indoor) continue;
+          const dx = (a.x + 16) - (b.x + 16);
+          const dy = (a.y + 20) - (b.y + 20);
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= gapSq || d2 < 1) continue;
+          const d = Math.sqrt(d2) || 1;
+          const push = (gap - d) * 0.55;
+          const nx = dx / d;
+          const ny = dy / d;
+          a.x += nx * push;
+          a.y += ny * push;
+          b.x -= nx * push;
+          b.y -= ny * push;
+          clampNpc(a);
+          clampNpc(b);
+          if (a.homeX != null) { a.homeX = a.x; a.homeY = a.y; }
+          if (b.homeX != null) { b.homeX = b.x; b.homeY = b.y; }
+        }
+      }
+    }
   }
 
   function spawn(world) {
@@ -249,7 +279,7 @@ const Npc = (() => {
     const ajim = Island.xy("ajim");
     const port = Island.xy("portHoumt");
     const hv = Island.xy("houmt");
-    const umbrellas = [[-80, 30], [-20, 18], [40, 34], [100, 20], [160, 38], [-50, 80], [80, 90], [20, 50]];
+    const umbrellas = [[-180, 40], [-90, 22], [10, 48], [110, 28], [200, 55], [-120, 120], [70, 130], [-30, 85]];
     const shops = (Places.TOWN || []).filter((b) => b.room === "shop").map((b) => [b.x + 12, b.y + 42]);
     const houses = (Places.TOWN || []).filter((b) => b.room === "home" || b.room === "cafe").map((b) => [b.x + 28, b.y + 90]);
     const quay = [[ajim.x - 20, ajim.y + 10], [ajim.x + 20, ajim.y + 16], [port.x + 30, port.y + 10], [port.x + 70, port.y + 6]];
@@ -258,12 +288,12 @@ const Npc = (() => {
       const st = ["tourF", "tourM", "tourF2", "tourM2", "localF", "elder"][i % 6];
       npcs.push(place(spawnOne("beach", npcs.length, "lounge", st), sidi.x + ox, sidi.y + oy));
     });
-    spawnFill(npcs, "beach", 8, "wander", ["localM", "localM2", "localF", "tourM"]);
-    spawnFill(npcs, "beach", 5, "run", ["kidM", "kidF"]);
-    spawnFill(npcs, "beach", 4, "photo", ["tourM", "tourF2", "tourM2"]);
+    spawnFill(npcs, "beach", 6, "wander", ["localM", "localM2", "localF", "tourM"]);
+    spawnFill(npcs, "beach", 4, "run", ["kidM", "kidF"]);
+    spawnFill(npcs, "beach", 3, "photo", ["tourM", "tourF2", "tourM2"]);
     spawnFill(npcs, "beach", 3, "sit", ["elder", "elderF"]);
-    spawnFill(npcs, "beach", 4, "pace", ["localM", "tourF", "localF", "tourM2"]);
-    spawnFill(npcs, "beach", 5, "sit", ["localF", "tourF", "localF2", "tourF2", "localF"]);
+    spawnFill(npcs, "beach", 3, "pace", ["localM", "tourF", "localF", "tourM2"]);
+    spawnFill(npcs, "beach", 4, "sit", ["localF", "tourF", "localF2", "tourF2", "localF"]);
 
     quay.forEach(([x, y], i) => {
       npcs.push(place(spawnOne("port", npcs.length, i < 4 ? "fish" : "stand", i < 4 ? "fisher" : "tourM"), x, y));
@@ -387,6 +417,7 @@ const Npc = (() => {
     });
 
     npcs.forEach(attachRoutine);
+    separateNpcs(npcs, 56);
     world.npcs = npcs;
   }
 
@@ -533,6 +564,33 @@ const Npc = (() => {
       if (n.vx > 4) n.facing = 1;
       if (n.vx < -4) n.facing = -1;
       clampNpc(n);
+    }
+
+    for (let i = 0; i < npcs.length; i++) {
+      for (let j = i + 1; j < npcs.length; j++) {
+        const a = npcs[i];
+        const b = npcs[j];
+        if (world.inside ? !a.indoor || !b.indoor : a.indoor || b.indoor) continue;
+        if (a.job === "commute" || b.job === "commute") continue;
+        const dx = (a.x + 16) - (b.x + 16);
+        const dy = (a.y + 20) - (b.y + 20);
+        const d2 = dx * dx + dy * dy;
+        if (d2 >= 42 * 42 || d2 < 1) continue;
+        const d = Math.sqrt(d2);
+        const push = (42 - d) * 0.35 * dt * 60;
+        const nx = dx / d;
+        const ny = dy / d;
+        if (a.job !== "stand" && a.job !== "sit" && a.job !== "lounge" && a.job !== "fish" && a.job !== "chat") {
+          a.x += nx * push;
+          a.y += ny * push;
+          clampNpc(a);
+        }
+        if (b.job !== "stand" && b.job !== "sit" && b.job !== "lounge" && b.job !== "fish" && b.job !== "chat") {
+          b.x -= nx * push;
+          b.y -= ny * push;
+          clampNpc(b);
+        }
+      }
     }
   }
 

@@ -7,8 +7,8 @@ const Player = (() => {
   function create(stats) {
     const start = Island.xy("sidi");
     return {
-      x: start.x,
-      y: start.y,
+      x: start.x + 140,
+      y: start.y + 95,
       vx: 0,
       vy: 0,
       angle: -Math.PI / 2,
