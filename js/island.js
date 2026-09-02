@@ -639,7 +639,7 @@ const Island = (() => {
     for (let ty = y0; ty < y1; ty++) {
       for (let tx = x0; tx < x1; tx++) {
         const img = tileImage(tx, ty);
-        if (img) ctx.drawImage(img, tx * TS, ty * TS);
+        if (img) Atlas.drawSprite(ctx, img, tx * TS, ty * TS);
       }
     }
   }

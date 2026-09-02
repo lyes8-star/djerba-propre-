@@ -60,6 +60,8 @@ const Engine3D = (() => {
   let camTarget = new THREE.Vector3();
   let camYaw = Math.PI * 0.22;
   let waterNormalPhase = 0;
+  let shakeT = 0;
+  let shakeAmp = 0;
   let plasterMat = null;
   let roofMat = null;
   let woodMat = null;

@@ -1,11 +1,11 @@
 /* DJERBA 2 · EAU PROPRE — monde ouvert GTA, campagne, marchés d'eau */
 (() => {
   const canvas = document.getElementById("game-canvas");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { alpha: false });
   const titleBg = document.getElementById("title-bg-canvas");
-  const titleBgCtx = titleBg.getContext("2d");
+  const titleBgCtx = titleBg.getContext("2d", { alpha: false });
   const mapCanvas = document.getElementById("map-canvas");
-  const mapCtx = mapCanvas.getContext("2d");
+  const mapCtx = mapCanvas.getContext("2d", { alpha: false });
 
   canvas.width = 320;
   canvas.height = 400;
@@ -45,16 +45,16 @@
 
   function fitGameCanvas() {
     const wrap = canvas.parentElement;
-    const w = (wrap && wrap.clientWidth) || window.innerWidth || 320;
-    const h = (wrap && wrap.clientHeight) || window.innerHeight || 400;
+    const w = Math.max(260, (wrap && wrap.clientWidth) || window.innerWidth || 320);
+    const h = Math.max(340, (wrap && wrap.clientHeight) || window.innerHeight || 400);
     const px = Math.max(2, Math.min(3, Math.floor(Math.min(w / 260, h / 340)) || 2));
     const nw = Math.max(260, Math.round(w / px));
     const nh = Math.max(340, Math.round(h / px));
     if (canvas.width !== nw || canvas.height !== nh) {
       canvas.width = nw;
       canvas.height = nh;
+      ctx.imageSmoothingEnabled = false;
     }
-    ctx.imageSmoothingEnabled = false;
   }
 
   let introPhase = "cine";
@@ -560,6 +560,8 @@
 
   function render(t, dt) {
     fitGameCanvas();
+    if (!world || !player) return;
+
     const inside = world.inside;
     if (!inside && typeof Engine3D !== "undefined" && Engine3D.active()) {
       canvas.classList.add("hidden-2d");
@@ -571,71 +573,85 @@
     canvas.classList.remove("hidden-2d");
     const glHide = document.getElementById("game-gl");
     if (glHide) glHide.style.display = "none";
-    const W = inside ? inside.w : world.W;
-    const H = inside ? inside.h : world.H;
-    const vw = canvas.width / ZOOM;
-    const vh = canvas.height / ZOOM;
-    let camX = player.x + 16 - vw / 2;
-    let camY = player.y + 20 - vh / 2;
-    camX = Math.max(0, Math.min(Math.max(0, W - vw), camX));
-    camY = Math.max(0, Math.min(Math.max(0, H - vh), camY));
-    cam = { x: camX, y: camY, vw, vh };
 
-    ctx.imageSmoothingEnabled = false;
-    ctx.save();
-    FX.applyShake(ctx);
-    ctx.scale(ZOOM, ZOOM);
-    ctx.translate(-camX, -camY);
+    try {
+      const W = inside ? inside.w : world.W;
+      const H = inside ? inside.h : world.H;
+      const vw = canvas.width / ZOOM;
+      const vh = canvas.height / ZOOM;
+      let camX = player.x + 16 - vw / 2;
+      let camY = player.y + 20 - vh / 2;
+      camX = Math.max(0, Math.min(Math.max(0, W - vw), camX));
+      camY = Math.max(0, Math.min(Math.max(0, H - vh), camY));
+      cam = { x: camX, y: camY, vw, vh };
 
-    const gold = Progress.get().cosmetics.hat_gold;
-    if (inside) {
-      Sprites.drawInterior(ctx, inside, t);
-      const actors = (world.npcs || []).filter((n) => n.indoor).map((n) => ({ n, y: n.y, player: false }));
-      actors.push({ y: player.y, player: true });
-      actors.sort((a, b) => a.y - b.y);
-      for (const a of actors) {
-        if (a.player) Sprites.drawPlayer(ctx, player, gold, t, null);
-        else Sprites.drawNpc(ctx, a.n, t, null);
-      }
-    } else {
-      Sprites.drawWorldBg(ctx, world.W, world.H, t, world.theme, cam);
-      Sprites.drawDoors(ctx, player, cam, t);
-      Sprites.drawFilth(ctx, world, t, cam);
-      for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
-      for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
-      for (const b of world.bins || [world.bin]) {
-        if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
-      }
-      if (typeof Market !== "undefined") Market.drawStalls(ctx, cam, t);
-      if (typeof Interactions !== "undefined") {
-        for (const s of Interactions.spots) {
-          const sx = s.x - cam.x;
-          const sy = s.y - cam.y;
-          if (sx < -40 || sy < -40 || sx > cam.vw + 40 || sy > cam.vh + 40) continue;
-          const pulse = 0.5 + Math.sin(t * 4 + s.x * 0.01) * 0.5;
-          ctx.fillStyle = `rgba(72, 200, 120, ${0.35 + pulse * 0.35})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy - 8, 5 + pulse * 2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "rgba(255,255,255,0.5)";
-          ctx.lineWidth = 1;
-          ctx.stroke();
+      ctx.fillStyle = "#2090dc";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.save();
+      FX.applyShake(ctx);
+      ctx.scale(ZOOM, ZOOM);
+      ctx.translate(-camX, -camY);
+
+      const gold = Progress.get().cosmetics.hat_gold;
+      if (inside) {
+        Sprites.drawInterior(ctx, inside, t);
+        const actors = (world.npcs || []).filter((n) => n.indoor).map((n) => ({ n, y: n.y, player: false }));
+        actors.push({ y: player.y, player: true });
+        actors.sort((a, b) => a.y - b.y);
+        for (const a of actors) {
+          if (a.player) Sprites.drawPlayer(ctx, player, gold, t, null);
+          else Sprites.drawNpc(ctx, a.n, t, null);
         }
+      } else {
+        Sprites.drawWorldBg(ctx, world.W, world.H, t, world.theme, cam);
+        Sprites.drawDoors(ctx, player, cam, t);
+        Sprites.drawFilth(ctx, world, t, cam);
+        for (const tr of World.living(world)) Sprites.drawTrash(ctx, tr, t, cam);
+        for (const r of World.livingRares(world)) Sprites.drawTrash(ctx, r, t, cam);
+        for (const b of world.bins || [world.bin]) {
+          if (b) Sprites.drawBin(ctx, b.x, b.y, t, cam);
+        }
+        if (typeof Market !== "undefined") Market.drawStalls(ctx, cam, t);
+        if (typeof Interactions !== "undefined") {
+          for (const s of Interactions.spots) {
+            const sx = s.x - cam.x;
+            const sy = s.y - cam.y;
+            if (sx < -40 || sy < -40 || sx > cam.vw + 40 || sy > cam.vh + 40) continue;
+            const pulse = 0.5 + Math.sin(t * 4 + s.x * 0.01) * 0.5;
+            ctx.fillStyle = `rgba(72, 200, 120, ${0.35 + pulse * 0.35})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy - 8, 5 + pulse * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+        const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
+        for (const car of world.cars || []) actors.push({ car, y: car.y });
+        actors.push({ y: player.y, player: true });
+        actors.sort((a, b) => a.y - b.y);
+        for (const a of actors) {
+          if (a.car) Sprites.drawCar(ctx, a.car, t, cam);
+          else if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
+          else Sprites.drawNpc(ctx, a.n, t, cam);
+        }
+        Sprites.drawMinimap(ctx, world.W, world.H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
       }
-      const actors = (world.npcs || []).filter((n) => !n.indoor).map((n) => ({ n, y: n.y, player: false }));
-      for (const car of world.cars || []) actors.push({ car, y: car.y });
-      actors.push({ y: player.y, player: true });
-      actors.sort((a, b) => a.y - b.y);
-      for (const a of actors) {
-        if (a.car) Sprites.drawCar(ctx, a.car, t, cam);
-        else if (a.player) Sprites.drawPlayer(ctx, player, gold, t, cam);
-        else Sprites.drawNpc(ctx, a.n, t, cam);
-      }
-      Sprites.drawMinimap(ctx, world.W, world.H, World.living(world), player, t, cam, world.npcs, World.livingRares(world));
+      FX.draw(ctx);
+      ctx.restore();
+      FX.drawFlash(ctx, canvas.width, canvas.height);
+    } catch (err) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#2090dc";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#fff";
+      ctx.font = "8px monospace";
+      ctx.fillText("RELOAD", 8, 16);
+      if (typeof console !== "undefined") console.error(err);
     }
-    FX.draw(ctx);
-    ctx.restore();
-    FX.drawFlash(ctx, canvas.width, canvas.height);
   }
 
   function loop(ts) {
