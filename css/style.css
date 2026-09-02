@@ -442,6 +442,18 @@ html, body {
   background: var(--sand);
 }
 
+#game-canvas.hidden-2d {
+  display: none !important;
+}
+
+.game-gl {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+  touch-action: none;
+}
+
 .hud-overlay {
   position: absolute;
   top: calc(6px + var(--safe-top));
