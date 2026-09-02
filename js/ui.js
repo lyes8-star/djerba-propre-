@@ -156,7 +156,40 @@ const UI = (() => {
     const s = Progress.get();
     const qn = Progress.questsDone();
     const bottles = Progress.waterStockTotal();
-    els.titleStats.innerHTML = `NV.${s.level} · $${s.coins}<br>QUETES ${qn}/11 · 💧${bottles}`;
+    const stars = Progress.totalStars();
+    if (els.titleStats) {
+      els.titleStats.innerHTML = `
+        <div class="title-stat">
+          <span class="title-stat-value">NV.${s.level}</span>
+          <span class="title-stat-label">Niveau</span>
+        </div>
+        <div class="title-stat">
+          <span class="title-stat-value">$${s.coins}</span>
+          <span class="title-stat-label">Pièces</span>
+        </div>
+        <div class="title-stat">
+          <span class="title-stat-value">${qn}/11 · 💧${bottles}</span>
+          <span class="title-stat-label">Quêtes · Eau</span>
+        </div>`;
+    }
+    const continueBtn = document.getElementById("btn-continue");
+    if (continueBtn) {
+      const show = s.level > 1 || s.coins > 350 || s.campaign.unlocked > 1 || qn > 0;
+      continueBtn.classList.toggle("hidden", !show);
+    }
+    const continueHint = document.getElementById("title-continue-hint");
+    if (continueHint) {
+      const unlocked = s.campaign.unlocked || 1;
+      const m = typeof Campaign !== "undefined" ? Campaign.get(unlocked) : null;
+      continueHint.textContent = m ? `Chapitre ${unlocked} · ${m.name}` : "Reprendre la campagne";
+    }
+    const campaignHint = document.getElementById("title-campaign-hint");
+    if (campaignHint) {
+      const unlocked = s.campaign.unlocked || 1;
+      campaignHint.textContent = s.campaign.introSeen
+        ? `Chapitre ${unlocked}/8 · ${stars}/24 étoiles`
+        : "8 chapitres · île de Djerba";
+    }
   }
 
   function renderMarketDrink() {
