@@ -74,6 +74,8 @@ const Engine3D = (() => {
   let rainSystem = null;
   let waterShader = null;
   const sunDir = new THREE.Vector3(0.4, 0.8, 0.3);
+  let islandOx = 0;
+  let islandOz = 0;
   const trashMesh = new Map();
   const npcMesh = new Map();
   const carMesh = new Map();
@@ -178,6 +180,9 @@ const Engine3D = (() => {
       vertexColors: true, side: THREE.BackSide, fog: false,
     }));
     skyDome = dome;
+    islandOx = (typeof Island !== "undefined" ? Island.W : 5120) / 2;
+    islandOz = (typeof Island !== "undefined" ? Island.H : 3840) / 2;
+    dome.position.set(islandOx, 0, islandOz);
     scene.add(dome);
   }
 
@@ -245,7 +250,8 @@ const Engine3D = (() => {
     sun = new THREE.DirectionalLight(0xfff4d8, 1.15);
     sun.position.set(1800, 2400, 1200);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    sun.shadow.mapSize.set(isMobile ? 1024 : 2048, isMobile ? 1024 : 2048);
     sun.shadow.camera.near = 200;
     sun.shadow.camera.far = 6000;
     const sc = 2200;
@@ -286,6 +292,9 @@ const Engine3D = (() => {
       vertexColors: true, flatShading: true, roughness: 0.9, metalness: 0,
     }));
     terrain.receiveShadow = true;
+    islandOx = W / 2;
+    islandOz = H / 2;
+    terrain.position.set(islandOx, 0, islandOz);
     root.add(terrain);
 
     const wGeo = new THREE.PlaneGeometry(W + 800, H + 800, 64, 48);
@@ -296,7 +305,7 @@ const Engine3D = (() => {
     } else {
       water = new THREE.Mesh(wGeo, mat(0x1a7fd4, { transparent: true, opacity: 0.78, roughness: 0.1 }));
     }
-    water.position.y = -5.5;
+    water.position.set(islandOx, -5.5, islandOz);
     root.add(water);
   }
 
@@ -529,6 +538,7 @@ const Engine3D = (() => {
     mount.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x5eb8ff);
     scene.fog = new THREE.Fog(0xb8e0f8, 900, 3400);
     clock = new THREE.Clock();
     root = new THREE.Group();
@@ -593,6 +603,7 @@ const Engine3D = (() => {
       mount.appendChild(renderer.domElement);
 
       scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xd4a574);
       scene.fog = new THREE.Fog(0xd4a574, 700, 3200);
       clock = new THREE.Clock();
       root = new THREE.Group();
@@ -657,7 +668,11 @@ const Engine3D = (() => {
       sun.target.position.set(cx, gy + 10, cz);
       sun.target.updateMatrixWorld();
     }
-    if (water) water.position.y = -5.5 + Math.sin(t * 0.5) * 0.3;
+    if (water) {
+      water.position.x = islandOx;
+      water.position.z = islandOz;
+      water.position.y = -5.5 + Math.sin(t * 0.5) * 0.3;
+    }
     if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
     renderer.render(scene, camera);
   }
@@ -834,7 +849,11 @@ const Engine3D = (() => {
     syncCars(world);
     syncPlayer(player, t, gold);
     updateCamera(player, dt || 0.016);
-    if (water && !waterShader) water.position.y = -5.5 + Math.sin(t * 0.6) * 0.25;
+    if (water) {
+      water.position.x = islandOx;
+      water.position.z = islandOz;
+      water.position.y = -5.5 + Math.sin(t * 0.6) * 0.25;
+    }
     if (typeof Textures !== "undefined" && Textures.isReady()) Textures.animateWater(t);
     renderer.render(scene, camera);
   }

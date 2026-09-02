@@ -30,12 +30,63 @@ const Textures = (() => {
   let terrainNormalAtlas = null;
   let waterNormal = null;
   let tileCache = {};
+  let loadedDiffs = 0;
+
+  const FALLBACK_COLORS = {
+    sand: ["#e8c872", "#d4a85c", "#f2dc9a"],
+    grass: ["#3fa84f", "#48b858", "#2d8a3a"],
+    cobble: ["#b8a898", "#a89888", "#c8b8a8"],
+    road: ["#c8b090", "#b8a080", "#d0c0a0"],
+    stone: ["#9a9a9a", "#888888", "#aaaaaa"],
+    dirt: ["#c9a060", "#b89050", "#d8b070"],
+    plaster: ["#f5efe0", "#ece4d4", "#faf6ee"],
+    roof: ["#c85838", "#b04830", "#d06848"],
+    wood: ["#c4742c", "#a86020", "#d08840"],
+    bark: ["#8a6030", "#704820", "#9a7040"],
+    leaves: ["#2d9a40", "#3cbc3c", "#248024"],
+    rock: ["#9a9088", "#888078", "#aaa098"],
+  };
+
+  function makeFallback(name) {
+    const cols = FALLBACK_COLORS[name] || FALLBACK_COLORS.sand;
+    const size = 128;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d");
+    for (let y = 0; y < size; y += 4) {
+      for (let x = 0; x < size; x += 4) {
+        const h = ((x * 13 + y * 17 + name.length * 31) >>> 0) % cols.length;
+        ctx.fillStyle = cols[h];
+        ctx.fillRect(x, y, 4, 4);
+      }
+    }
+    return c;
+  }
+
+  function downscaleImage(img, maxSize) {
+    const max = maxSize || 512;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    if (scale >= 1) return img;
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, (img.width * scale) | 0);
+    c.height = Math.max(1, (img.height * scale) | 0);
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
 
   function loadImage(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => resolve(img);
+      img.onload = () => {
+        try {
+          resolve(downscaleImage(img, /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 512 : 1024));
+        } catch (e) {
+          resolve(img);
+        }
+      };
       img.onerror = () => reject(new Error(`Texture: ${url}`));
       img.src = url;
     });
@@ -45,7 +96,9 @@ const Textures = (() => {
     const diff = await loadImage(`${BASE}/${folder}/${name}_diff.jpg`).catch(() => null);
     const nor = await loadImage(`${BASE}/${folder}/${name}_nor.jpg`).catch(() => null);
     const rough = await loadImage(`${BASE}/${folder}/${name}_rough.jpg`).catch(() => null);
-    return { diff, nor, rough, name };
+    const fallback = !diff ? makeFallback(name) : null;
+    if (diff) loadedDiffs += 1;
+    return { diff: diff || fallback, nor, rough, name, fallback: !!fallback };
   }
 
   function makeWaterNormal(size = 512) {
@@ -155,6 +208,7 @@ const Textures = (() => {
     if (ready) return pack;
     if (loading) return loading;
     loading = (async () => {
+      loadedDiffs = 0;
       const terrainNames = ["sand", "grass", "cobble", "road", "stone", "dirt"];
       const results = await Promise.all(terrainNames.map((n) => loadSet("terrain", n)));
       terrainNames.forEach((n, i) => { pack.terrain[n] = results[i]; });
@@ -168,9 +222,11 @@ const Textures = (() => {
       propNames.forEach((n, i) => { pack.props[n] = pRes[i]; });
 
       pack.water.normalCanvas = makeWaterNormal(512);
-      ready = true;
-      bakeTerrainAtlases();
-      injectAtlasTiles();
+      ready = loadedDiffs > 0;
+      if (ready) {
+        bakeTerrainAtlases();
+        injectAtlasTiles();
+      }
       return pack;
     })();
     return loading;
@@ -200,8 +256,20 @@ const Textures = (() => {
     return configure(tex, repeatX, repeatY);
   }
 
+  function atlasHasPixels(canvas) {
+    if (!canvas) return false;
+    const ctx = canvas.getContext("2d");
+    const w = Math.min(16, canvas.width);
+    const h = Math.min(16, canvas.height);
+    const data = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] > 0 && (data[i] + data[i + 1] + data[i + 2] > 24)) return true;
+    }
+    return false;
+  }
+
   function terrainMaterial() {
-    if (!ready || !terrainAtlas || typeof THREE === "undefined") return null;
+    if (!ready || !terrainAtlas || !atlasHasPixels(terrainAtlas) || typeof THREE === "undefined") return null;
     const map = threeFromCanvas(terrainAtlas, 1, 1);
     const normalMap = terrainNormalAtlas ? threeFromCanvas(terrainNormalAtlas, 1, 1) : null;
     if (normalMap) normalMap.colorSpace = THREE.LinearSRGBColorSpace;
