@@ -55,10 +55,10 @@ Debloque les niveaux en gagnant des etoiles. Carte interactive + **monde libre**
 - UI pixel pro : police Press Start 2P, cadres, scanlines, scale entier
 - Canvas **256×384** + themes par niveau
 - FX : particules, combos, anneaux, shake
-- Musiques titre / gameplay (Web Audio orientale retro)
+- Musiques MP3 téléchargées par zone (plage, médina) — voir `audio/music/`
 - Habitants et touristes dans chaque quartier (plage, souk, ville, port) : parle-leur
 - **Textures PBR réalistes** (CC0) : sable, herbe, pavé, routes, bâtiments, végétation — voir `textures/README.md`
 
 ## Stack
 
-HTML / CSS / JS vanilla · Canvas 2D pixel art · Web Audio (musique orientale rétro)
+HTML / CSS / JS vanilla · Canvas 2D pixel art · Musiques MP3 + effets sonores légers
