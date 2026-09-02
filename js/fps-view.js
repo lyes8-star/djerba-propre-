@@ -39,8 +39,6 @@ const FPSView = (() => {
       const y = oy + sin * d;
       const onLand = Island.contains(x, y);
       if (!onLand) {
-        const hit = { dist: d, h: 10, color: "#1a6bb5", kind: "sea" };
-        if (!best || hit.dist < best.dist) best = hit;
         break;
       }
       const props = Island.props();
@@ -128,8 +126,7 @@ const FPSView = (() => {
     while (rel < -Math.PI) rel += Math.PI * 2;
     if (Math.abs(rel) > FOV * 0.58) return;
 
-    const dist = sp.dist * Math.cos(rel);
-    if (dist < 4) return;
+    const dist = Math.max(sp.dist * Math.cos(rel), 10);
     const sx = (rel / (FOV * 0.5)) * (cw * 0.5) + cw * 0.5;
     const sh = projectH(sp.h, dist, ch);
     const sw = projectH(sp.w, dist, ch);
